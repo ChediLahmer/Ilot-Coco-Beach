@@ -1,233 +1,144 @@
-<script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { flashSale } from '@/data/mock.js'
-
-gsap.registerPlugin(ScrollTrigger)
-
-const { t, locale } = useI18n()
-
-const timerContainer = ref(null)
-const badgeRef = ref(null)
-let ctx
-let timerInterval = null
-
-// Reactive countdown state
-const now = ref(Date.now())
-
-const endTime = computed(() => new Date(flashSale.endsAt).getTime())
-
-const isExpired = computed(() => now.value >= endTime.value)
-
-const timeLeft = computed(() => {
-  const diff = Math.max(0, endTime.value - now.value)
-  const totalSeconds = Math.floor(diff / 1000)
-  return {
-    days: Math.floor(totalSeconds / 86400),
-    hours: Math.floor((totalSeconds % 86400) / 3600),
-    minutes: Math.floor((totalSeconds % 3600) / 60),
-    seconds: totalSeconds % 60,
-  }
-})
-
-const pad = (n) => String(n).padStart(2, '0')
-
-const localizedTitle = computed(() => {
-  const lang = locale.value
-  return flashSale.title[lang] || flashSale.title.fr
-})
-
-const localizedDescription = computed(() => {
-  const lang = locale.value
-  return flashSale.description[lang] || flashSale.description.fr
-})
-
-onMounted(() => {
-  // Start countdown timer
-  timerInterval = setInterval(() => {
-    now.value = Date.now()
-    if (now.value >= endTime.value) {
-      clearInterval(timerInterval)
-    }
-  }, 1000)
-
-  // GSAP animations
-  ctx = gsap.context(() => {
-    // Timer boxes slide up with stagger
-    gsap.from('.timer-box', {
-      y: 60,
-      opacity: 0,
-      duration: 0.6,
-      stagger: 0.12,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: timerContainer.value,
-        start: 'top 85%',
-        toggleActions: 'play none none none',
-      },
-    })
-
-    // Pulsing badge
-    if (badgeRef.value) {
-      gsap.to(badgeRef.value, {
-        scale: 1.08,
-        duration: 0.8,
-        ease: 'power1.inOut',
-        repeat: -1,
-        yoyo: true,
-      })
-    }
-  })
-})
-
-onUnmounted(() => {
-  if (ctx) ctx.revert()
-  if (timerInterval) clearInterval(timerInterval)
-})
-
-function scrollToReservation() {
-  const el = document.getElementById('reservation')
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
-}
-</script>
-
 <template>
   <section
-    id="flash-sale"
-    class="relative py-16 px-6 overflow-hidden"
-    :style="{
-      background: `linear-gradient(135deg, var(--color-ocean-dark) 0%, var(--color-charcoal) 100%)`,
-    }"
+    v-if="flashSale.isActive"
+    class="relative py-16 px-6 md:px-16 overflow-hidden"
+    style="background: linear-gradient(135deg, var(--color-ocean-dark) 0%, var(--color-charcoal) 100%)"
   >
-    <!-- Background image overlay -->
-    <div
-      v-if="flashSale.image"
-      class="absolute inset-0 bg-cover bg-center opacity-10"
-      :style="{ backgroundImage: `url(${flashSale.image})` }"
-    />
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
+    <!-- Decorative circles -->
+    <div class="absolute top-10 right-10 w-40 h-40 bg-ocean-light/10 rounded-full blur-2xl" />
+    <div class="absolute bottom-10 left-10 w-32 h-32 bg-coral/10 rounded-full blur-2xl" />
 
-    <!-- Content -->
-    <div class="relative z-10 max-w-4xl mx-auto text-center">
-      <!-- Title -->
-      <h2 class="font-display text-white text-4xl md:text-5xl mb-3">
-        {{ t('flash.title') }}
+    <div ref="contentEl" class="relative z-10 max-w-4xl mx-auto text-center text-white">
+      <!-- Flash sale badge -->
+      <div class="inline-flex items-center gap-2 bg-coral/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
+        <span class="w-2.5 h-2.5 bg-coral rounded-full animate-pulse" />
+        <span class="font-heading font-bold text-sm text-coral-light uppercase tracking-wider">
+          {{ t('flash.title') }}
+        </span>
+      </div>
+
+      <!-- Discount badge with rotating dashed ring -->
+      <div class="flex justify-center mb-6">
+        <div class="relative flex items-center justify-center w-32 h-32">
+          <!-- Rotating dashed SVG circle -->
+          <svg
+            class="absolute inset-0 w-32 h-32 dashed-ring text-coral-light/50"
+            viewBox="0 0 128 128"
+            fill="none"
+          >
+            <circle
+              cx="64"
+              cy="64"
+              r="60"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-dasharray="8 6"
+              fill="none"
+            />
+          </svg>
+          <!-- Inner coral badge -->
+          <div class="w-24 h-24 bg-coral rounded-full flex items-center justify-center animate-pulse shadow-lg shadow-coral/30">
+            <span class="font-heading font-black text-2xl text-white">
+              -{{ flashSale.discountPercent }}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="font-heading text-2xl md:text-3xl font-bold mb-3">
+        {{ flashSale.title[locale] || flashSale.title.fr }}
       </h2>
-      <p class="text-white/60 text-lg mb-8">
-        {{ t('flash.subtitle') }}
+      <p class="font-body text-white/80 text-base md:text-lg max-w-2xl mx-auto mb-8">
+        {{ flashSale.description[locale] || flashSale.description.fr }}
       </p>
 
-      <!-- Discount badge -->
-      <div class="flex justify-center mb-8">
+      <!-- Countdown -->
+      <div v-if="!expired" class="flex justify-center gap-3 md:gap-4 mb-8">
         <div
-          ref="badgeRef"
-          class="relative w-28 h-28 rounded-full bg-coral flex flex-col items-center justify-center shadow-lg"
-          style="box-shadow: 0 0 40px rgba(249, 115, 22, 0.4)"
+          v-for="unit in countdownUnits"
+          :key="unit.label"
+          class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 min-w-[70px]"
         >
-          <span class="font-display text-white text-3xl leading-none">
-            {{ flashSale.discountPercent }}%
-          </span>
-          <span class="text-white/90 text-xs font-heading font-bold uppercase tracking-wider mt-1">
-            OFF
-          </span>
-          <!-- Decorative ring -->
-          <div class="absolute inset-0 rounded-full border-2 border-dashed border-white/30 animate-spin" style="animation-duration: 20s" />
+          <div class="font-heading font-black text-2xl md:text-3xl text-white">
+            {{ String(unit.value).padStart(2, '0') }}
+          </div>
+          <div class="font-body text-white/60 text-xs uppercase tracking-wide mt-1">
+            {{ unit.label }}
+          </div>
         </div>
       </div>
-
-      <!-- Flash sale title & description -->
-      <h3 class="font-heading font-bold text-white text-xl md:text-2xl mb-2">
-        {{ localizedTitle }}
-      </h3>
-      <p class="text-white/80 max-w-lg mx-auto mb-10">
-        {{ localizedDescription }}
+      <p v-else class="text-coral-light text-lg font-heading font-semibold mb-8">
+        {{ t('flash.expired') }}
       </p>
 
-      <!-- Countdown timer -->
-      <div
-        v-if="!isExpired"
-        ref="timerContainer"
-        class="flex justify-center gap-3 md:gap-5 mb-10"
+      <!-- CTA -->
+      <a
+        v-if="!expired"
+        href="#reservation"
+        class="inline-block bg-coral hover:bg-coral-light text-white font-heading font-semibold px-8 py-3 rounded-full text-lg transition-colors duration-200 shadow-lg"
+        @click.prevent="scrollToReservation"
       >
-        <!-- Days -->
-        <div class="timer-box bg-white/10 backdrop-blur rounded-xl p-4 min-w-[80px] text-center">
-          <span class="block text-4xl md:text-5xl font-bold text-white font-heading leading-none">
-            {{ pad(timeLeft.days) }}
-          </span>
-          <span class="block text-sm text-white/60 mt-2">
-            {{ t('flash.days') }}
-          </span>
-        </div>
-
-        <!-- Hours -->
-        <div class="timer-box bg-white/10 backdrop-blur rounded-xl p-4 min-w-[80px] text-center">
-          <span class="block text-4xl md:text-5xl font-bold text-white font-heading leading-none">
-            {{ pad(timeLeft.hours) }}
-          </span>
-          <span class="block text-sm text-white/60 mt-2">
-            {{ t('flash.hours') }}
-          </span>
-        </div>
-
-        <!-- Separator -->
-        <div class="hidden md:flex items-center text-white/40 text-3xl font-bold self-start mt-4">:</div>
-
-        <!-- Minutes -->
-        <div class="timer-box bg-white/10 backdrop-blur rounded-xl p-4 min-w-[80px] text-center">
-          <span class="block text-4xl md:text-5xl font-bold text-white font-heading leading-none">
-            {{ pad(timeLeft.minutes) }}
-          </span>
-          <span class="block text-sm text-white/60 mt-2">
-            {{ t('flash.minutes') }}
-          </span>
-        </div>
-
-        <!-- Seconds -->
-        <div class="timer-box bg-white/10 backdrop-blur rounded-xl p-4 min-w-[80px] text-center">
-          <span class="block text-4xl md:text-5xl font-bold text-white font-heading leading-none">
-            {{ pad(timeLeft.seconds) }}
-          </span>
-          <span class="block text-sm text-white/60 mt-2">
-            {{ t('flash.seconds') }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Expired message -->
-      <div
-        v-else
-        class="mb-10 py-6"
-      >
-        <p class="text-white/60 text-xl font-heading italic">
-          {{ t('flash.expired') }}
-        </p>
-      </div>
-
-      <!-- CTA button -->
-      <button
-        class="inline-flex items-center gap-2 bg-coral text-white font-heading font-semibold rounded-full px-8 py-4 text-lg transition-all duration-300 hover:scale-105 cursor-pointer"
-        style="box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4)"
-        @click="scrollToReservation"
-      >
-        <!-- Lightning bolt icon -->
-        <svg
-          class="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" />
-        </svg>
         {{ t('flash.bookNow') }}
-      </button>
+      </a>
     </div>
   </section>
 </template>
 
-<style scoped>
-@keyframes pulse-coral {
-  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { flashSale } from '@/data/mock'
+
+gsap.registerPlugin(ScrollTrigger)
+
+const { t, locale } = useI18n()
+const contentEl = ref(null)
+const now = ref(Date.now())
+let timer = null
+
+const endTime = new Date(flashSale.endsAt).getTime()
+const expired = computed(() => now.value >= endTime)
+
+const countdownUnits = computed(() => {
+  const diff = Math.max(0, endTime - now.value)
+  const seconds = Math.floor(diff / 1000)
+  return [
+    { label: t('flash.days'), value: Math.floor(seconds / 86400) },
+    { label: t('flash.hours'), value: Math.floor((seconds % 86400) / 3600) },
+    { label: t('flash.minutes'), value: Math.floor((seconds % 3600) / 60) },
+    { label: t('flash.seconds'), value: seconds % 60 },
+  ]
+})
+
+function scrollToReservation() {
+  const el = document.getElementById('reservation')
+  if (el) el.scrollIntoView({ behavior: 'instant' })
 }
-</style>
+
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
+
+  // Gentle slide-up, NO opacity:0
+  if (contentEl.value) {
+    gsap.from(contentEl.value, {
+      y: 30,
+      scale: 0.98,
+      duration: 0.8,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: contentEl.value,
+        start: 'top 85%',
+        toggleActions: 'play none none none',
+      },
+    })
+  }
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+</script>

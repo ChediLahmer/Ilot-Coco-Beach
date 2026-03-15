@@ -1,6 +1,7 @@
 {
   "nav": {
     "home": "Home",
+    "menu": "Menu",
     "gallery": "Gallery",
     "experience": "Experience",
     "reservation": "Book Now",
@@ -33,9 +34,20 @@
     "title": "Live the experience",
     "play": "Play video"
   },
+  "menu": {
+    "title": "Our Menu",
+    "subtitle": "Savor our fresh specialties, between land and sea",
+    "standard": "Standard",
+    "extra": "Extra",
+    "available": "Available",
+    "unavailable": "Unavailable"
+  },
   "experience": {
     "title": "Our spaces",
     "subtitle": "Choose your corner of paradise",
+    "capacity": "Capacity",
+    "persons": "persons",
+    "perPerson": "per person",
     "cards": {
       "overwater": {
         "title": "Overwater Cabin",
@@ -63,6 +75,8 @@
     "date": "Preferred date",
     "guests": "Number of guests",
     "message": "Message (optional)",
+    "voucherCode": "Promo code (optional)",
+    "voucherPlaceholder": "Enter your promo code",
     "whatsapp": "Send via WhatsApp",
     "call": "Call directly",
     "namePlaceholder": "Enter your full name",
@@ -103,6 +117,12 @@
     "seconds": "Sec",
     "expired": "This offer has expired",
     "bookNow": "Grab the deal"
+  },
+  "reviews": {
+    "title": "Guest Reviews",
+    "subtitle": "What those who lived the Ilot experience say",
+    "writeReview": "Write a review",
+    "loginToReview": "Log in to write a review"
   },
   "footer": {
     "rights": "All rights reserved",

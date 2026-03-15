@@ -1,229 +1,201 @@
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { setLanguage } from '@/i18n/index.js'
-
-const { t, locale } = useI18n()
-
-const mobileOpen = ref(false)
-const activeSection = ref('hero')
-const scrolled = ref(false)
-
-const navLinks = [
-  { key: 'nav.home', hash: '#hero', id: 'hero' },
-  { key: 'nav.menu', hash: '#menu', id: 'menu' },
-  { key: 'nav.experience', hash: '#experience', id: 'experience' },
-  { key: 'nav.gallery', hash: '#gallery', id: 'gallery' },
-  { key: 'nav.reservation', hash: '#reservation', id: 'reservation' },
-  { key: 'nav.contact', hash: '#contact', id: 'contact' },
-]
-
-const languages = [
-  { code: 'fr', label: 'FR' },
-  { code: 'ar', label: 'AR' },
-  { code: 'en', label: 'EN' },
-]
-
-function switchLang(code) {
-  setLanguage(code)
-}
-
-function closeMobile() {
-  mobileOpen.value = false
-}
-
-function scrollTo(hash) {
-  closeMobile()
-  const el = document.querySelector(hash)
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' })
-  }
-}
-
-/* IntersectionObserver to detect active section */
-let observer = null
-
-function setupObserver() {
-  const sections = navLinks
-    .map((link) => document.getElementById(link.id))
-    .filter(Boolean)
-
-  if (!sections.length) return
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
-        }
-      })
-    },
-    { rootMargin: '-50% 0px -50% 0px', threshold: 0 }
-  )
-
-  sections.forEach((section) => observer.observe(section))
-}
-
-function handleScroll() {
-  scrolled.value = window.scrollY > 10
-}
-
-onMounted(() => {
-  setupObserver()
-  window.addEventListener('scroll', handleScroll, { passive: true })
-  handleScroll()
-})
-
-onUnmounted(() => {
-  if (observer) observer.disconnect()
-  window.removeEventListener('scroll', handleScroll)
-})
-</script>
-
 <template>
   <nav
-    class="fixed top-0 inset-x-0 z-50 h-[72px] bg-white/90 backdrop-blur-sm transition-shadow duration-300"
-    :class="scrolled ? 'shadow-md' : ''"
+    :class="[
+      'fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-4 md:px-8 transition-all duration-300',
+      'bg-white shadow-md',
+    ]"
   >
-    <div class="max-w-7xl mx-auto h-full flex items-center justify-between px-4 lg:px-8">
-      <!-- Brand -->
-      <a
-        href="#hero"
-        class="font-display text-ocean text-2xl tracking-wide select-none"
-        @click.prevent="scrollTo('#hero')"
-      >
-        ILOT
-      </a>
-
-      <!-- Desktop nav links -->
-      <ul class="hidden md:flex items-center gap-1">
-        <li v-for="link in navLinks" :key="link.id">
-          <a
-            :href="link.hash"
-            class="relative px-3 py-2 text-sm font-heading font-medium transition-colors duration-200"
-            :class="
-              activeSection === link.id
-                ? 'text-ocean'
-                : 'text-charcoal/70 hover:text-ocean'
-            "
-            @click.prevent="scrollTo(link.hash)"
-          >
-            {{ t(link.key) }}
-            <span
-              class="absolute bottom-0 left-3 right-3 h-0.5 bg-ocean rounded-full transition-transform duration-300 origin-left"
-              :class="activeSection === link.id ? 'scale-x-100' : 'scale-x-0'"
-            />
-          </a>
-        </li>
-      </ul>
-
-      <!-- Desktop right side -->
-      <div class="hidden md:flex items-center gap-4">
-        <!-- Language switcher -->
-        <div class="flex items-center rounded-full bg-sand p-0.5 gap-0.5">
-          <button
-            v-for="lang in languages"
-            :key="lang.code"
-            class="px-3 py-1 text-xs font-heading font-semibold rounded-full transition-all duration-200"
-            :class="
-              locale === lang.code
-                ? 'bg-ocean text-white shadow-sm'
-                : 'text-charcoal/60 hover:text-ocean'
-            "
-            @click="switchLang(lang.code)"
-          >
-            {{ lang.label }}
-          </button>
-        </div>
-
-        <!-- CTA -->
-        <a
-          href="#reservation"
-          class="bg-coral text-white font-heading font-semibold text-sm px-5 py-2.5 rounded-full hover:scale-105 transition-transform duration-200 shadow-sm"
-          @click.prevent="scrollTo('#reservation')"
-        >
-          {{ t('nav.reservation') }}
-        </a>
-      </div>
-
-      <!-- Mobile hamburger -->
-      <button
-        class="md:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-1.5"
-        :aria-label="mobileOpen ? 'Close menu' : 'Open menu'"
-        @click="mobileOpen = !mobileOpen"
-      >
-        <span
-          class="block w-6 h-0.5 bg-charcoal rounded-full transition-all duration-300 origin-center"
-          :class="mobileOpen ? 'rotate-45 translate-y-[4px]' : ''"
-        />
-        <span
-          class="block w-6 h-0.5 bg-charcoal rounded-full transition-all duration-300"
-          :class="mobileOpen ? 'opacity-0 scale-x-0' : ''"
-        />
-        <span
-          class="block w-6 h-0.5 bg-charcoal rounded-full transition-all duration-300 origin-center"
-          :class="mobileOpen ? '-rotate-45 -translate-y-[4px]' : ''"
-        />
-      </button>
-    </div>
-  </nav>
-
-  <!-- Mobile overlay -->
-  <Transition name="mobile-menu">
-    <div
-      v-if="mobileOpen"
-      class="fixed inset-0 z-40 bg-white flex flex-col items-center justify-center gap-8"
-      style="padding-top: 72px"
+    <!-- Logo -->
+    <a
+      href="#hero"
+      class="text-2xl font-display text-ocean shrink-0"
+      @click.prevent="scrollTo('hero')"
     >
+      ILOT
+    </a>
+
+    <!-- Desktop links -->
+    <div class="hidden lg:flex items-center gap-6">
       <a
         v-for="link in navLinks"
         :key="link.id"
-        :href="link.hash"
-        class="font-heading text-2xl font-semibold transition-colors duration-200"
-        :class="activeSection === link.id ? 'text-ocean' : 'text-charcoal/70'"
-        @click.prevent="scrollTo(link.hash)"
+        :href="'#' + link.id"
+        :class="[
+          'text-sm font-heading font-medium transition-colors duration-200 hover:text-ocean',
+          activeSection === link.id ? 'text-ocean' : 'text-charcoal',
+        ]"
+        @click.prevent="scrollTo(link.id)"
       >
-        {{ t(link.key) }}
+        {{ link.label }}
       </a>
+    </div>
 
-      <!-- Mobile language switcher -->
-      <div class="flex items-center rounded-full bg-sand p-1 gap-1 mt-4">
+    <!-- Right side -->
+    <div class="hidden lg:flex items-center gap-3">
+      <!-- Language pills -->
+      <div class="flex rounded-full overflow-hidden border border-ocean/30">
         <button
-          v-for="lang in languages"
-          :key="lang.code"
-          class="px-4 py-2 text-sm font-heading font-semibold rounded-full transition-all duration-200"
-          :class="
-            locale === lang.code
-              ? 'bg-ocean text-white shadow-sm'
-              : 'text-charcoal/60 hover:text-ocean'
-          "
-          @click="switchLang(lang.code)"
+          v-for="lang in langs"
+          :key="lang"
+          :class="[
+            'px-2.5 py-1 text-xs font-heading font-bold transition-colors duration-200',
+            currentLang === lang
+              ? 'bg-ocean text-white'
+              : 'text-charcoal hover:bg-ocean/10',
+          ]"
+          @click="switchLang(lang)"
         >
-          {{ lang.label }}
+          {{ lang.toUpperCase() }}
         </button>
       </div>
-
-      <!-- Mobile CTA -->
+      <!-- Reservation button -->
       <a
         href="#reservation"
-        class="bg-coral text-white font-heading font-semibold text-lg px-8 py-3 rounded-full hover:scale-105 transition-transform duration-200 shadow-md mt-2"
-        @click.prevent="scrollTo('#reservation')"
+        class="bg-coral hover:bg-coral-light text-white text-sm font-heading font-semibold px-5 py-2 rounded-full transition-colors duration-200"
+        @click.prevent="scrollTo('reservation')"
       >
         {{ t('nav.reservation') }}
       </a>
     </div>
-  </Transition>
+
+    <!-- Mobile hamburger -->
+    <button
+      class="lg:hidden flex flex-col gap-1.5 p-2"
+      @click="mobileOpen = true"
+      :aria-label="'Open menu'"
+    >
+      <span class="w-6 h-0.5 rounded bg-charcoal transition-colors" />
+      <span class="w-6 h-0.5 rounded bg-charcoal transition-colors" />
+      <span class="w-4 h-0.5 rounded bg-charcoal transition-colors" />
+    </button>
+
+    <!-- Mobile overlay -->
+    <Teleport to="body">
+      <Transition name="mobile-nav">
+        <div
+          v-if="mobileOpen"
+          class="fixed inset-0 z-[100] bg-ocean-dark flex flex-col items-center justify-center gap-6"
+        >
+          <button
+            class="absolute top-5 right-5 text-white text-3xl leading-none"
+            @click="mobileOpen = false"
+          >
+            &times;
+          </button>
+          <a
+            v-for="link in navLinks"
+            :key="link.id"
+            :href="'#' + link.id"
+            class="text-white text-2xl font-heading font-semibold hover:text-ocean-light transition-colors"
+            @click.prevent="scrollTo(link.id); mobileOpen = false"
+          >
+            {{ link.label }}
+          </a>
+          <div class="flex gap-3 mt-4">
+            <button
+              v-for="lang in langs"
+              :key="lang"
+              :class="[
+                'px-4 py-2 rounded-full text-sm font-bold font-heading transition-colors',
+                currentLang === lang
+                  ? 'bg-white text-ocean-dark'
+                  : 'border border-white/50 text-white hover:bg-white/10',
+              ]"
+              @click="switchLang(lang)"
+            >
+              {{ lang.toUpperCase() }}
+            </button>
+          </div>
+          <a
+            href="#reservation"
+            class="mt-4 bg-coral hover:bg-coral-light text-white text-lg font-heading font-semibold px-8 py-3 rounded-full transition-colors"
+            @click.prevent="scrollTo('reservation'); mobileOpen = false"
+          >
+            {{ t('nav.reservation') }}
+          </a>
+        </div>
+      </Transition>
+    </Teleport>
+  </nav>
 </template>
 
-<style scoped>
-.mobile-menu-enter-active,
-.mobile-menu-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { setLanguage } from '@/i18n'
+
+const { t, locale } = useI18n()
+
+const scrolled = ref(false)
+const mobileOpen = ref(false)
+const activeSection = ref('hero')
+const currentLang = computed(() => locale.value)
+const langs = ['fr', 'ar', 'en']
+
+const navLinks = computed(() => [
+  { id: 'hero', label: t('nav.home') },
+  { id: 'menu', label: t('nav.menu') || 'Menu' },
+  { id: 'experience', label: t('nav.experience') },
+  { id: 'gallery', label: t('nav.gallery') },
+  { id: 'reservation', label: t('nav.reservation') },
+  { id: 'contact', label: t('nav.contact') },
+])
+
+function scrollTo(id) {
+  const el = document.getElementById(id)
+  if (el) {
+    el.scrollIntoView({ behavior: 'instant' })
+  }
 }
 
-.mobile-menu-enter-from,
-.mobile-menu-leave-to {
+function switchLang(lang) {
+  setLanguage(lang)
+}
+
+function onScroll() {
+  scrolled.value = window.scrollY > 50
+}
+
+// IntersectionObserver for active section
+let observer = null
+const sectionIds = ['hero', 'about', 'menu', 'experience', 'gallery', 'reservation', 'contact']
+
+function setupObserver() {
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id
+        }
+      }
+    },
+    { rootMargin: '-40% 0px -55% 0px' }
+  )
+  for (const id of sectionIds) {
+    const el = document.getElementById(id)
+    if (el) observer.observe(el)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+  setupObserver()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  if (observer) observer.disconnect()
+})
+</script>
+
+<style scoped>
+.mobile-nav-enter-active,
+.mobile-nav-leave-active {
+  transition: opacity 0.25s ease;
+}
+.mobile-nav-enter-from,
+.mobile-nav-leave-to {
   opacity: 0;
-  transform: translateY(-12px);
 }
 </style>

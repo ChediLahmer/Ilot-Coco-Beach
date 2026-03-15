@@ -1,104 +1,73 @@
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { reviews } from '@/data/mock.js'
-
-gsap.registerPlugin(ScrollTrigger)
-
-const { t } = useI18n()
-
-const cardsContainer = ref(null)
-let ctx
-
-onMounted(() => {
-  ctx = gsap.context(() => {
-    gsap.from('.review-card', {
-      x: 80,
-      opacity: 0,
-      duration: 0.7,
-      stagger: 0.15,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: cardsContainer.value,
-        start: 'top 80%',
-        toggleActions: 'play none none none',
-      },
-    })
-  })
-})
-
-onUnmounted(() => {
-  if (ctx) ctx.revert()
-})
-</script>
-
 <template>
-  <section id="reviews" class="py-20 px-6 md:px-16 bg-sand">
+  <section class="relative bg-white py-20 px-6 md:px-16">
+    <!-- Section editorial number -->
+    <div class="section-number">07</div>
+
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="text-center mb-12">
-        <h2 class="font-display text-ocean text-4xl">
+      <div class="text-center mb-10 gold-accent">
+        <h2 class="font-display text-ocean text-3xl md:text-4xl mb-3">
           {{ t('reviews.title') }}
         </h2>
-        <p class="text-charcoal/60 text-lg mt-3">
+        <p class="font-body text-charcoal/60 text-base md:text-lg max-w-xl mx-auto">
           {{ t('reviews.subtitle') }}
         </p>
       </div>
 
-      <!-- Review Cards — horizontal scroll on desktop, vertical stack on mobile -->
-      <div
-        ref="cardsContainer"
-        class="flex flex-col md:flex-row gap-6 md:overflow-x-auto md:pb-4 reviews-scroll-container"
-      >
+      <!-- Horizontal scroll -->
+      <div class="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 -mx-2 px-2">
         <div
           v-for="review in reviews"
           :key="review.id"
-          class="review-card md:min-w-[320px] md:max-w-[380px] bg-white rounded-2xl p-6 shadow-lg md:flex-shrink-0 border-l-4 border-ocean"
+          class="snap-start shrink-0 w-[320px] md:w-[360px] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
         >
-          <!-- Star Rating -->
-          <div class="flex items-center gap-1 mb-3">
-            <svg
+          <!-- Quote -->
+          <div class="text-gold/20 text-4xl font-display leading-none mb-2">"</div>
+
+          <!-- Stars -->
+          <div class="flex gap-1 mb-3">
+            <span
               v-for="star in 5"
               :key="star"
-              class="w-5 h-5"
-              :class="star <= review.rating ? 'text-coral' : 'text-gray-300'"
-              viewBox="0 0 24 24"
-              :fill="star <= review.rating ? 'currentColor' : 'none'"
-              :stroke="star <= review.rating ? 'none' : 'currentColor'"
-              stroke-width="1.5"
-              xmlns="http://www.w3.org/2000/svg"
+              :class="[
+                'text-lg',
+                star <= review.rating ? 'text-coral' : 'text-charcoal/15',
+              ]"
             >
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
+              ★
+            </span>
           </div>
 
           <!-- Comment -->
-          <div class="relative">
-            <span class="text-4xl text-ocean/20 leading-none font-display absolute -top-2 -left-1">&ldquo;</span>
-            <p class="text-charcoal/80 italic text-sm leading-relaxed pl-5 pt-1">
-              {{ review.comment }}
-            </p>
-          </div>
+          <p class="font-body text-charcoal/70 text-sm leading-relaxed mb-4 line-clamp-4">
+            {{ review.comment }}
+          </p>
 
-          <!-- User Info -->
-          <div class="mt-4 pt-3 border-t border-gray-100">
-            <p class="font-heading font-bold text-charcoal text-sm">
-              {{ review.userName }}
-            </p>
-            <p class="text-xs text-charcoal/40">
-              {{ review.date }}
-            </p>
+          <!-- User info -->
+          <div class="flex items-center justify-between pt-3 border-t border-charcoal/5">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-ocean/10 rounded-full flex items-center justify-center text-xs font-heading font-bold text-ocean">
+                {{ review.userName.charAt(0) }}
+              </div>
+              <span class="font-heading font-semibold text-sm text-charcoal">
+                {{ review.userName }}
+              </span>
+            </div>
+            <span class="font-body text-xs text-charcoal/40">
+              {{ formatDate(review.date) }}
+            </span>
           </div>
         </div>
       </div>
 
-      <!-- CTA Button -->
-      <div class="text-center mt-10">
+      <!-- Write review button -->
+      <div class="text-center mt-8">
         <button
-          class="bg-ocean text-white rounded-full px-6 py-3 font-heading font-semibold transition-transform duration-300 hover:scale-105 cursor-pointer"
+          class="inline-flex items-center gap-2 bg-ocean/10 hover:bg-ocean/20 text-ocean font-heading font-semibold text-sm px-6 py-2.5 rounded-full transition-colors duration-200"
         >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
           {{ t('reviews.writeReview') }}
         </button>
       </div>
@@ -106,12 +75,14 @@ onUnmounted(() => {
   </section>
 </template>
 
-<style scoped>
-.reviews-scroll-container {
-  scrollbar-width: none;
-}
+<script setup>
+import { useI18n } from 'vue-i18n'
+import { reviews } from '@/data/mock'
 
-.reviews-scroll-container::-webkit-scrollbar {
-  display: none;
+const { t } = useI18n()
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
-</style>
+</script>

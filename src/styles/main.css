@@ -13,6 +13,8 @@
   --color-sand-dark: #F0E6D3;
   --color-charcoal: #1C1917;
   --color-leaf: #22C55E;
+  --color-gold: #C4A265;
+  --color-gold-light: #D4B884;
 
   --font-display: 'Pacifico', cursive;
   --font-heading: 'Plus Jakarta Sans', sans-serif;
@@ -21,7 +23,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 html[dir="rtl"] body {
@@ -43,32 +45,89 @@ body {
   font-family: var(--font-heading);
 }
 
-/* Wave separator */
-.wave-separator {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  line-height: 0;
+/* ========================================
+   COASTAL LUXE — Signature Elements
+   ======================================== */
+
+/* Text shimmer — gold/cyan gradient sweep on text */
+.text-shimmer {
+  background: linear-gradient(
+    120deg,
+    var(--color-ocean-light) 0%,
+    var(--color-gold) 30%,
+    var(--color-gold-light) 50%,
+    var(--color-ocean-light) 70%,
+    var(--color-gold) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 3s ease-in-out infinite;
 }
 
-.wave-separator svg {
+@keyframes shimmer-sweep {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Gold accent line under headings via ::after */
+.gold-accent {
   position: relative;
+  display: inline-block;
+}
+
+.gold-accent::after {
+  content: '';
   display: block;
-  width: calc(100% + 1.3px);
-  height: 60px;
+  width: 60px;
+  height: 3px;
+  margin: 12px auto 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
 }
 
-/* Smooth reveal animation base */
-.reveal {
-  opacity: 0;
-  transform: translateY(30px);
+/* Section editorial number — huge semi-transparent */
+.section-number {
+  position: absolute;
+  font-family: var(--font-heading);
+  font-size: 8rem;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.04;
+  pointer-events: none;
+  user-select: none;
 }
 
-.reveal.active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+/* Scroll progress bar — fixed below navbar */
+.scroll-progress {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  height: 3px;
+  z-index: 49;
+  background: linear-gradient(90deg, var(--color-ocean), var(--color-gold), var(--color-coral));
+  transition: width 0.05s linear;
 }
+
+/* Dashed ring rotation */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.dashed-ring {
+  animation: spin-slow 12s linear infinite;
+}
+
+/* Dark section background */
+.section-dark {
+  background: linear-gradient(135deg, #0f1923 0%, #1a1a2e 50%, #0f1923 100%);
+}
+
+/* ========================================
+   Utilities — kept from original
+   ======================================== */
 
 /* Ken Burns effect */
 @keyframes kenBurns {

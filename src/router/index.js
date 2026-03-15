@@ -3,19 +3,18 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'home',
     component: () => import('@/views/HomeView.vue'),
   },
   {
     path: '/admin/login',
-    name: 'AdminLogin',
+    name: 'admin-login',
     component: () => import('@/views/AdminLogin.vue'),
   },
   {
     path: '/admin',
-    name: 'AdminDashboard',
+    name: 'admin-dashboard',
     component: () => import('@/views/AdminDashboard.vue'),
-    meta: { requiresAuth: true },
   },
 ]
 
@@ -24,9 +23,12 @@ const router = createRouter({
   routes,
   scrollBehavior(to) {
     if (to.hash) {
-      return { el: to.hash, behavior: 'smooth' }
+      return {
+        el: to.hash,
+        behavior: 'instant',
+      }
     }
-    return { top: 0 }
+    return { top: 0, behavior: 'instant' }
   },
 })
 

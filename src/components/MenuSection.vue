@@ -1,170 +1,119 @@
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { menuCategories } from '@/data/mock.js'
-
-gsap.registerPlugin(ScrollTrigger)
-
-const { t, locale } = useI18n()
-
-const selectedMenu = ref('standard')
-const menuGrid = ref(null)
-
-let ctx
-
-onMounted(() => {
-  ctx = gsap.context(() => {
-    const cards = menuGrid.value?.querySelectorAll('.menu-item-card')
-    if (cards?.length) {
-      gsap.from(cards, {
-        y: 40,
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: menuGrid.value,
-          start: 'top 85%',
-          once: true,
-        },
-      })
-    }
-  })
-})
-
-onUnmounted(() => {
-  if (ctx) ctx.revert()
-})
-
-function getPrice(item) {
-  const price = selectedMenu.value === 'standard' ? item.priceStandard : item.priceExtra
-  return `${price} DT`
-}
-</script>
-
 <template>
-  <section id="menu" class="py-20 px-6 md:px-16 bg-white">
-    <div class="max-w-7xl mx-auto">
+  <section id="menu" class="relative bg-white py-20 px-6 md:px-16">
+    <!-- Section editorial number -->
+    <div class="section-number">02</div>
+
+    <div class="max-w-6xl mx-auto">
       <!-- Header -->
-      <div class="text-center mb-10">
-        <h2 class="font-display text-ocean text-4xl mb-3">
+      <div class="text-center mb-10 gold-accent">
+        <h2 class="font-display text-ocean text-3xl md:text-4xl mb-3">
           {{ t('menu.title') }}
         </h2>
-        <p class="font-heading text-charcoal/60 text-base md:text-lg">
+        <p class="font-body text-charcoal/60 text-base md:text-lg max-w-xl mx-auto">
           {{ t('menu.subtitle') }}
         </p>
       </div>
 
-      <!-- Toggle Switch -->
-      <div class="flex justify-center mb-12">
-        <div class="inline-flex rounded-full overflow-hidden border border-ocean/20 p-1 bg-sand">
+      <!-- Standard / Extra toggle -->
+      <div class="flex justify-center mb-8">
+        <div class="inline-flex bg-sand rounded-full p-1">
           <button
-            class="px-6 py-2 rounded-full text-sm font-heading font-semibold transition-all duration-300 cursor-pointer border-none"
-            :class="selectedMenu === 'standard'
-              ? 'bg-ocean text-white shadow-md'
-              : 'bg-sand text-charcoal hover:bg-sand-dark'"
-            @click="selectedMenu = 'standard'"
+            v-for="mode in ['standard', 'extra']"
+            :key="mode"
+            :class="[
+              'px-6 py-2 rounded-full text-sm font-heading font-semibold transition-all duration-200',
+              priceMode === mode
+                ? 'bg-ocean text-white shadow-md'
+                : 'text-charcoal/60 hover:text-charcoal',
+            ]"
+            @click="priceMode = mode"
           >
-            {{ t('menu.standard') }}
-          </button>
-          <button
-            class="px-6 py-2 rounded-full text-sm font-heading font-semibold transition-all duration-300 cursor-pointer border-none"
-            :class="selectedMenu === 'extra'
-              ? 'bg-ocean text-white shadow-md'
-              : 'bg-sand text-charcoal hover:bg-sand-dark'"
-            @click="selectedMenu = 'extra'"
-          >
-            {{ t('menu.extra') }}
+            {{ t(`menu.${mode}`) }}
           </button>
         </div>
       </div>
 
-      <!-- Menu Categories -->
-      <div ref="menuGrid" class="space-y-12">
-        <div v-for="category in menuCategories" :key="category.id">
-          <!-- Category heading with decorative line -->
-          <div class="flex items-center gap-4 mb-6">
-            <div class="h-px flex-1 bg-gradient-to-r from-transparent to-driftwood/40"></div>
-            <h3 class="font-heading font-bold text-xl text-ocean whitespace-nowrap">
-              {{ category.name[locale] }}
-            </h3>
-            <div class="h-px flex-1 bg-gradient-to-l from-transparent to-driftwood/40"></div>
+      <!-- Category tabs -->
+      <div class="flex flex-wrap justify-center gap-2 mb-8">
+        <button
+          v-for="cat in menuCategories"
+          :key="cat.id"
+          :class="[
+            'px-4 py-2 rounded-full text-sm font-heading font-medium transition-all duration-200 border',
+            activeCategory === cat.id
+              ? 'bg-ocean text-white border-ocean'
+              : 'bg-white text-charcoal/70 border-charcoal/15 hover:border-ocean hover:text-ocean',
+          ]"
+          @click="activeCategory = cat.id"
+        >
+          {{ cat.name[locale] || cat.name.fr }}
+        </button>
+      </div>
+
+      <!-- Items grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          v-for="item in activeItems"
+          :key="item.id"
+          :class="[
+            'flex gap-4 p-4 rounded-2xl transition-all duration-200',
+            item.available
+              ? 'bg-sand/50 hover:bg-sand hover:shadow-sm'
+              : 'bg-gray-100/50 opacity-60',
+          ]"
+        >
+          <!-- Thumbnail -->
+          <div v-if="item.image" class="shrink-0 w-20 h-20 rounded-xl overflow-hidden">
+            <img
+              :src="item.image"
+              :alt="item.name[locale] || item.name.fr"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div v-else class="shrink-0 w-20 h-20 rounded-xl bg-ocean/5 flex items-center justify-center text-2xl">
+            🍽️
           </div>
 
-          <!-- Items Grid -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div
-              v-for="item in category.items"
-              :key="item.id"
-              class="menu-item-card relative bg-sand/50 rounded-2xl p-4 flex items-start gap-4 transition-shadow duration-300 hover:shadow-md"
-              :class="{ 'opacity-50': !item.available }"
-            >
-              <!-- Unavailable badge -->
-              <div
-                v-if="!item.available"
-                class="absolute top-3 right-3 z-10 bg-charcoal/80 text-white text-xs font-heading font-semibold px-3 py-1 rounded-full"
-              >
-                {{ t('menu.unavailable') }}
-              </div>
-
-              <!-- Thumbnail -->
-              <img
-                v-if="item.image"
-                :src="item.image"
-                :alt="item.name[locale]"
-                class="w-20 h-20 rounded-xl object-cover flex-shrink-0"
-                loading="lazy"
-              />
-
-              <!-- Content + Price -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-baseline gap-2">
-                  <!-- Name -->
-                  <span class="font-heading font-bold text-charcoal whitespace-nowrap">
-                    {{ item.name[locale] }}
-                  </span>
-                  <!-- Dotted line -->
-                  <span class="flex-1 border-b-2 border-dotted border-driftwood/40 translate-y-[-4px]"></span>
-                  <!-- Price -->
-                  <span class="font-heading font-bold text-ocean whitespace-nowrap">
-                    {{ getPrice(item) }}
-                  </span>
-                </div>
-                <p class="text-sm text-charcoal/60 mt-1 leading-relaxed">
-                  {{ item.desc[locale] }}
-                </p>
-              </div>
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-heading font-bold text-charcoal text-sm leading-tight">
+                {{ item.name[locale] || item.name.fr }}
+              </h3>
+              <span class="shrink-0 font-heading font-bold text-ocean text-sm">
+                {{ priceMode === 'standard' ? item.priceStandard : item.priceExtra }} DT
+              </span>
             </div>
+            <!-- Dotted separator -->
+            <div class="border-b border-dotted border-charcoal/20 my-1.5" />
+            <p class="font-body text-charcoal/50 text-xs leading-relaxed line-clamp-2">
+              {{ item.desc[locale] || item.desc.fr }}
+            </p>
+            <span
+              v-if="!item.available"
+              class="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-heading font-bold rounded-full"
+            >
+              {{ t('menu.unavailable') }}
+            </span>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Wave SVG separator -->
-    <div class="mt-20 -mb-px leading-[0]">
-      <svg
-        viewBox="0 0 1440 120"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="none"
-        class="w-full h-[60px] md:h-[80px]"
-      >
-        <path
-          d="M0,64 C240,100 480,20 720,64 C960,108 1200,28 1440,64 L1440,120 L0,120 Z"
-          class="fill-sand"
-        />
-      </svg>
     </div>
   </section>
 </template>
 
-<style scoped>
-.menu-item-card {
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-}
+<script setup>
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { menuCategories } from '@/data/mock'
 
-.menu-item-card:hover {
-  transform: translateY(-2px);
-}
-</style>
+const { t, locale } = useI18n()
+
+const priceMode = ref('standard')
+const activeCategory = ref(menuCategories[0]?.id || 1)
+
+const activeItems = computed(() => {
+  const cat = menuCategories.find((c) => c.id === activeCategory.value)
+  return cat ? cat.items : []
+})
+</script>
