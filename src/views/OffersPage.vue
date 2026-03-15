@@ -1,31 +1,40 @@
 <template>
-  <section
-    v-if="activeSales.length > 0"
-    class="relative py-20 px-6 md:px-16"
-    style="background: linear-gradient(135deg, var(--color-ocean-dark) 0%, var(--color-charcoal) 100%)"
-  >
-    <div class="max-w-7xl mx-auto">
-      <!-- Section header -->
-      <div class="text-center mb-14">
-        <h2 class="font-display text-white text-4xl md:text-5xl tracking-wide">
+  <div class="min-h-screen bg-[#FAF7F2]">
+    <NavBar />
+
+    <!-- Page header -->
+    <div class="pt-[72px]">
+      <div class="max-w-7xl mx-auto px-6 pt-12 pb-2">
+        <router-link
+          to="/"
+          class="inline-flex items-center gap-2 text-charcoal/40 hover:text-charcoal font-heading text-sm transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+          </svg>
+          {{ t('gallery.backHome') || 'Retour à l\u2019accueil' }}
+        </router-link>
+      </div>
+
+      <div class="text-center py-10">
+        <h1 class="font-display text-charcoal text-4xl md:text-5xl tracking-wide">
           {{ t('flash.title') }}
-        </h2>
+        </h1>
         <div class="w-12 h-[2px] bg-gold mx-auto mt-5 mb-3" />
-        <p class="font-body text-white/50 text-base md:text-lg max-w-xl mx-auto">
+        <p class="font-body text-charcoal/50 text-base md:text-lg max-w-xl mx-auto">
           {{ t('flash.subtitle') || '' }}
         </p>
       </div>
+    </div>
 
-      <!-- Mobile: horizontal scroll | Desktop: grid -->
-      <div
-        ref="cardsContainer"
-        class="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible md:pb-0"
-      >
+    <!-- Sales grid -->
+    <div class="max-w-7xl mx-auto px-6 pb-20">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
-          v-for="sale in displayedSales"
+          v-for="sale in activeSales"
           :key="sale.id"
-          class="card-item relative flex-shrink-0 snap-center min-w-[280px] md:min-w-0 rounded-2xl overflow-hidden group"
-          style="aspect-ratio: 4 / 3"
+          class="relative rounded-2xl overflow-hidden group"
+          style="aspect-ratio: 3 / 4"
         >
           <!-- Full card image -->
           <img
@@ -34,10 +43,7 @@
             :alt="sale.title[locale] || sale.title.fr"
             class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div
-            v-else
-            class="absolute inset-0 bg-charcoal"
-          />
+          <div v-else class="absolute inset-0 bg-charcoal" />
 
           <!-- Dark gradient overlay -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
@@ -71,10 +77,7 @@
                 </span>
               </div>
             </div>
-            <p
-              v-else
-              class="font-heading font-semibold text-coral-light text-sm"
-            >
+            <p v-else class="font-heading font-semibold text-coral-light text-sm">
               {{ t('flash.expired') }}
             </p>
 
@@ -90,43 +93,27 @@
           </div>
         </div>
       </div>
-
-      <!-- See all offers -->
-      <div v-if="hasMore" class="text-center mt-10">
-        <router-link
-          to="/offers"
-          class="inline-flex items-center gap-2 font-heading text-sm text-white/70 hover:text-white transition-colors duration-200"
-        >
-          {{ t('flash.seeAll') }}
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
-        </router-link>
-        <p class="font-body text-white/40 text-xs mt-1">
-          +{{ activeSales.length - 3 }} {{ t('flash.moreOffers') }}
-        </p>
-      </div>
     </div>
-  </section>
+
+    <FooterSection />
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useRouter } from 'vue-router'
+import NavBar from '@/components/NavBar.vue'
+import FooterSection from '@/components/FooterSection.vue'
 import { flashSales } from '@/data/mock'
 
-gsap.registerPlugin(ScrollTrigger)
-
 const { t, locale } = useI18n()
-const cardsContainer = ref(null)
+const router = useRouter()
+
 const now = ref(Date.now())
 let countdownTimer = null
 
 const activeSales = computed(() => flashSales.filter(s => s.isActive))
-const displayedSales = computed(() => activeSales.value.slice(0, 3))
-const hasMore = computed(() => activeSales.value.length > 3)
 
 function isSaleExpired(sale) {
   return now.value >= new Date(sale.endsAt).getTime()
@@ -144,41 +131,14 @@ function getSaleCountdown(sale) {
 }
 
 function scrollToReservation() {
-  const el = document.getElementById('reservation')
-  if (el) el.scrollIntoView({ behavior: 'instant' })
+  router.push('/#reservation')
 }
 
 onMounted(() => {
   countdownTimer = setInterval(() => { now.value = Date.now() }, 1000)
-
-  if (cardsContainer.value) {
-    const cards = cardsContainer.value.querySelectorAll('.card-item')
-    gsap.from(cards, {
-      y: 30,
-      opacity: 0,
-      duration: 0.7,
-      stagger: 0.15,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: cardsContainer.value,
-        start: 'top 85%',
-        toggleActions: 'play none none none',
-      },
-    })
-  }
 })
 
 onUnmounted(() => {
   if (countdownTimer) clearInterval(countdownTimer)
 })
 </script>
-
-<style scoped>
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-</style>

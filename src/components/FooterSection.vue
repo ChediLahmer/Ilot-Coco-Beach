@@ -1,5 +1,5 @@
 <template>
-  <footer class="relative bg-midnight text-white pt-16 pb-8">
+  <footer class="relative bg-ocean-dark text-white pt-16 pb-8">
     <!-- Top gold separator -->
     <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
 

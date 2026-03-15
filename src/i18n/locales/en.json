@@ -119,7 +119,9 @@
     "minutes": "Min",
     "seconds": "Sec",
     "expired": "This offer has expired",
-    "bookNow": "Grab the deal"
+    "bookNow": "Grab the deal",
+    "seeAll": "See all offers",
+    "moreOffers": "more offers available"
   },
   "reviews": {
     "title": "Guest Reviews",

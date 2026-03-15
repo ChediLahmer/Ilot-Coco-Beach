@@ -7,7 +7,7 @@
         alt=""
         class="w-full h-full object-cover"
       />
-      <div class="absolute inset-0 bg-[#0D2B35]/85 backdrop-blur-sm" />
+      <div class="absolute inset-0 bg-charcoal/80 backdrop-blur-sm" />
     </div>
 
     <div class="relative z-10 max-w-3xl mx-auto">

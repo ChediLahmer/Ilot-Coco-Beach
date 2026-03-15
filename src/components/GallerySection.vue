@@ -1,7 +1,8 @@
 <template>
   <section
     id="gallery"
-    class="relative py-20 px-6 md:px-16 bg-deep-warm"
+    class="relative py-20 px-6 md:px-16"
+    style="background: linear-gradient(135deg, #0f1923 0%, #1a2a36 50%, #0a1a24 100%)"
   >
     <div class="max-w-7xl mx-auto">
       <!-- Header -->

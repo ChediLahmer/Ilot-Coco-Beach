@@ -86,7 +86,9 @@
     "minutes": "Min",
     "seconds": "Sec",
     "expired": "Cette offre a expire",
-    "bookNow": "Profiter de l'offre"
+    "bookNow": "Profiter de l'offre",
+    "seeAll": "Voir toutes les offres",
+    "moreOffers": "offres disponibles"
   },
   "reviews": {
     "title": "Avis de nos clients",

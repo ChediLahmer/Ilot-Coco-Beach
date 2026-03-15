@@ -12,9 +12,6 @@
   --color-sand: #FAF7F2;
   --color-sand-dark: #EDE4D6;
   --color-charcoal: #3E4347;
-  --color-deep: #0D2B35;
-  --color-midnight: #091E27;
-  --color-deep-warm: #14363F;
   --color-leaf: #22C55E;
   --color-gold: #D4A847;
   --color-gold-light: #E5C06A;
@@ -59,6 +56,33 @@ body {
 
 .font-brand {
   font-family: var(--font-brand);
+}
+
+/* Text shimmer — gold/cyan gradient sweep */
+.text-shimmer {
+  background: linear-gradient(
+    120deg,
+    var(--color-ocean-light) 0%,
+    var(--color-gold) 30%,
+    var(--color-gold-light) 50%,
+    var(--color-ocean-light) 70%,
+    var(--color-gold) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 3s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Dark section background */
+.section-dark {
+  background: linear-gradient(135deg, #0f1923 0%, #1a1a2e 50%, #0f1923 100%);
 }
 
 /* ========================================
