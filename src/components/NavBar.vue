@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-4 md:px-8 bg-white backdrop-blur-sm border-b border-charcoal/5"
+    class="fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-4 md:px-8 bg-white/90 backdrop-blur-md border-b border-charcoal/5"
   >
     <!-- Logo -->
     <a
@@ -8,8 +8,8 @@
       class="flex flex-col items-start leading-none shrink-0"
       @click.prevent="scrollTo('hero')"
     >
-      <span class="font-brand font-black text-2xl text-charcoal tracking-tight">ÎLOT</span>
-      <span class="font-body text-[10px] text-charcoal/40 uppercase tracking-[0.2em]">Coco Beach</span>
+      <span class="font-brand font-black text-2xl text-blue-900 tracking-tight">ÎLOT</span>
+      <span class="font-body text-[10px] text-blue-900/60 uppercase tracking-[0.2em]">Coco Beach</span>
     </a>
 
     <!-- Desktop links -->
@@ -19,8 +19,8 @@
         :key="link.id"
         :href="'#' + link.id"
         :class="[
-          'text-sm font-heading font-semibold transition-colors duration-200 hover:text-charcoal',
-          activeSection === link.id ? 'text-charcoal' : 'text-charcoal/60',
+          'text-sm font-heading font-semibold transition-colors duration-200 hover:text-blue-900',
+          activeSection === link.id ? 'text-blue-900' : 'text-blue-900/70',
         ]"
         @click.prevent="scrollTo(link.id)"
       >
@@ -38,8 +38,8 @@
           :class="[
             'px-2 py-1 text-xs font-heading transition-colors duration-200',
             currentLang === lang
-              ? 'font-bold text-charcoal'
-              : 'text-charcoal/40 hover:text-charcoal/60',
+              ? 'font-bold text-blue-900'
+              : 'text-blue-900/60 hover:text-blue-900/80',
           ]"
           @click="switchLang(lang)"
         >
@@ -49,7 +49,7 @@
       <!-- Reservation button -->
       <a
         href="#reservation"
-        class="bg-coral hover:bg-coral/90 text-white text-sm font-heading font-medium px-5 py-2 rounded-full transition-colors duration-200"
+        class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-heading font-medium px-5 py-2 rounded-full transition-colors duration-200 shadow-md"
         @click.prevent="scrollTo('reservation')"
       >
         {{ t('nav.reservation') }}
@@ -62,9 +62,9 @@
       @click="mobileOpen = true"
       :aria-label="'Open menu'"
     >
-      <span class="w-6 h-0.5 rounded bg-charcoal" />
-      <span class="w-6 h-0.5 rounded bg-charcoal" />
-      <span class="w-4 h-0.5 rounded bg-charcoal" />
+      <span class="w-6 h-0.5 rounded bg-blue-900" />
+      <span class="w-6 h-0.5 rounded bg-blue-900" />
+      <span class="w-4 h-0.5 rounded bg-blue-900" />
     </button>
 
     <!-- Mobile overlay -->
@@ -75,7 +75,7 @@
           class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center gap-6"
         >
           <button
-            class="absolute top-5 right-5 rtl:right-auto rtl:left-5 text-charcoal text-3xl leading-none"
+            class="absolute top-5 right-5 rtl:right-auto rtl:left-5 text-blue-900 text-3xl leading-none"
             @click="mobileOpen = false"
           >
             &times;
@@ -83,15 +83,15 @@
 
           <!-- Mobile logo -->
           <div class="absolute top-6 left-0 right-0 text-center">
-            <span class="font-brand font-black text-2xl text-charcoal tracking-tight">ÎLOT</span>
-            <p class="font-body text-[10px] text-charcoal/40 uppercase tracking-[0.2em]">Coco Beach</p>
+            <span class="font-brand font-black text-2xl text-blue-900 tracking-tight">ÎLOT</span>
+            <p class="font-body text-[10px] text-blue-900/60 uppercase tracking-[0.2em]">Coco Beach</p>
           </div>
 
           <a
             v-for="link in navLinks"
             :key="link.id"
             :href="'#' + link.id"
-            class="text-charcoal text-2xl font-heading font-semibold hover:text-charcoal/60 transition-colors"
+            class="text-blue-900 text-2xl font-heading font-semibold hover:text-blue-900/70 transition-colors"
             @click.prevent="scrollTo(link.id); mobileOpen = false"
           >
             {{ link.label }}
@@ -103,8 +103,8 @@
               :class="[
                 'px-4 py-2 text-sm font-heading transition-colors',
                 currentLang === lang
-                  ? 'font-bold text-charcoal'
-                  : 'text-charcoal/40 hover:text-charcoal/60',
+                  ? 'font-bold text-blue-900'
+                  : 'text-blue-900/60 hover:text-blue-900/80',
               ]"
               @click="switchLang(lang)"
             >
@@ -114,7 +114,7 @@
           <!-- Mobile Reservation button -->
           <a
             href="#reservation"
-            class="mt-4 bg-coral hover:bg-coral/90 text-white text-lg font-heading font-semibold px-8 py-3 rounded-full transition-colors"
+            class="mt-4 bg-blue-600 hover:bg-blue-500 text-white text-lg font-heading font-semibold px-8 py-3 rounded-full transition-colors shadow-lg"
             @click.prevent="scrollTo('reservation'); mobileOpen = false"
           >
             {{ t('nav.reservation') }}

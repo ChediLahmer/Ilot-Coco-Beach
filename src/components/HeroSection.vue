@@ -19,7 +19,7 @@
     </video>
 
     <!-- Cinematic gradient overlay -->
-    <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+    <div class="absolute inset-0 bg-gradient-to-b from-blue-900/40 via-blue-800/20 to-amber-900/40 mix-blend-multiply" />
 
     <!-- Film grain noise overlay -->
     <div class="hero-grain absolute inset-0 pointer-events-none" />
@@ -37,7 +37,7 @@
       <!-- Brand -->
       <h1
         ref="brandEl"
-        class="font-brand font-black text-7xl md:text-[9rem] text-white leading-none mb-3"
+        class="font-brand font-black text-7xl md:text-[9rem] text-white leading-none mb-3 drop-shadow-md"
       >
         ÎLOT
       </h1>
@@ -65,7 +65,7 @@
       <a
         ref="ctaEl"
         href="#experience"
-        class="border border-white/30 text-white hover:bg-white/10 rounded-none px-8 py-3 text-xs uppercase tracking-[0.2em] font-heading font-medium transition-all duration-300"
+        class="bg-blue-600 hover:bg-blue-500 text-white rounded-full px-8 py-3 text-xs uppercase tracking-[0.2em] font-heading font-medium transition-colors duration-300 shadow-lg"
         @click.prevent="scrollToExperience"
       >
         {{ t('hero.cta') }}

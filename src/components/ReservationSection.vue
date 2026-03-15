@@ -7,69 +7,69 @@
         alt=""
         class="w-full h-full object-cover"
       />
-      <div class="absolute inset-0 bg-charcoal/80 backdrop-blur-sm" />
+      <div class="absolute inset-0 bg-white/90 backdrop-blur-sm" />
     </div>
 
     <div class="relative z-10 max-w-3xl mx-auto">
       <!-- Header -->
       <div class="text-center mb-12">
-        <h2 class="font-display text-white text-4xl md:text-5xl tracking-wide">
+        <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
           {{ t('reservation.title') }}
         </h2>
-        <div class="w-10 h-[2px] bg-gold/60 mx-auto mt-4 mb-2" />
-        <p class="font-body text-white/50 text-base md:text-lg max-w-xl mx-auto">
+        <div class="w-10 h-[2px] bg-ocean/60 mx-auto mt-4 mb-2" />
+        <p class="font-body text-charcoal/70 text-base md:text-lg max-w-xl mx-auto">
           {{ t('reservation.subtitle') }}
         </p>
       </div>
 
       <!-- Form -->
-      <div class="bg-white/5 backdrop-blur-md rounded-2xl p-10 md:p-14 border border-white/5">
+      <div class="bg-white rounded-2xl shadow-xl p-10 md:p-14 border border-gray-100">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-6">
           <!-- Name -->
           <div>
-            <label class="block text-white/50 text-xs font-heading uppercase tracking-wider mb-3">
+            <label class="block text-charcoal text-xs font-heading uppercase tracking-wider mb-3">
               {{ t('reservation.name') }}
             </label>
             <input
               v-model="form.name"
               type="text"
               :placeholder="t('reservation.namePlaceholder')"
-              class="w-full bg-transparent border-b border-white/25 text-white py-2 text-sm placeholder-white/20 font-body focus:outline-none focus:border-ocean-light transition-colors"
+              class="w-full bg-transparent border-b border-gray-300 text-charcoal py-2 text-sm placeholder-gray-400 font-body focus:outline-none focus:border-ocean transition-colors"
             />
           </div>
           <!-- Phone -->
           <div>
-            <label class="block text-white/50 text-xs font-heading uppercase tracking-wider mb-3">
+            <label class="block text-charcoal text-xs font-heading uppercase tracking-wider mb-3">
               {{ t('reservation.phone') }}
             </label>
             <input
               v-model="form.phone"
               type="tel"
               :placeholder="t('reservation.phonePlaceholder')"
-              class="w-full bg-transparent border-b border-white/25 text-white py-2 text-sm placeholder-white/20 font-body focus:outline-none focus:border-ocean-light transition-colors"
+              class="w-full bg-transparent border-b border-gray-300 text-charcoal py-2 text-sm placeholder-gray-400 font-body focus:outline-none focus:border-ocean transition-colors"
             />
           </div>
           <!-- Date -->
           <div>
-            <label class="block text-white/50 text-xs font-heading uppercase tracking-wider mb-3">
+            <label class="block text-charcoal text-xs font-heading uppercase tracking-wider mb-3">
               {{ t('reservation.date') }}
             </label>
             <input
               v-model="form.date"
               type="date"
-              class="w-full bg-transparent border-b border-white/25 text-white py-2 text-sm font-body focus:outline-none focus:border-ocean-light transition-colors"
+              class="w-full bg-transparent border-b border-gray-300 text-charcoal py-2 text-sm font-body focus:outline-none focus:border-ocean transition-colors"
             />
           </div>
           <!-- Guests -->
           <div>
-            <label class="block text-white/50 text-xs font-heading uppercase tracking-wider mb-3">
+            <label class="block text-charcoal text-xs font-heading uppercase tracking-wider mb-3">
               {{ t('reservation.guests') }}
             </label>
             <select
               v-model="form.guests"
-              class="w-full bg-transparent border-b border-white/25 text-white py-2 text-sm font-body focus:outline-none focus:border-ocean-light transition-colors appearance-none"
+              class="w-full bg-transparent border-b border-gray-300 text-charcoal py-2 text-sm font-body focus:outline-none focus:border-ocean transition-colors appearance-none"
             >
-              <option value="" disabled class="text-charcoal">{{ t('reservation.guestOptions.select') }}</option>
+              <option value="" disabled class="text-gray-400">{{ t('reservation.guestOptions.select') }}</option>
               <option value="1-2" class="text-charcoal">{{ t('reservation.guestOptions.1-2') }}</option>
               <option value="3-5" class="text-charcoal">{{ t('reservation.guestOptions.3-5') }}</option>
               <option value="6-10" class="text-charcoal">{{ t('reservation.guestOptions.6-10') }}</option>
@@ -80,32 +80,32 @@
 
         <!-- Message -->
         <div class="mb-6">
-          <label class="block text-white/50 text-xs font-heading uppercase tracking-wider mb-3">
+          <label class="block text-charcoal text-xs font-heading uppercase tracking-wider mb-3">
             {{ t('reservation.message') }}
           </label>
           <textarea
             v-model="form.message"
             rows="3"
             :placeholder="t('reservation.messagePlaceholder')"
-            class="w-full bg-transparent border-b border-white/25 text-white py-2 text-sm placeholder-white/20 font-body focus:outline-none focus:border-ocean-light transition-colors resize-none"
+            class="w-full bg-transparent border-b border-gray-300 text-charcoal py-2 text-sm placeholder-gray-400 font-body focus:outline-none focus:border-ocean transition-colors resize-none"
           />
         </div>
 
         <!-- Voucher code -->
         <div class="mb-10">
-          <label class="block text-white/50 text-xs font-heading uppercase tracking-wider mb-3">
+          <label class="block text-charcoal text-xs font-heading uppercase tracking-wider mb-3">
             {{ t('reservation.voucherCode') }}
           </label>
           <input
             v-model="form.voucher"
             type="text"
             :placeholder="t('reservation.voucherPlaceholder')"
-            class="w-full md:w-1/2 bg-transparent border-b border-white/25 text-white py-2 text-sm placeholder-white/20 font-body focus:outline-none focus:border-ocean-light transition-colors uppercase tracking-wider"
+            class="w-full md:w-1/2 bg-transparent border-b border-gray-300 text-charcoal py-2 text-sm placeholder-gray-400 font-body focus:outline-none focus:border-ocean transition-colors uppercase tracking-wider"
           />
         </div>
 
         <!-- Contact label -->
-        <p class="text-white/30 text-xs uppercase tracking-widest mb-4 text-center font-heading">
+        <p class="text-charcoal/50 text-xs uppercase tracking-widest mb-4 text-center font-heading">
           Contactez-nous via
         </p>
 
@@ -148,7 +148,7 @@
         <div class="text-center mt-5">
           <a
             :href="'tel:' + config.phone"
-            class="text-white/30 text-sm font-body hover:text-white/50 transition-colors duration-200"
+            class="text-charcoal/60 text-sm font-body hover:text-charcoal transition-colors duration-200"
           >
             {{ t('reservation.call') }} {{ config.phone }}
           </a>

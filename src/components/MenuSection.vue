@@ -1,37 +1,37 @@
 <template>
-  <section id="menu" class="relative bg-white py-24 md:py-32 px-6 md:px-16">
-    <div class="max-w-6xl mx-auto">
+  <section id="menu" class="relative bg-sand/30 py-24 md:py-32 px-6 md:px-16">
+    <div class="max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="text-center mb-16">
+      <div class="text-center mb-20">
         <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
           {{ t('menu.title') }}
         </h2>
-        <div class="w-10 h-[1px] bg-gold/60 mx-auto mt-4 mb-2" />
-        <p class="font-body text-charcoal/50 text-sm md:text-base max-w-xl mx-auto">
+        <div class="w-12 h-[2px] bg-gold/60 mx-auto mt-6 mb-4" />
+        <p class="font-body text-charcoal/60 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
           {{ t('menu.subtitle') }}
         </p>
       </div>
 
       <!-- Standard / Extra toggle -->
-      <div class="flex justify-center items-center gap-3 mb-10">
+      <div class="flex justify-center items-center gap-4 mb-12">
         <button
           :class="[
-            'font-heading text-sm transition-colors duration-200',
+            'font-heading text-sm md:text-base uppercase tracking-wider transition-colors duration-300',
             priceMode === 'standard'
-              ? 'font-bold text-charcoal'
-              : 'text-charcoal/40 hover:text-charcoal/60',
+              ? 'font-bold text-ocean'
+              : 'text-charcoal/40 hover:text-charcoal/70',
           ]"
           @click="priceMode = 'standard'"
         >
           {{ t('menu.standard') }}
         </button>
-        <span class="text-charcoal/20 text-sm select-none">|</span>
+        <span class="text-charcoal/20 text-sm md:text-base select-none">|</span>
         <button
           :class="[
-            'font-heading text-sm transition-colors duration-200',
+            'font-heading text-sm md:text-base uppercase tracking-wider transition-colors duration-300',
             priceMode === 'extra'
-              ? 'font-bold text-charcoal'
-              : 'text-charcoal/40 hover:text-charcoal/60',
+              ? 'font-bold text-ocean'
+              : 'text-charcoal/40 hover:text-charcoal/70',
           ]"
           @click="priceMode = 'extra'"
         >
@@ -40,22 +40,22 @@
       </div>
 
       <!-- Category tabs -->
-      <div class="flex flex-wrap justify-center gap-6 mb-10">
+      <div class="flex flex-wrap justify-center gap-8 mb-16">
         <button
           v-for="cat in menuCategories"
           :key="cat.id"
           :class="[
-            'relative pb-2 font-heading text-sm transition-all duration-200',
+            'relative pb-2 font-heading text-sm md:text-base tracking-wide transition-all duration-300',
             activeCategory === cat.id
-              ? 'text-charcoal font-semibold'
-              : 'text-charcoal/40 hover:text-charcoal/60',
+              ? 'text-ocean font-semibold'
+              : 'text-charcoal/50 hover:text-charcoal/80',
           ]"
           @click="activeCategory = cat.id"
         >
           {{ cat.name[locale] || cat.name.fr }}
           <span
             :class="[
-              'absolute bottom-0 left-0 h-[2px] bg-charcoal transition-all duration-300 ease-out',
+              'absolute bottom-0 left-0 h-[2px] bg-ocean transition-all duration-300 ease-out',
               activeCategory === cat.id ? 'w-full' : 'w-0',
             ]"
           />
@@ -72,10 +72,10 @@
         <!-- Prev arrow -->
         <button
           v-if="totalPages > 1"
-          class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 z-10 w-9 h-9 flex items-center justify-center rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-charcoal hover:border-charcoal/30 transition-all duration-200"
+          class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-8 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-ocean hover:border-ocean/30 shadow-sm hover:shadow-md transition-all duration-300"
           @click="prevPage"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -84,41 +84,41 @@
         <Transition name="menu-fade" mode="out-in">
           <div
             :key="currentPage"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             <div
               v-for="item in pageItems"
               :key="item.id"
-              class="group bg-sand/50 rounded-xl p-4"
+              class="group bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full"
             >
               <!-- Image -->
-              <div v-if="item.image" class="rounded-xl h-40 overflow-hidden mb-3">
+              <div v-if="item.image" class="rounded-xl h-48 overflow-hidden mb-5">
                 <img
                   :src="item.image"
                   :alt="item.name[locale] || item.name.fr"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
               </div>
-              <div v-else class="rounded-xl h-40 bg-sand/80 flex items-center justify-center text-2xl mb-3">
+              <div v-else class="rounded-xl h-48 bg-sand/30 flex items-center justify-center text-3xl mb-5">
                 🍽️
               </div>
 
               <!-- Info -->
-              <div>
-                <h3 class="font-heading font-semibold text-charcoal text-base leading-tight mb-1">
+              <div class="flex-grow flex flex-col">
+                <h3 class="font-heading font-semibold text-ocean text-lg leading-tight mb-2 group-hover:text-ocean/80 transition-colors duration-300">
                   {{ item.name[locale] || item.name.fr }}
                 </h3>
-                <p class="font-body text-charcoal/40 text-xs leading-relaxed line-clamp-2 mb-2">
+                <p class="font-body text-charcoal/60 text-sm leading-relaxed line-clamp-3 mb-4 flex-grow">
                   {{ item.desc[locale] || item.desc.fr }}
                 </p>
-                <div class="w-full h-[1px] bg-charcoal/10 mb-2" />
-                <div class="flex items-center justify-between">
-                  <span class="shrink-0 font-heading font-bold text-ocean text-base">
+                <div class="w-full h-[1px] bg-charcoal/5 mb-4" />
+                <div class="flex items-center justify-between mt-auto">
+                  <span class="shrink-0 font-heading font-bold text-ocean text-lg">
                     {{ priceMode === 'standard' ? item.priceStandard : item.priceExtra }} DT
                   </span>
                   <span
                     v-if="!item.available"
-                    class="inline-block px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-heading font-bold rounded-full"
+                    class="inline-block px-3 py-1 bg-red-50 text-red-600 text-xs font-heading font-bold rounded-full uppercase tracking-wider"
                   >
                     {{ t('menu.unavailable') }}
                   </span>
@@ -128,32 +128,32 @@
           </div>
         </Transition>
 
-        <p v-if="activeItems.length === 0" class="text-center text-charcoal/40 font-body py-8">
+        <p v-if="activeItems.length === 0" class="text-center text-charcoal/50 font-body py-12">
           Aucun plat disponible dans cette catégorie.
         </p>
 
         <!-- Next arrow -->
         <button
           v-if="totalPages > 1"
-          class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 z-10 w-9 h-9 flex items-center justify-center rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-charcoal hover:border-charcoal/30 transition-all duration-200"
+          class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-8 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-ocean hover:border-ocean/30 shadow-sm hover:shadow-md transition-all duration-300"
           @click="nextPage"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
       <!-- Dots -->
-      <div v-if="totalPages > 1" class="mt-8 flex justify-center gap-2">
+      <div v-if="totalPages > 1" class="mt-12 flex justify-center gap-3">
         <button
           v-for="i in totalPages"
           :key="i"
           :class="[
-            'w-1.5 h-1.5 rounded-full transition-all duration-200',
+            'w-2 h-2 rounded-full transition-all duration-300',
             currentPage === i - 1
-              ? 'bg-charcoal'
-              : 'bg-charcoal/15 hover:bg-charcoal/30',
+              ? 'bg-ocean w-6'
+              : 'bg-charcoal/20 hover:bg-ocean/50',
           ]"
           @click="goToPage(i - 1)"
         />
