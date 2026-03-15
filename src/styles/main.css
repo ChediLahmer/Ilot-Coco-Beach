@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ocean: #0E7490;
-  --color-ocean-light: #22D3EE;
-  --color-ocean-dark: #0A5B72;
+  --color-ocean: #0891B2;
+  --color-ocean-light: #38E8FF;
+  --color-ocean-dark: #0C7A94;
   --color-driftwood: #C2956B;
   --color-driftwood-light: #D4B896;
   --color-driftwood-dark: #A07A52;
-  --color-coral: #F97316;
-  --color-coral-light: #FB923C;
-  --color-sand: #FBF7F0;
-  --color-sand-dark: #F0E6D3;
-  --color-charcoal: #1C1917;
+  --color-coral: #E8754A;
+  --color-coral-light: #F09060;
+  --color-sand: #FAF7F2;
+  --color-sand-dark: #EDE4D6;
+  --color-charcoal: #3E4347;
+  --color-deep: #0D2B35;
+  --color-midnight: #091E27;
+  --color-deep-warm: #14363F;
   --color-leaf: #22C55E;
-  --color-gold: #C4A265;
-  --color-gold-light: #D4B884;
+  --color-gold: #D4A847;
+  --color-gold-light: #E5C06A;
 
   --font-display: 'Pacifico', cursive;
+  --font-brand: 'Playfair Display', serif;
   --font-heading: 'Plus Jakarta Sans', sans-serif;
   --font-body: 'Nunito', sans-serif;
   --font-arabic: 'Tajawal', sans-serif;
 }
+
+/* ========================================
+   Base
+   ======================================== */
 
 html {
   scroll-behavior: auto;
@@ -37,6 +45,10 @@ body {
   overflow-x: hidden;
 }
 
+/* ========================================
+   Font Utilities
+   ======================================== */
+
 .font-display {
   font-family: var(--font-display);
 }
@@ -45,107 +57,33 @@ body {
   font-family: var(--font-heading);
 }
 
-/* ========================================
-   COASTAL LUXE — Signature Elements
-   ======================================== */
-
-/* Text shimmer — gold/cyan gradient sweep on text */
-.text-shimmer {
-  background: linear-gradient(
-    120deg,
-    var(--color-ocean-light) 0%,
-    var(--color-gold) 30%,
-    var(--color-gold-light) 50%,
-    var(--color-ocean-light) 70%,
-    var(--color-gold) 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer-sweep 3s ease-in-out infinite;
-}
-
-@keyframes shimmer-sweep {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-/* Gold accent line under headings via ::after */
-.gold-accent {
-  position: relative;
-  display: inline-block;
-}
-
-.gold-accent::after {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 3px;
-  margin: 12px auto 0;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
-}
-
-/* Section editorial number — huge semi-transparent */
-.section-number {
-  position: absolute;
-  font-family: var(--font-heading);
-  font-size: 8rem;
-  font-weight: 800;
-  line-height: 1;
-  opacity: 0.04;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Scroll progress bar — fixed below navbar */
-.scroll-progress {
-  position: fixed;
-  top: 72px;
-  left: 0;
-  height: 3px;
-  z-index: 49;
-  background: linear-gradient(90deg, var(--color-ocean), var(--color-gold), var(--color-coral));
-  transition: width 0.05s linear;
-}
-
-/* Dashed ring rotation */
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.dashed-ring {
-  animation: spin-slow 12s linear infinite;
-}
-
-/* Dark section background */
-.section-dark {
-  background: linear-gradient(135deg, #0f1923 0%, #1a1a2e 50%, #0f1923 100%);
+.font-brand {
+  font-family: var(--font-brand);
 }
 
 /* ========================================
-   Utilities — kept from original
+   Section Divider — thin gold accent
    ======================================== */
 
-/* Ken Burns effect */
-@keyframes kenBurns {
-  0% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.08) translate(-1%, -1%); }
-  100% { transform: scale(1) translate(0, 0); }
+.section-divider {
+  width: 40px;
+  height: 2px;
+  background: var(--color-gold);
+  margin: 16px auto 0;
 }
 
-.ken-burns {
-  animation: kenBurns 20s ease-in-out infinite;
-}
+/* ========================================
+   Sand Grain Texture
+   ======================================== */
 
-/* Sand grain texture */
 .sand-texture {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
-/* Custom scrollbar */
+/* ========================================
+   Custom Scrollbar
+   ======================================== */
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -163,7 +101,10 @@ body {
   background: var(--color-ocean);
 }
 
-/* WhatsApp button pulse */
+/* ========================================
+   WhatsApp Button Pulse
+   ======================================== */
+
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
   50% { box-shadow: 0 0 0 12px rgba(37, 211, 102, 0); }
@@ -171,4 +112,24 @@ body {
 
 .whatsapp-pulse {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ========================================
+   RTL Font Overrides
+   ======================================== */
+
+html[dir="rtl"] .font-display {
+  font-family: var(--font-arabic), var(--font-display), cursive;
+}
+
+html[dir="rtl"] .font-heading {
+  font-family: var(--font-arabic), var(--font-heading), sans-serif;
+}
+
+html[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+html[dir="rtl"] ::-webkit-scrollbar {
+  direction: rtl;
 }

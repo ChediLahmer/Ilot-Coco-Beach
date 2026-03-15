@@ -1,73 +1,110 @@
 <template>
-  <section class="relative bg-white py-20 px-6 md:px-16">
-    <!-- Section editorial number -->
-    <div class="section-number">07</div>
-
+  <section class="bg-sand sand-texture py-24 md:py-32 px-6 md:px-16">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="text-center mb-10 gold-accent">
-        <h2 class="font-display text-ocean text-3xl md:text-4xl mb-3">
+      <div class="text-center mb-12">
+        <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
           {{ t('reviews.title') }}
         </h2>
-        <p class="font-body text-charcoal/60 text-base md:text-lg max-w-xl mx-auto">
+        <div class="w-10 h-[2px] bg-gold/60 mx-auto mt-4 mb-2" />
+        <p class="font-body text-charcoal/50 text-base md:text-lg max-w-xl mx-auto">
           {{ t('reviews.subtitle') }}
         </p>
       </div>
 
-      <!-- Horizontal scroll -->
-      <div class="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 -mx-2 px-2">
+      <!-- Carousel -->
+      <div
+        @mouseenter="pause"
+        @mouseleave="resume"
+        dir="ltr"
+        class="relative overflow-hidden"
+      >
+        <!-- Track -->
         <div
-          v-for="review in reviews"
-          :key="review.id"
-          class="snap-start shrink-0 w-[320px] md:w-[360px] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
+          class="flex transition-transform duration-500 ease-out"
+          :style="{ transform: trackTransform }"
         >
-          <!-- Quote -->
-          <div class="text-gold/20 text-4xl font-display leading-none mb-2">"</div>
-
-          <!-- Stars -->
-          <div class="flex gap-1 mb-3">
-            <span
-              v-for="star in 5"
-              :key="star"
-              :class="[
-                'text-lg',
-                star <= review.rating ? 'text-coral' : 'text-charcoal/15',
-              ]"
-            >
-              ★
-            </span>
-          </div>
-
-          <!-- Comment -->
-          <p class="font-body text-charcoal/70 text-sm leading-relaxed mb-4 line-clamp-4">
-            {{ review.comment }}
-          </p>
-
-          <!-- User info -->
-          <div class="flex items-center justify-between pt-3 border-t border-charcoal/5">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-ocean/10 rounded-full flex items-center justify-center text-xs font-heading font-bold text-ocean">
-                {{ review.userName.charAt(0) }}
+          <div
+            v-for="review in reviews"
+            :key="review.id"
+            class="flex-shrink-0 px-3"
+            :style="{ width: cardPercent + '%' }"
+          >
+            <div class="bg-white rounded-xl p-6 shadow-sm h-full flex flex-col border-l-2 border-ocean/20">
+              <!-- Stars -->
+              <div class="flex gap-0.5">
+                <span
+                  v-for="star in 5"
+                  :key="star"
+                  :class="[
+                    'text-base',
+                    star <= review.rating ? 'text-coral' : 'text-charcoal/10',
+                  ]"
+                >
+                  ★
+                </span>
               </div>
-              <span class="font-heading font-semibold text-sm text-charcoal">
-                {{ review.userName }}
-              </span>
+
+              <!-- Comment -->
+              <p class="font-body text-charcoal/70 text-base leading-relaxed mt-3 line-clamp-4 flex-1">
+                {{ review.comment }}
+              </p>
+
+              <!-- User info -->
+              <div class="flex items-center gap-3 mt-4 pt-4 border-t border-charcoal/5">
+                <div class="w-10 h-10 bg-charcoal/5 rounded-full flex items-center justify-center font-heading font-bold text-sm text-charcoal/40">
+                  {{ review.userName.charAt(0) }}
+                </div>
+                <div>
+                  <span class="font-heading font-semibold text-sm text-charcoal block">
+                    {{ review.userName }}
+                  </span>
+                  <span class="font-body text-charcoal/30 text-xs">
+                    {{ formatDate(review.date) }}
+                  </span>
+                </div>
+              </div>
             </div>
-            <span class="font-body text-xs text-charcoal/40">
-              {{ formatDate(review.date) }}
-            </span>
           </div>
+        </div>
+
+        <!-- Prev button -->
+        <button
+          @click="prev"
+          class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 border border-charcoal/10 hover:border-charcoal/30 rounded-full flex items-center justify-center text-charcoal/40 hover:text-charcoal transition-colors z-10 bg-white/80"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <!-- Next button -->
+        <button
+          @click="next"
+          class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 border border-charcoal/10 hover:border-charcoal/30 rounded-full flex items-center justify-center text-charcoal/40 hover:text-charcoal transition-colors z-10 bg-white/80"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        <!-- Dots -->
+        <div class="flex justify-center gap-2 mt-8">
+          <button
+            v-for="i in dotCount"
+            :key="i"
+            @click="goTo(i - 1)"
+            :class="[
+              'rounded-full transition-all duration-300',
+              current === i - 1 ? 'bg-ocean w-4 h-1.5' : 'bg-charcoal/15 w-1.5 h-1.5',
+            ]"
+          />
         </div>
       </div>
 
-      <!-- Write review button -->
-      <div class="text-center mt-8">
-        <button
-          class="inline-flex items-center gap-2 bg-ocean/10 hover:bg-ocean/20 text-ocean font-heading font-semibold text-sm px-6 py-2.5 rounded-full transition-colors duration-200"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+      <!-- Write review link -->
+      <div class="text-center mt-10">
+        <button class="border border-ocean/30 text-ocean px-5 py-2 rounded-full hover:bg-ocean/5 font-heading text-sm transition-colors">
           {{ t('reviews.writeReview') }}
         </button>
       </div>
@@ -76,13 +113,66 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { reviews } from '@/data/mock'
 
 const { t } = useI18n()
 
+// Responsive screen width tracking
+const screenW = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
+const onResize = () => { screenW.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
+
+// Card width % based on breakpoint
+const cardPercent = computed(() => {
+  if (screenW.value >= 1024) return 33.333
+  if (screenW.value >= 768) return 50
+  return 100
+})
+
+// Carousel state
+const current = ref(0)
+const paused = ref(false)
+let timer = null
+
+const dotCount = computed(() => reviews.length)
+
+const trackTransform = computed(() => `translateX(-${current.value * cardPercent.value}%)`)
+
+function next() {
+  current.value = current.value >= reviews.length - 1 ? 0 : current.value + 1
+}
+
+function prev() {
+  current.value = current.value <= 0 ? reviews.length - 1 : current.value - 1
+}
+
+function goTo(i) {
+  current.value = i
+}
+
+function pause() {
+  paused.value = true
+}
+
+function resume() {
+  paused.value = false
+}
+
 function formatDate(dateStr) {
   const d = new Date(dateStr)
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+onMounted(() => {
+  timer = setInterval(() => {
+    if (!paused.value) next()
+  }, 3500)
+})
+
+onUnmounted(() => {
+  clearInterval(timer)
+})
 </script>

@@ -1,11 +1,5 @@
 <template>
   <div class="min-h-screen">
-    <!-- Scroll progress bar -->
-    <div
-      class="scroll-progress"
-      :style="{ width: scrollProgress + '%' }"
-    />
-
     <NavBar />
     <HeroSection />
     <AboutSection />
@@ -20,6 +14,24 @@
     <LocationSection />
     <FooterSection />
     <FloatingSocial />
+
+    <!-- Sticky mobile reservation bar -->
+    <div
+      v-if="showStickyBar"
+      class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-charcoal/10 px-4 py-3 flex items-center justify-between lg:hidden"
+    >
+      <div>
+        <p class="font-brand font-bold text-charcoal text-sm">ÎLOT Coco Beach</p>
+        <p class="font-body text-charcoal/60 text-xs">{{ t('hero.tagline') }}</p>
+      </div>
+      <a
+        href="#reservation"
+        class="bg-coral hover:bg-coral-light text-white font-heading font-semibold px-5 py-2.5 rounded-full text-sm transition-colors shadow-md"
+        @click.prevent="scrollToRes"
+      >
+        {{ t('nav.reservation') }}
+      </a>
+    </div>
   </div>
 </template>
 
@@ -46,12 +58,16 @@ import FloatingSocial from '@/components/FloatingSocial.vue'
 const { t } = useI18n()
 const config = useConfig()
 
-const scrollProgress = ref(0)
+const showStickyBar = ref(false)
 
 function onScroll() {
   const scrollTop = window.scrollY
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight
-  scrollProgress.value = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
+  showStickyBar.value = scrollTop > window.innerHeight * 0.8
+}
+
+function scrollToRes() {
+  const el = document.getElementById('reservation')
+  if (el) el.scrollIntoView({ behavior: 'instant' })
 }
 
 onMounted(() => {

@@ -28,7 +28,10 @@
   },
   "gallery": {
     "title": "Our world",
-    "subtitle": "Every corner of the island is an invitation to discover"
+    "subtitle": "Every corner of the island is an invitation to discover",
+    "viewAll": "View full gallery",
+    "backHome": "Back to home",
+    "noMore": "You've seen it all!"
   },
   "video": {
     "title": "Live the experience",

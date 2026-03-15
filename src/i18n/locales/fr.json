@@ -36,7 +36,10 @@
   },
   "gallery": {
     "title": "Notre univers",
-    "subtitle": "Chaque coin de l'ile est une invitation a la decouverte"
+    "subtitle": "Chaque coin de l'ile est une invitation a la decouverte",
+    "viewAll": "Voir toute la galerie",
+    "backHome": "Retour a l'accueil",
+    "noMore": "Vous avez tout vu !"
   },
   "video": {
     "title": "Vivez l'experience",
