@@ -1,32 +1,35 @@
 <template>
   <div class="min-h-screen">
     <NavBar />
-    <HeroSection />
-    <AboutSection />
-    <FlashSaleSection />
-    <MenuSection />
-    <ExperienceSection />
-    <GallerySection />
-    <VoucherSection />
-    <VideoSection />
-    <ReviewsSection />
-    <ReservationSection />
-    <LocationSection />
+    <main>
+      <HeroSection />
+      <AboutSection />
+      <FlashSaleSection />
+      <MenuSection />
+      <ExperienceSection />
+      <GallerySection />
+      <VoucherSection />
+      <VideoSection />
+      <ReviewsSection />
+      <ReservationSection />
+      <LocationSection />
+    </main>
     <FooterSection />
     <FloatingSocial />
 
-    <!-- Sticky mobile reservation bar -->
     <div
       v-if="showStickyBar"
-      class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-charcoal/10 px-4 py-3 flex items-center justify-between lg:hidden"
+      class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-4 border-t border-charcoal/10 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden"
     >
-      <div>
-        <p class="font-brand font-bold text-charcoal text-sm">ÎLOT Coco Beach</p>
-        <p class="font-body text-charcoal/60 text-xs">{{ t('hero.tagline') }}</p>
+      <div class="min-w-0">
+        <p class="truncate font-brand text-base text-deep">{{ config.name }}</p>
+        <p class="mt-1 truncate font-heading text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-charcoal/55">
+          {{ t('hero.tagline') }}
+        </p>
       </div>
       <a
         href="#reservation"
-        class="bg-coral hover:bg-coral-light text-white font-heading font-semibold px-5 py-2.5 rounded-full text-sm transition-colors shadow-md"
+        class="shrink-0 rounded-full bg-ocean px-5 py-2.5 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white shadow-[0_14px_28px_rgba(49,112,124,0.24)]"
         @click.prevent="scrollToRes"
       >
         {{ t('nav.reservation') }}
@@ -36,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfig } from '@/composables/useConfig'
 
@@ -55,7 +58,7 @@ import LocationSection from '@/components/LocationSection.vue'
 import FooterSection from '@/components/FooterSection.vue'
 import FloatingSocial from '@/components/FloatingSocial.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const config = useConfig()
 
 const showStickyBar = ref(false)
@@ -67,44 +70,39 @@ function onScroll() {
 
 function scrollToRes() {
   const el = document.getElementById('reservation')
-  if (el) el.scrollIntoView({ behavior: 'instant' })
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
-onMounted(() => {
-  window.addEventListener('scroll', onScroll, { passive: true })
+function setMeta(name, content) {
+  let el = document.querySelector(`meta[name="${name}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute('name', name)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', content)
+}
 
-  // SEO meta
+function setOG(prop, content) {
+  let el = document.querySelector(`meta[property="${prop}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute('property', prop)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', content)
+}
+
+function applyHead() {
   document.title = `${config.name} — ${t('hero.tagline')}`
 
-  const setMeta = (name, content) => {
-    let el = document.querySelector(`meta[name="${name}"]`)
-    if (!el) {
-      el = document.createElement('meta')
-      el.setAttribute('name', name)
-      document.head.appendChild(el)
-    }
-    el.setAttribute('content', content)
-  }
-
   setMeta('description', t('about.description'))
-  setMeta('keywords', 'ilot coco beach, bizerte, tunisie, restaurant, plage, cabane, overwater')
+  setMeta('keywords', 'ilot coco beach, ghar el melh, bizerte, waterfront dining, private cabins, beach restaurant, tunisia')
 
-  // Open Graph
-  const setOG = (prop, content) => {
-    let el = document.querySelector(`meta[property="${prop}"]`)
-    if (!el) {
-      el = document.createElement('meta')
-      el.setAttribute('property', prop)
-      document.head.appendChild(el)
-    }
-    el.setAttribute('content', content)
-  }
-
-  setOG('og:title', config.name)
+  setOG('og:title', `${config.name} | ${t('hero.tagline')}`)
   setOG('og:description', t('about.description'))
   setOG('og:type', 'website')
 
-  // JSON-LD
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
@@ -132,6 +130,16 @@ onMounted(() => {
     document.head.appendChild(scriptEl)
   }
   scriptEl.textContent = JSON.stringify(jsonLd)
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+
+  applyHead()
+})
+
+watch(locale, () => {
+  applyHead()
 })
 
 onUnmounted(() => {

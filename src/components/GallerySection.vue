@@ -1,51 +1,63 @@
 <template>
-  <section
-    id="gallery"
-    class="relative py-20 px-6 md:px-16"
-    style="background: linear-gradient(135deg, #0f1923 0%, #1a2a36 50%, #0a1a24 100%)"
-  >
-    <div class="max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="text-center mb-14">
-        <h2 class="font-display text-white text-4xl md:text-5xl tracking-wide">
+  <section id="gallery" class="relative px-6 py-24 md:px-16 md:py-32">
+    <div class="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
+      <div class="lg:pr-10">
+        <p class="section-kicker">{{ t('gallery.eyebrow') }}</p>
+        <h2 class="section-title mt-6 max-w-xl">
           {{ t('gallery.title') }}
         </h2>
-        <div class="w-10 h-[1px] bg-gold/60 mx-auto mt-4 mb-2" />
-        <p class="font-body text-white/40 text-base md:text-lg max-w-xl mx-auto">
+        <div class="section-divider" />
+        <p class="section-copy mt-8 max-w-xl">
           {{ t('gallery.subtitle') }}
         </p>
-      </div>
 
-      <!-- Masonry grid (first 8 images only) -->
-      <div v-if="images.length > 0" class="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
         <router-link
-          v-for="(img, idx) in images"
-          :key="idx"
           to="/gallery"
-          class="break-inside-avoid cursor-pointer overflow-hidden rounded-xl block"
+          class="mt-10 inline-flex items-center gap-3 font-heading text-sm font-bold uppercase tracking-[0.18em] text-ocean"
         >
-          <img
-            :src="img.src"
-            :alt="img.alt"
-            class="w-full object-cover transition-all duration-500 hover:brightness-110 hover:scale-[1.02] rounded-xl"
-            loading="lazy"
-          />
+          {{ t('gallery.viewAll') }}
+          <span class="block h-px w-10 bg-gold/80" />
         </router-link>
       </div>
-      <p v-else class="text-center text-white/40 font-body py-10">
-        {{ t('gallery.subtitle') }}
-      </p>
 
-      <!-- CTA -->
-      <div class="text-center mt-12">
+      <div class="grid gap-4 sm:grid-cols-2">
         <router-link
           to="/gallery"
-          class="inline-flex items-center gap-2 border border-white/20 text-white hover:bg-white/10 px-8 py-3 rounded-full font-heading font-semibold text-sm tracking-wider transition-all duration-300"
+          class="editorial-frame group relative min-h-[20rem] overflow-hidden rounded-[2rem] sm:col-span-2 sm:min-h-[27rem]"
         >
-          {{ t('gallery.viewAll') || 'Voir toute la galerie' }}
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
+          <img
+            :src="images[0].src"
+            :alt="images[0].alt"
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          />
+          <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,17,23,0.1)_0%,rgba(7,17,23,0.72)_100%)]" />
+          <div class="absolute inset-x-0 bottom-0 z-10 p-6 text-white sm:p-8">
+            <p class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.22em] text-gold-light/78">
+              {{ t('gallery.eyebrow') }}
+            </p>
+            <p class="mt-3 font-brand text-3xl leading-tight sm:text-4xl">
+              {{ t('gallery.title') }}
+            </p>
+          </div>
+        </router-link>
+
+        <router-link
+          v-for="image in images.slice(1)"
+          :key="image.alt"
+          to="/gallery"
+          class="editorial-frame group relative min-h-[15rem] overflow-hidden rounded-[2rem]"
+        >
+          <img
+            :src="image.src"
+            :alt="image.alt"
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          />
+          <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,17,23,0.06)_0%,rgba(7,17,23,0.66)_100%)]" />
+          <div class="absolute inset-x-0 bottom-0 z-10 p-5 text-white">
+            <p class="font-heading text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-white/72">
+              {{ t(image.labelKey) }}
+            </p>
+          </div>
         </router-link>
       </div>
     </div>
@@ -54,14 +66,20 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n'
-import { allImages } from '@/data/mock'
+
+import overwaterImg from '@/assets/images/overwater-cabin.jpg'
+import heroImg from '@/assets/images/hero-beach-lounge.jpg'
+import cabinImg from '@/assets/images/cabin-interior.jpg'
+import cabinHammockImg from '@/assets/images/cabin-hammock.jpg'
+import swingImg from '@/assets/images/swing-pergola.jpg'
 
 const { t } = useI18n()
 
-const images = Object.entries(allImages)
-  .slice(0, 8)
-  .map(([key, src]) => ({
-    src,
-    alt: key.replace(/Img$/, '').replace(/([A-Z])/g, ' $1').trim(),
-  }))
+const images = [
+  { src: overwaterImg, alt: 'Overwater cabin at Ilot Coco Beach', labelKey: 'gallery.labels.overwater' },
+  { src: heroImg, alt: 'Beachfront arrival at Ilot Coco Beach', labelKey: 'gallery.labels.arrival' },
+  { src: cabinImg, alt: 'Dining cabin at Ilot Coco Beach', labelKey: 'gallery.labels.dining' },
+  { src: cabinHammockImg, alt: 'Private lounge at Ilot Coco Beach', labelKey: 'gallery.labels.lounge' },
+  { src: swingImg, alt: 'Panoramic terrace at Ilot Coco Beach', labelKey: 'gallery.labels.terrace' },
+]
 </script>

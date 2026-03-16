@@ -12,6 +12,11 @@ const routes = [
     component: () => import('@/views/GalleryView.vue'),
   },
   {
+    path: '/menu',
+    name: 'menu',
+    component: () => import('@/views/MenuPage.vue'),
+  },
+  {
     path: '/offers',
     name: 'offers',
     component: () => import('@/views/OffersPage.vue'),
@@ -35,10 +40,10 @@ const router = createRouter({
     if (to.hash) {
       return {
         el: to.hash,
-        behavior: 'instant',
+        behavior: 'smooth',
       }
     }
-    return { top: 0, behavior: 'instant' }
+    return { top: 0, behavior: 'smooth' }
   },
 })
 

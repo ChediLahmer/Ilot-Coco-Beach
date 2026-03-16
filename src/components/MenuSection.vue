@@ -1,170 +1,179 @@
 <template>
-  <section id="menu" class="relative bg-sand/30 py-24 md:py-32 px-6 md:px-16">
-    <div class="max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="text-center mb-20">
-        <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
-          {{ t('menu.title') }}
-        </h2>
-        <div class="w-12 h-[2px] bg-gold/60 mx-auto mt-6 mb-4" />
-        <p class="font-body text-charcoal/60 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+  <section id="menu" class="relative overflow-hidden bg-sand/45 px-6 py-24 md:px-16 md:py-32">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,125,97,0.14),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(29,166,179,0.14),transparent_28%)]" />
+    <div class="sand-texture absolute inset-0 opacity-40" />
+
+    <div class="relative z-10 mx-auto max-w-7xl">
+      <div class="text-center">
+        <p class="section-kicker justify-center">{{ t('menu.eyebrow') }}</p>
+        <h2 class="section-title mt-6">{{ t('menu.title') }}</h2>
+        <div class="mx-auto mt-5 h-px w-14 bg-gold" />
+        <p class="mx-auto mt-8 max-w-2xl text-base leading-8 text-charcoal/70 md:text-lg">
           {{ t('menu.subtitle') }}
         </p>
       </div>
 
-      <!-- Standard / Extra toggle -->
-      <div class="flex justify-center items-center gap-4 mb-12">
-        <button
-          :class="[
-            'font-heading text-sm md:text-base uppercase tracking-wider transition-colors duration-300',
-            priceMode === 'standard'
-              ? 'font-bold text-ocean'
-              : 'text-charcoal/40 hover:text-charcoal/70',
-          ]"
-          @click="priceMode = 'standard'"
-        >
-          {{ t('menu.standard') }}
-        </button>
-        <span class="text-charcoal/20 text-sm md:text-base select-none">|</span>
-        <button
-          :class="[
-            'font-heading text-sm md:text-base uppercase tracking-wider transition-colors duration-300',
-            priceMode === 'extra'
-              ? 'font-bold text-ocean'
-              : 'text-charcoal/40 hover:text-charcoal/70',
-          ]"
-          @click="priceMode = 'extra'"
-        >
-          {{ t('menu.extra') }}
-        </button>
-      </div>
-
-      <!-- Category tabs -->
-      <div class="flex flex-wrap justify-center gap-8 mb-16">
-        <button
-          v-for="cat in menuCategories"
-          :key="cat.id"
-          :class="[
-            'relative pb-2 font-heading text-sm md:text-base tracking-wide transition-all duration-300',
-            activeCategory === cat.id
-              ? 'text-ocean font-semibold'
-              : 'text-charcoal/50 hover:text-charcoal/80',
-          ]"
-          @click="activeCategory = cat.id"
-        >
-          {{ cat.name[locale] || cat.name.fr }}
-          <span
+      <div class="mt-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div class="inline-flex w-fit items-center rounded-full border border-charcoal/10 bg-white/75 p-1 shadow-[0_18px_40px_rgba(10,24,32,0.06)] backdrop-blur-xl">
+          <button
+            v-for="mode in ['standard', 'extra']"
+            :key="mode"
             :class="[
-              'absolute bottom-0 left-0 h-[2px] bg-ocean transition-all duration-300 ease-out',
-              activeCategory === cat.id ? 'w-full' : 'w-0',
+              'rounded-full px-4 py-2 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] transition-colors duration-200',
+              priceMode === mode ? 'bg-[linear-gradient(135deg,var(--color-coral),var(--color-ocean))] text-white shadow-[0_10px_24px_rgba(255,125,97,0.18)]' : 'text-charcoal/52 hover:text-deep',
             ]"
-          />
+            @click="priceMode = mode"
+          >
+            {{ t(`menu.${mode}`) }}
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 self-start lg:self-auto">
+          <router-link
+            to="/menu"
+            class="inline-flex items-center gap-3 rounded-full border border-coral/16 bg-white/82 px-5 py-3 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-deep shadow-[0_14px_30px_rgba(255,125,97,0.08)] hover:border-coral/32 hover:text-coral"
+          >
+            {{ t('menu.viewAll') }}
+            <span class="block h-px w-8 bg-coral/45" />
+          </router-link>
+
+          <div class="flex items-center gap-3">
+            <span class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.18em] text-coral/80">
+              {{ t('ui.scrollHint') }}
+            </span>
+            <button
+              type="button"
+              class="tropical-arrow"
+              :aria-label="t('ui.previous')"
+              :disabled="!canScrollLeft"
+              @click="scrollByStep(-1)"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="tropical-arrow"
+              :aria-label="t('ui.next')"
+              :disabled="!canScrollRight"
+              @click="scrollByStep(1)"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap justify-center gap-3">
+        <button
+          v-for="category in menuCategories"
+          :key="category.id"
+          :class="[
+            'rounded-full border px-4 py-2 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] transition-colors duration-200',
+            activeCategory === category.id
+              ? 'border-transparent bg-[linear-gradient(135deg,var(--color-coral),var(--color-ocean))] text-white shadow-[0_10px_24px_rgba(255,125,97,0.18)]'
+              : 'border-charcoal/10 bg-white/65 text-charcoal/58 hover:border-ocean/30 hover:text-ocean',
+          ]"
+          @click="activeCategory = category.id"
+        >
+          {{ category.name[locale] || category.name.fr }}
         </button>
       </div>
 
-      <!-- Paginated items area -->
-      <div
-        class="relative"
-        dir="ltr"
-        @mouseenter="paused = true"
-        @mouseleave="paused = false"
-      >
-        <!-- Prev arrow -->
-        <button
-          v-if="totalPages > 1"
-          class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-8 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-ocean hover:border-ocean/30 shadow-sm hover:shadow-md transition-all duration-300"
-          @click="prevPage"
+      <div class="mt-10 overflow-hidden" @mouseenter="pause" @mouseleave="resume" @touchstart.passive="pause" @touchend.passive="resume">
+        <div
+          ref="scrollerEl"
+          class="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
+          @scroll="updateScrollState"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <!-- Items grid with fade transition -->
-        <Transition name="menu-fade" mode="out-in">
-          <div
-            :key="currentPage"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          <article
+            v-for="item in activeItems"
+            :key="item.id"
+            data-rail-item
+            class="group flex min-h-[29rem] min-w-[18.5rem] flex-col overflow-hidden rounded-[1.75rem] border border-charcoal/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,248,239,0.92))] shadow-[0_22px_50px_rgba(10,24,32,0.08)] sm:min-w-[20rem]"
           >
-            <div
-              v-for="item in pageItems"
-              :key="item.id"
-              class="group bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full"
-            >
-              <!-- Image -->
-              <div v-if="item.image" class="rounded-xl h-48 overflow-hidden mb-5">
-                <img
-                  :src="item.image"
-                  :alt="item.name[locale] || item.name.fr"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-              </div>
-              <div v-else class="rounded-xl h-48 bg-sand/30 flex items-center justify-center text-3xl mb-5">
-                🍽️
+            <div class="relative h-56 overflow-hidden bg-sand/70">
+              <img
+                v-if="item.image"
+                :src="item.image"
+                :alt="item.name[locale] || item.name.fr"
+                class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div v-else class="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(49,112,124,0.12),rgba(184,148,86,0.14))]">
+                <span class="font-heading text-[0.72rem] font-bold uppercase tracking-[0.2em] text-ocean/70">
+                  {{ activeCategoryLabel }}
+                </span>
               </div>
 
-              <!-- Info -->
-              <div class="flex-grow flex flex-col">
-                <h3 class="font-heading font-semibold text-ocean text-lg leading-tight mb-2 group-hover:text-ocean/80 transition-colors duration-300">
-                  {{ item.name[locale] || item.name.fr }}
-                </h3>
-                <p class="font-body text-charcoal/60 text-sm leading-relaxed line-clamp-3 mb-4 flex-grow">
-                  {{ item.desc[locale] || item.desc.fr }}
+              <div class="absolute inset-x-4 top-4 flex items-start justify-between gap-3">
+                <p class="rounded-full border border-white/30 bg-white/88 px-3 py-1 font-heading text-[0.62rem] font-bold uppercase tracking-[0.18em] text-charcoal/78 shadow-sm">
+                  {{ activeCategoryLabel }}
                 </p>
-                <div class="w-full h-[1px] bg-charcoal/5 mb-4" />
-                <div class="flex items-center justify-between mt-auto">
-                  <span class="shrink-0 font-heading font-bold text-ocean text-lg">
-                    {{ priceMode === 'standard' ? item.priceStandard : item.priceExtra }} DT
-                  </span>
-                  <span
-                    v-if="!item.available"
-                    class="inline-block px-3 py-1 bg-red-50 text-red-600 text-xs font-heading font-bold rounded-full uppercase tracking-wider"
-                  >
-                    {{ t('menu.unavailable') }}
-                  </span>
-                </div>
+                <p class="rounded-full bg-[linear-gradient(135deg,var(--color-coral),var(--color-gold))] px-3 py-1 text-[0.72rem] font-heading font-bold uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(255,125,97,0.18)]">
+                  {{ displayPrice(item) }} DT
+                </p>
               </div>
             </div>
-          </div>
-        </Transition>
 
-        <p v-if="activeItems.length === 0" class="text-center text-charcoal/50 font-body py-12">
-          Aucun plat disponible dans cette catégorie.
-        </p>
+            <div class="flex flex-1 flex-col p-6">
+              <h3 class="font-brand text-[2rem] leading-tight text-deep">
+                {{ item.name[locale] || item.name.fr }}
+              </h3>
+              <p class="mt-3 text-sm font-heading font-semibold uppercase tracking-[0.16em] text-charcoal/45">
+                {{ t(`menu.${priceMode}`) }}
+              </p>
+              <p class="mt-4 flex-1 text-sm leading-7 text-charcoal/66 sm:text-base">
+                {{ item.desc[locale] || item.desc.fr }}
+              </p>
 
-        <!-- Next arrow -->
-        <button
-          v-if="totalPages > 1"
-          class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-8 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-ocean hover:border-ocean/30 shadow-sm hover:shadow-md transition-all duration-300"
-          @click="nextPage"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+              <div class="mt-6 flex items-center justify-between gap-4 border-t border-charcoal/8 pt-5">
+                <span class="font-heading text-lg font-bold text-deep">
+                  {{ displayPrice(item) }} DT
+                </span>
+                <span
+                  v-if="!item.available"
+                  class="rounded-full bg-coral/12 px-3 py-1 text-[0.68rem] font-heading font-bold uppercase tracking-[0.16em] text-coral"
+                >
+                  {{ t('menu.unavailable') }}
+                </span>
+                <a
+                  v-else
+                  href="#reservation"
+                  class="inline-flex items-center gap-3 font-heading text-[0.7rem] font-bold uppercase tracking-[0.2em] text-coral hover:text-deep"
+                  @click.prevent="scrollTo('reservation')"
+                >
+                  {{ t('menu.reserveCta') }}
+                  <span class="block h-px w-8 bg-coral/45" />
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
 
-      <!-- Dots -->
-      <div v-if="totalPages > 1" class="mt-12 flex justify-center gap-3">
-        <button
-          v-for="i in totalPages"
-          :key="i"
-          :class="[
-            'w-2 h-2 rounded-full transition-all duration-300',
-            currentPage === i - 1
-              ? 'bg-ocean w-6'
-              : 'bg-charcoal/20 hover:bg-ocean/50',
-          ]"
-          @click="goToPage(i - 1)"
-        />
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        <article
+          v-for="note in menuNotes"
+          :key="note"
+          class="rounded-[1.5rem] border border-charcoal/8 bg-white/72 px-5 py-4 text-left shadow-[0_18px_40px_rgba(10,24,32,0.05)] backdrop-blur-xl"
+        >
+          <p class="text-sm leading-7 text-charcoal/66">
+            {{ note }}
+          </p>
+        </article>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import { useHorizontalRail } from '@/composables/useHorizontalRail'
 import { menuCategories } from '@/data/mock'
 
 const { t, locale } = useI18n()
@@ -172,62 +181,57 @@ const { t, locale } = useI18n()
 const priceMode = ref('standard')
 const activeCategory = ref(menuCategories[0]?.id || 1)
 
-const activeItems = computed(() => {
-  const cat = menuCategories.find((c) => c.id === activeCategory.value)
-  return cat ? cat.items : []
-})
+const activeCategoryData = computed(() => menuCategories.find((category) => category.id === activeCategory.value) ?? menuCategories[0])
 
-const ITEMS_PER_PAGE = 6
-const currentPage = ref(0)
-const paused = ref(false)
-let timer = null
+const activeCategoryLabel = computed(() => activeCategoryData.value?.name[locale.value] || activeCategoryData.value?.name.fr || '')
 
-const totalPages = computed(() => Math.ceil(activeItems.value.length / ITEMS_PER_PAGE))
+const activeItems = computed(() => activeCategoryData.value?.items || [])
 
-const pageItems = computed(() => {
-  const start = currentPage.value * ITEMS_PER_PAGE
-  return activeItems.value.slice(start, start + ITEMS_PER_PAGE)
-})
+const menuNotes = computed(() => [
+  t('menu.notes.one'),
+  t('menu.notes.two'),
+  t('menu.notes.three'),
+])
 
-function nextPage() {
-  currentPage.value = currentPage.value >= totalPages.value - 1 ? 0 : currentPage.value + 1
+const {
+  scrollerEl,
+  canScrollLeft,
+  canScrollRight,
+  scrollByStep,
+  updateScrollState,
+  reset,
+  pause,
+  resume,
+} = useHorizontalRail(computed(() => activeItems.value.length))
+
+function displayPrice(item) {
+  return priceMode.value === 'extra' ? item.priceExtra : item.priceStandard
 }
 
-function prevPage() {
-  currentPage.value = currentPage.value <= 0 ? totalPages.value - 1 : currentPage.value - 1
+function scrollTo(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
-function goToPage(i) {
-  currentPage.value = i
-}
-
-// Reset page when category changes
-watch(activeCategory, () => {
-  currentPage.value = 0
+watch(activeCategory, async () => {
+  await nextTick()
+  reset('auto')
+  updateScrollState()
 })
 
-// Auto-rotate pages
-onMounted(() => {
-  timer = setInterval(() => {
-    if (!paused.value && totalPages.value > 1) {
-      nextPage()
-    }
-  }, 5000)
-})
-
-onUnmounted(() => {
-  clearInterval(timer)
+watch(locale, async () => {
+  await nextTick()
+  updateScrollState()
 })
 </script>
 
 <style scoped>
-.menu-fade-enter-active,
-.menu-fade-leave-active {
-  transition: opacity 0.3s ease;
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.menu-fade-enter-from,
-.menu-fade-leave-to {
-  opacity: 0;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

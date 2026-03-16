@@ -1,6 +1,9 @@
 <template>
-  <section class="relative bg-sand sand-texture py-20 px-6 md:px-16 overflow-hidden">
-    <div class="max-w-7xl mx-auto">
+  <section class="relative overflow-hidden bg-sand py-20 px-6 md:px-16">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,125,97,0.16),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(29,166,179,0.16),transparent_26%)]" />
+    <div class="sand-texture absolute inset-0 opacity-40" />
+
+    <div class="relative z-10 max-w-7xl mx-auto">
       <!-- Header -->
       <div class="text-center mb-14">
         <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
@@ -23,7 +26,7 @@
         <!-- Prev arrow -->
         <button
           v-if="activeVouchers.length > visibleCount"
-          class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 md:-translate-x-5 z-10 w-9 h-9 flex items-center justify-center border border-charcoal/10 bg-white/80 hover:bg-white rounded-full text-charcoal/40 hover:text-charcoal/70 transition-all duration-200"
+          class="tropical-arrow absolute left-0 top-1/2 z-10 -translate-x-3 -translate-y-1/2 md:-translate-x-5"
           @click="prevSlide"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,10 +46,10 @@
               class="shrink-0 px-2.5"
               :style="{ width: `${cardPercent}%` }"
             >
-              <div class="bg-white rounded-xl p-6 border border-charcoal/5 hover:shadow-md transition-shadow duration-300">
+              <div class="rounded-[1.5rem] border border-charcoal/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,248,239,0.92))] p-6 shadow-[0_20px_42px_rgba(10,24,32,0.06)] transition-shadow duration-300 hover:shadow-[0_24px_52px_rgba(255,125,97,0.12)]">
                 <!-- Discount -->
                 <div class="text-center">
-                  <span class="font-heading font-black text-5xl text-ocean">
+                  <span class="font-heading font-black text-5xl text-coral">
                     -{{ voucher.discountPercent }}%
                   </span>
                   <span class="block font-body text-charcoal/40 text-base mt-1">
@@ -59,7 +62,7 @@
 
                 <!-- Code -->
                 <div class="text-center">
-                  <div class="font-heading font-bold text-lg text-charcoal bg-sand rounded-lg py-2 px-4 tracking-widest inline-flex items-center gap-2">
+                  <div class="font-heading font-bold text-lg text-ocean-dark bg-mist rounded-lg py-2 px-4 tracking-widest inline-flex items-center gap-2 shadow-sm">
                     {{ voucher.code }}
                     <button
                       class="p-1 rounded-md text-charcoal/30 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
@@ -93,7 +96,7 @@
         <!-- Next arrow -->
         <button
           v-if="activeVouchers.length > visibleCount"
-          class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 md:translate-x-5 z-10 w-9 h-9 flex items-center justify-center border border-charcoal/10 bg-white/80 hover:bg-white rounded-full text-charcoal/40 hover:text-charcoal/70 transition-all duration-200"
+          class="tropical-arrow absolute right-0 top-1/2 z-10 translate-x-3 -translate-y-1/2 md:translate-x-5"
           @click="nextSlide"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

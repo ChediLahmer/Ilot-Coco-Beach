@@ -1,132 +1,116 @@
 <template>
-  <section
-    v-if="activeSales.length > 0"
-    class="relative py-20 px-6 md:px-16"
-    style="background: linear-gradient(135deg, var(--color-ocean-dark) 0%, var(--color-charcoal) 100%)"
-  >
-    <div class="max-w-7xl mx-auto">
-      <!-- Section header -->
-      <div class="text-center mb-14">
-        <h2 class="font-display text-white text-4xl md:text-5xl tracking-wide">
-          {{ t('flash.title') }}
-        </h2>
-        <div class="w-12 h-[2px] bg-gold mx-auto mt-5 mb-3" />
-        <p class="font-body text-white/50 text-base md:text-lg max-w-xl mx-auto">
-          {{ t('flash.subtitle') || '' }}
-        </p>
+  <section v-if="displayedSales.length > 0" id="flash-offers" class="relative overflow-hidden px-6 py-20 md:px-16 md:py-24">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,125,97,0.18),transparent_22%),radial-gradient(circle_at_top_right,rgba(239,186,82,0.16),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(29,166,179,0.16),transparent_28%)]" />
+    <div class="sand-texture absolute inset-0 opacity-40" />
+
+    <div class="relative z-10 mx-auto max-w-7xl">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-2xl">
+          <p class="section-kicker">{{ t('vouchers.title') }}</p>
+          <h2 class="section-title mt-6">{{ t('flash.title') }}</h2>
+          <div class="section-divider" />
+          <p class="mt-8 max-w-xl text-base leading-8 text-charcoal/70 md:text-lg">
+            {{ t('flash.subtitle') }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 lg:justify-end">
+          <p v-if="hasMore" class="text-sm text-charcoal/56">
+            +{{ activeSales.length - displayedSales.length }} {{ t('flash.moreOffers') }}
+          </p>
+          <router-link
+            to="/offers"
+            class="inline-flex items-center gap-3 rounded-full border border-coral/14 bg-white/78 px-5 py-3 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-deep shadow-[0_18px_36px_rgba(255,125,97,0.1)] backdrop-blur-xl hover:border-coral/30 hover:bg-white"
+          >
+            {{ t('flash.seeAll') }}
+            <span class="block h-px w-8 bg-coral/60" />
+          </router-link>
+        </div>
       </div>
 
-      <!-- Mobile: horizontal scroll | Desktop: grid -->
-      <div
-        ref="cardsContainer"
-        class="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible md:pb-0"
-      >
-        <div
+      <div class="mt-12 grid gap-5 lg:grid-cols-3">
+        <article
           v-for="sale in displayedSales"
           :key="sale.id"
-          class="card-item relative flex-shrink-0 snap-center min-w-[280px] md:min-w-0 rounded-2xl overflow-hidden group"
-          style="aspect-ratio: 4 / 3"
+          class="group relative min-h-[22rem] overflow-hidden rounded-[2rem] border border-white/10 bg-deep shadow-[0_28px_70px_rgba(7,17,23,0.22)]"
         >
-          <!-- Full card image -->
           <img
             v-if="sale.image"
             :src="sale.image"
             :alt="sale.title[locale] || sale.title.fr"
-            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div
-            v-else
-            class="absolute inset-0 bg-charcoal"
-          />
+          <div v-else class="absolute inset-0 bg-charcoal" />
+          <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,35,48,0.08)_0%,rgba(15,85,99,0.36)_44%,rgba(11,35,48,0.94)_100%)]" />
 
-          <!-- Dark gradient overlay -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div class="absolute inset-x-5 top-5 flex items-center justify-between gap-4">
+            <span class="rounded-full bg-[linear-gradient(135deg,var(--color-coral),var(--color-gold))] px-3 py-1 text-[0.72rem] font-heading font-bold uppercase tracking-[0.14em] text-white shadow-[0_16px_28px_rgba(255,125,97,0.28)]">
+              -{{ sale.discountPercent }}%
+            </span>
+            <span class="rounded-full border border-ocean-light/30 bg-white/12 px-3 py-1 text-[0.68rem] font-heading font-bold uppercase tracking-[0.16em] text-ocean-light backdrop-blur-xl">
+              {{ t('flash.title') }}
+            </span>
+          </div>
 
-          <!-- Discount badge -->
-          <span class="absolute top-4 right-4 bg-coral text-white font-heading font-bold text-sm px-3 py-1 rounded-full z-10">
-            -{{ sale.discountPercent }}%
-          </span>
-
-          <!-- Content at bottom -->
-          <div class="absolute inset-x-0 bottom-0 p-5 flex flex-col gap-3 z-10">
-            <h3 class="font-heading font-semibold text-white text-lg leading-tight">
+          <div class="absolute inset-x-0 bottom-0 p-6">
+            <h3 class="font-brand text-[2rem] leading-none text-white sm:text-[2.35rem]">
               {{ sale.title[locale] || sale.title.fr }}
             </h3>
-            <p class="font-body text-white/70 text-sm line-clamp-2">
+            <p class="mt-4 text-sm leading-7 text-white/72 sm:text-base">
               {{ sale.description[locale] || sale.description.fr }}
             </p>
 
-            <!-- Countdown -->
-            <div v-if="!isSaleExpired(sale)" class="flex gap-2 mt-1">
+            <div v-if="!isSaleExpired(sale)" class="mt-5 flex flex-wrap gap-2">
               <div
                 v-for="unit in getSaleCountdown(sale)"
                 :key="unit.label"
-                class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-lg px-2 py-1"
+                class="min-w-[4.4rem] rounded-[1.15rem] border border-ocean-light/22 bg-white/12 px-3 py-2 text-center backdrop-blur-xl"
               >
-                <span class="font-heading font-bold text-white text-sm leading-none">
+                <p class="font-heading text-lg font-bold text-white">
                   {{ String(unit.value).padStart(2, '0') }}
-                </span>
-                <span class="text-white/50 text-[10px] leading-tight mt-0.5">
+                </p>
+                <p class="mt-1 text-[0.6rem] font-heading uppercase tracking-[0.18em] text-white/56">
                   {{ unit.label }}
-                </span>
+                </p>
               </div>
             </div>
-            <p
-              v-else
-              class="font-heading font-semibold text-coral-light text-sm"
-            >
+            <p v-else class="mt-5 font-heading text-sm font-semibold uppercase tracking-[0.14em] text-coral-light">
               {{ t('flash.expired') }}
             </p>
 
-            <!-- CTA -->
-            <a
-              v-if="!isSaleExpired(sale)"
-              href="#reservation"
-              class="text-gold-light hover:text-gold font-heading text-xs uppercase tracking-wider transition-colors duration-200 mt-1"
-              @click.prevent="scrollToReservation"
-            >
-              {{ t('flash.bookNow') }} &rarr;
-            </a>
+            <div class="mt-6 flex items-center justify-between gap-4">
+              <a
+                href="#reservation"
+                class="inline-flex items-center gap-3 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-coral-light hover:text-white"
+                @click.prevent="scrollToReservation"
+              >
+                {{ t('flash.bookNow') }}
+                <span class="block h-px w-8 bg-coral-light/80" />
+              </a>
+              <router-link to="/offers" class="text-sm text-white/62 hover:text-white">
+                {{ t('flash.seeAll') }}
+              </router-link>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- See all offers -->
-      <div v-if="hasMore" class="text-center mt-10">
-        <router-link
-          to="/offers"
-          class="inline-flex items-center gap-2 font-heading text-sm text-white/70 hover:text-white transition-colors duration-200"
-        >
-          {{ t('flash.seeAll') }}
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
-        </router-link>
-        <p class="font-body text-white/40 text-xs mt-1">
-          +{{ activeSales.length - 3 }} {{ t('flash.moreOffers') }}
-        </p>
+        </article>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
 import { flashSales } from '@/data/mock'
 
-gsap.registerPlugin(ScrollTrigger)
-
 const { t, locale } = useI18n()
-const cardsContainer = ref(null)
 const now = ref(Date.now())
 let countdownTimer = null
 
-const activeSales = computed(() => flashSales.filter(s => s.isActive))
+const activeSales = computed(() => flashSales.filter((sale) => sale.isActive))
 const displayedSales = computed(() => activeSales.value.slice(0, 3))
-const hasMore = computed(() => activeSales.value.length > 3)
+const hasMore = computed(() => activeSales.value.length > displayedSales.value.length)
 
 function isSaleExpired(sale) {
   return now.value >= new Date(sale.endsAt).getTime()
@@ -134,51 +118,28 @@ function isSaleExpired(sale) {
 
 function getSaleCountdown(sale) {
   const diff = Math.max(0, new Date(sale.endsAt).getTime() - now.value)
-  const s = Math.floor(diff / 1000)
+  const seconds = Math.floor(diff / 1000)
+
   return [
-    { label: t('flash.days'), value: Math.floor(s / 86400) },
-    { label: t('flash.hours'), value: Math.floor((s % 86400) / 3600) },
-    { label: t('flash.minutes'), value: Math.floor((s % 3600) / 60) },
-    { label: t('flash.seconds'), value: s % 60 },
+    { label: t('flash.days'), value: Math.floor(seconds / 86400) },
+    { label: t('flash.hours'), value: Math.floor((seconds % 86400) / 3600) },
+    { label: t('flash.minutes'), value: Math.floor((seconds % 3600) / 60) },
+    { label: t('flash.seconds'), value: seconds % 60 },
   ]
 }
 
 function scrollToReservation() {
   const el = document.getElementById('reservation')
-  if (el) el.scrollIntoView({ behavior: 'instant' })
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
 onMounted(() => {
-  countdownTimer = setInterval(() => { now.value = Date.now() }, 1000)
-
-  if (cardsContainer.value) {
-    const cards = cardsContainer.value.querySelectorAll('.card-item')
-    gsap.from(cards, {
-      y: 30,
-      opacity: 0,
-      duration: 0.7,
-      stagger: 0.15,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: cardsContainer.value,
-        start: 'top 85%',
-        toggleActions: 'play none none none',
-      },
-    })
-  }
+  countdownTimer = window.setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
 })
 
 onUnmounted(() => {
-  if (countdownTimer) clearInterval(countdownTimer)
+  if (countdownTimer) window.clearInterval(countdownTimer)
 })
 </script>
-
-<style scoped>
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-</style>

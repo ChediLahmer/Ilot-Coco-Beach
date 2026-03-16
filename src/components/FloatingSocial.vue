@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+  <div class="fixed bottom-6 right-6 z-50 hidden flex-col items-end gap-3 lg:flex">
     <!-- Expanded buttons -->
     <Transition name="social-buttons">
       <div v-if="open" class="flex flex-col gap-3">
@@ -64,7 +64,7 @@ const config = useConfig()
 const open = ref(false)
 
 const messengerUrl = computed(() => {
-  const fbId = config.facebook.split('/').pop()
+  const fbId = config.facebook.split('/').filter(Boolean).pop()
   return `https://m.me/${fbId}`
 })
 </script>

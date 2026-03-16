@@ -1,6 +1,8 @@
 <template>
-  <section class="bg-white py-24 md:py-32 px-6 md:px-16">
-    <div class="max-w-4xl mx-auto text-center">
+  <section class="relative overflow-hidden bg-white py-24 px-6 md:px-16 md:py-32">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(29,166,179,0.12),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(255,125,97,0.14),transparent_24%)]" />
+
+    <div class="relative z-10 max-w-4xl mx-auto text-center">
       <!-- Header -->
       <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
         {{ t('video.title') }}
@@ -11,7 +13,7 @@
       </p>
 
       <!-- Video -->
-      <div class="relative rounded-xl overflow-hidden shadow-lg ring-1 ring-charcoal/5">
+      <div class="relative overflow-hidden rounded-[2rem] shadow-[0_30px_70px_rgba(10,24,32,0.12)] ring-1 ring-charcoal/5">
         <video
           ref="videoEl"
           :poster="heroPoster"
@@ -26,11 +28,11 @@
         <Transition name="fade">
           <button
             v-if="!isPlaying"
-            class="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors duration-200"
+            class="absolute inset-0 flex items-center justify-center bg-[linear-gradient(180deg,rgba(11,35,48,0.08),rgba(11,35,48,0.32))] transition-colors duration-200"
             @click="togglePlay"
           >
-            <div class="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform duration-200">
-              <svg class="w-8 h-8 text-charcoal ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <div class="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-coral),var(--color-gold))] shadow-[0_18px_40px_rgba(255,125,97,0.28)] transition-transform duration-200 hover:scale-105">
+              <svg class="ml-0.5 h-8 w-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
@@ -39,7 +41,7 @@
       </div>
 
       <!-- Description text below video -->
-      <p class="text-charcoal/40 text-sm text-center mt-6">
+      <p class="mt-6 text-center text-sm text-charcoal/52">
         {{ t('video.description') || 'Plongez dans l\'atmosphère unique d\'Ilot Coco Beach' }}
       </p>
     </div>

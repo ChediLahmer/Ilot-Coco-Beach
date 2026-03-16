@@ -1,54 +1,97 @@
 <template>
-  <section id="about" class="relative bg-sand sand-texture py-24 md:py-32 px-6 md:px-16 overflow-hidden">
-    <div class="relative z-10 max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="text-center mb-16">
-        <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
-          {{ t('about.title') }}
-        </h2>
-        <div class="w-10 h-[1px] bg-gold/60 mx-auto mt-4 mb-2" />
-      </div>
+  <section id="about" class="relative overflow-hidden px-6 py-24 md:px-16 md:py-32">
+    <div class="absolute inset-0 sand-texture opacity-60" />
 
-      <!-- Description -->
-      <div class="max-w-2xl mx-auto text-center mb-16">
-        <p class="font-body text-charcoal/70 leading-relaxed">
-          {{ t('about.description') }}
-        </p>
-      </div>
+    <div class="relative z-10 mx-auto max-w-7xl">
+      <div class="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+        <div class="lg:sticky lg:top-28 lg:pr-10">
+          <p class="section-kicker">{{ t('about.eyebrow') }}</p>
+          <h2 class="section-title mt-6 max-w-xl">
+            {{ t('about.title') }}
+          </h2>
+          <div class="section-divider" />
 
-      <!-- Two large images side by side -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-16">
-        <div class="rounded-xl overflow-hidden">
-          <img
-            :src="overwaterImg"
-            alt="Ilot Coco Beach"
-            class="w-full aspect-[3/2] object-cover hover:scale-[1.02] transition-transform duration-700"
-          />
+          <p class="section-copy mt-8 max-w-xl">
+            {{ t('about.description') }}
+          </p>
+          <p class="section-copy mt-6 max-w-xl text-charcoal/60">
+            {{ t('about.story') }}
+          </p>
+
+          <a
+            href="#reservation"
+            class="mt-10 inline-flex items-center gap-3 font-heading text-sm font-bold uppercase tracking-[0.18em] text-ocean"
+            @click.prevent="scrollTo('reservation')"
+          >
+            {{ t('about.cta') }}
+            <span class="block h-px w-10 bg-gold/80" />
+          </a>
         </div>
-        <div class="rounded-xl overflow-hidden">
-          <img
-            :src="waterSwingImg"
-            alt="Ilot Coco Beach"
-            class="w-full aspect-[3/2] object-cover hover:scale-[1.02] transition-transform duration-700"
-          />
+
+        <div class="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+          <article class="editorial-frame premium-card rounded-[2rem] p-3 md:row-span-2">
+            <img
+              :src="overwaterImg"
+              alt="Overwater dining at Ilot Coco Beach"
+              class="h-full min-h-[22rem] w-full rounded-[1.5rem] object-cover"
+            />
+            <div class="px-4 pb-4 pt-5 sm:px-5">
+              <p class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.22em] text-ocean/65">
+                {{ t('about.features.cabins') }}
+              </p>
+              <p class="mt-3 text-sm leading-7 text-charcoal/68 sm:text-base">
+                {{ t('about.features.cabinsDesc') }}
+              </p>
+            </div>
+          </article>
+
+          <article class="editorial-frame premium-card rounded-[2rem] p-3">
+            <img
+              :src="cabinHammockImg"
+              alt="Private cabin at Ilot Coco Beach"
+              class="aspect-[4/3] w-full rounded-[1.5rem] object-cover"
+            />
+            <div class="px-4 pb-4 pt-5 sm:px-5">
+              <p class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.22em] text-ocean/65">
+                {{ t('about.features.water') }}
+              </p>
+              <p class="mt-3 text-sm leading-7 text-charcoal/68 sm:text-base">
+                {{ t('about.features.waterDesc') }}
+              </p>
+            </div>
+          </article>
+
+          <article class="premium-card rounded-[2rem] p-6 sm:p-7">
+            <p class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.22em] text-ocean/65">
+              {{ t('about.features.vibes') }}
+            </p>
+            <p class="mt-4 font-brand text-3xl leading-tight text-deep">
+              {{ t('about.features.vibesDesc') }}
+            </p>
+            <div class="soft-divider mt-6" />
+            <p class="mt-6 text-sm leading-7 text-charcoal/62 sm:text-base">
+              {{ t('about.features.hammocksDesc') }}
+            </p>
+          </article>
         </div>
       </div>
 
-      <!-- Feature cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16">
-        <div
+      <div class="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article
           v-for="feature in features"
           :key="feature.key"
-          class="text-center"
+          class="premium-outline rounded-[1.65rem] px-5 py-6"
         >
-          <div class="w-12 h-12 mx-auto mb-3 text-ocean" v-html="feature.svg" />
-          <h3 class="font-heading font-semibold text-charcoal text-base mb-1">
+          <p class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.22em] text-ocean/68">
+            {{ feature.index }}
+          </p>
+          <h3 class="mt-4 text-lg font-semibold text-deep">
             {{ t(`about.features.${feature.key}`) }}
           </h3>
-          <p class="font-body text-charcoal/50 text-sm leading-relaxed">
+          <p class="mt-3 text-sm leading-7 text-charcoal/62">
             {{ t(`about.features.${feature.key}Desc`) }}
           </p>
-        </div>
+        </article>
       </div>
     </div>
   </section>
@@ -58,31 +101,19 @@
 import { useI18n } from 'vue-i18n'
 
 import overwaterImg from '@/assets/images/overwater-cabin.jpg'
-import waterSwingImg from '@/assets/images/water-swing.jpg'
-import hammockImg from '@/assets/images/hammock-area.jpg'
-import cabinImg from '@/assets/images/cabin-interior.jpg'
 import cabinHammockImg from '@/assets/images/cabin-hammock.jpg'
-import surfboardImg from '@/assets/images/surfboard-sign.jpg'
-import swingImg from '@/assets/images/swing-pergola.jpg'
-import heroImg from '@/assets/images/hero-beach-lounge.jpg'
 
 const { t } = useI18n()
 
 const features = [
-  { key: 'cabins', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>' },
-  { key: 'water', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 003 12c0-1.605.42-3.113 1.157-4.418"/></svg>' },
-  { key: 'hammocks', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>' },
-  { key: 'vibes', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"/></svg>' },
+  { key: 'cabins', index: '01' },
+  { key: 'water', index: '02' },
+  { key: 'hammocks', index: '03' },
+  { key: 'vibes', index: '04' },
 ]
 
-const slideshowImages = [
-  overwaterImg,
-  waterSwingImg,
-  hammockImg,
-  cabinImg,
-  cabinHammockImg,
-  surfboardImg,
-  swingImg,
-  heroImg,
-]
+function scrollTo(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
+}
 </script>

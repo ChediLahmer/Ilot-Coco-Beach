@@ -1,114 +1,101 @@
 <template>
-  <section id="experience" class="relative bg-sand sand-texture py-24 md:py-32 px-6 md:px-16">
-    <div class="max-w-7xl mx-auto">
-      <!-- Header -->
-      <div class="text-center mb-16">
-        <h2 class="font-display text-ocean text-4xl md:text-5xl tracking-wide">
-          {{ t('experience.title') }}
-        </h2>
-        <div class="w-10 h-[1px] bg-gold/60 mx-auto mt-4 mb-2" />
-        <p class="font-body text-charcoal/50 text-sm md:text-base max-w-xl mx-auto">
+  <section id="experience" class="relative overflow-hidden bg-sand px-6 py-24 md:px-16 md:py-32">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(29,166,179,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(255,125,97,0.16),transparent_28%)]" />
+    <div class="sand-texture absolute inset-0 opacity-40" />
+
+    <div class="relative z-10 mx-auto max-w-7xl">
+      <div class="text-center">
+        <p class="section-kicker justify-center">{{ t('experience.eyebrow') }}</p>
+        <h2 class="section-title mt-6">{{ t('experience.title') }}</h2>
+        <div class="mx-auto mt-5 h-px w-14 bg-gold" />
+        <p class="mx-auto mt-8 max-w-2xl text-base leading-8 text-charcoal/68 md:text-lg">
           {{ t('experience.subtitle') }}
         </p>
       </div>
 
-      <p v-if="emplacements.length === 0" class="text-center text-charcoal/40 font-body py-10">
-        {{ t('experience.subtitle') }}
-      </p>
+      <div class="mt-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <p class="max-w-2xl text-sm leading-7 text-charcoal/58">
+          {{ t('about.story') }}
+        </p>
 
-      <!-- Carousel -->
-      <div
-        v-if="emplacements.length > 0"
-        @mouseenter="pause"
-        @mouseleave="resume"
-        dir="ltr"
-        class="relative overflow-hidden"
-      >
-        <!-- Track -->
-        <div
-          class="flex transition-transform duration-500 ease-out"
-          :style="{ transform: trackTransform }"
-        >
-          <div
-            v-for="emp in emplacements"
-            :key="emp.id"
-            class="flex-shrink-0 px-3"
-            :style="{ width: cardPercent + '%' }"
+        <div class="flex items-center gap-3 self-start lg:self-auto">
+          <span class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.18em] text-coral/80">
+            {{ t('ui.scrollHint') }}
+          </span>
+          <button
+            type="button"
+            class="tropical-arrow"
+            :aria-label="t('ui.previous')"
+            :disabled="!canScrollLeft"
+            @click="scrollByStep(-1)"
           >
-            <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-              <!-- Image -->
-              <div class="relative h-52 overflow-hidden">
-                <img
-                  :src="emp.image"
-                  :alt="emp.name[locale] || emp.name.fr"
-                  class="w-full h-full object-cover rounded-t-xl"
-                />
-                <!-- Price badge -->
-                <div class="absolute top-3 right-3 bg-white text-charcoal font-bold text-xs font-heading px-2.5 py-1 rounded-full shadow-sm">
-                  {{ emp.price }} DT
-                </div>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="tropical-arrow"
+            :aria-label="t('ui.next')"
+            :disabled="!canScrollRight"
+            @click="scrollByStep(1)"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-12 overflow-hidden" @mouseenter="pause" @mouseleave="resume" @touchstart.passive="pause" @touchend.passive="resume">
+        <div
+          ref="scrollerEl"
+          class="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
+          @scroll="updateScrollState"
+        >
+          <article
+            v-for="space in spaces"
+            :key="space.id"
+            data-rail-item
+            class="editorial-frame group relative min-h-[29rem] min-w-[19rem] overflow-hidden rounded-[2rem] text-white sm:min-w-[21rem] lg:min-w-[23rem]"
+          >
+            <img
+              v-if="space.image"
+              :src="space.image"
+              :alt="space.name[locale] || space.name.fr"
+              class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div v-else class="absolute inset-0 bg-[linear-gradient(135deg,rgba(49,112,124,0.9),rgba(10,24,32,0.95))]" />
+            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,17,23,0.08)_0%,rgba(7,17,23,0.52)_48%,rgba(7,17,23,0.92)_100%)]" />
+
+            <div class="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="rounded-full border border-white/16 bg-white/12 px-4 py-2 text-[0.68rem] font-heading font-bold uppercase tracking-[0.18em] text-white/88 backdrop-blur-xl">
+                  {{ t('experience.startingAt') }} {{ space.price }} DT
+                </span>
+                <span class="rounded-full border border-coral-light/30 bg-coral/18 px-4 py-2 text-[0.68rem] font-heading font-bold uppercase tracking-[0.18em] text-white/88 backdrop-blur-xl">
+                  {{ space.capacity }} {{ t('experience.persons') }}
+                </span>
               </div>
-              <!-- Content -->
-              <div class="p-6">
-                <h3 class="font-heading font-semibold text-charcoal text-base mb-1.5">
-                  {{ emp.name[locale] || emp.name.fr }}
+
+              <div>
+                <h3 class="font-brand text-3xl leading-tight sm:text-4xl">
+                  {{ space.name[locale] || space.name.fr }}
                 </h3>
-                <p class="font-body text-charcoal/40 text-xs leading-relaxed mb-4 line-clamp-2">
-                  {{ emp.desc[locale] || emp.desc.fr }}
+                <p class="mt-4 text-sm leading-7 text-white/74 sm:text-base">
+                  {{ space.desc[locale] || space.desc.fr }}
                 </p>
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-charcoal/30 font-heading">
-                    <svg class="w-3.5 h-3.5 inline-block mr-0.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {{ emp.capacity }} {{ t('experience.persons') || 'pers.' }}
-                  </span>
-                  <a
-                    href="#reservation"
-                    class="bg-ocean/10 text-ocean px-3 py-1 rounded-full text-xs font-heading font-semibold hover:bg-ocean/20 transition-colors"
-                    @click.prevent="scrollToReservation"
-                  >
-                    Réserver →
-                  </a>
-                </div>
+                <a
+                  href="#reservation"
+                  class="mt-6 inline-flex items-center gap-3 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-coral-light hover:text-white"
+                  @click.prevent="scrollToReservation"
+                >
+                  {{ t('experience.reserveCta') }}
+                  <span class="block h-px w-10 bg-coral-light/80" />
+                </a>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Prev button -->
-        <button
-          @click="prev"
-          class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-charcoal hover:border-charcoal/30 flex items-center justify-center transition-all duration-200 z-10"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <!-- Next button -->
-        <button
-          @click="next"
-          class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full border border-charcoal/10 bg-white text-charcoal/40 hover:text-charcoal hover:border-charcoal/30 flex items-center justify-center transition-all duration-200 z-10"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-
-        <!-- Dots -->
-        <div class="flex justify-center gap-2 mt-8">
-          <button
-            v-for="i in dotCount"
-            :key="i"
-            @click="goTo(i - 1)"
-            :class="[
-              'w-1.5 h-1.5 rounded-full transition-all duration-200',
-              current === i - 1
-                ? 'bg-charcoal'
-                : 'bg-charcoal/15 hover:bg-charcoal/30',
-            ]"
-          />
+          </article>
         </div>
       </div>
     </div>
@@ -116,67 +103,44 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import { useHorizontalRail } from '@/composables/useHorizontalRail'
 import { emplacements } from '@/data/mock'
 
 const { t, locale } = useI18n()
 
-// Responsive screen width tracking
-const screenW = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
-const onResize = () => { screenW.value = window.innerWidth }
-onMounted(() => window.addEventListener('resize', onResize))
-onUnmounted(() => window.removeEventListener('resize', onResize))
+const spaces = emplacements
 
-// Card width % based on breakpoint
-const cardPercent = computed(() => {
-  if (screenW.value >= 1280) return 25
-  if (screenW.value >= 1024) return 33.333
-  if (screenW.value >= 640) return 50
-  return 100
-})
-
-// Carousel state
-const current = ref(0)
-const paused = ref(false)
-let timer = null
-
-const dotCount = computed(() => emplacements.length)
-
-const trackTransform = computed(() => `translateX(-${current.value * cardPercent.value}%)`)
-
-function next() {
-  current.value = current.value >= emplacements.length - 1 ? 0 : current.value + 1
-}
-
-function prev() {
-  current.value = current.value <= 0 ? emplacements.length - 1 : current.value - 1
-}
-
-function goTo(i) {
-  current.value = i
-}
-
-function pause() {
-  paused.value = true
-}
-
-function resume() {
-  paused.value = false
-}
+const {
+  scrollerEl,
+  canScrollLeft,
+  canScrollRight,
+  scrollByStep,
+  updateScrollState,
+  pause,
+  resume,
+} = useHorizontalRail(computed(() => spaces.length))
 
 function scrollToReservation() {
   const el = document.getElementById('reservation')
-  if (el) el.scrollIntoView({ behavior: 'instant' })
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
-onMounted(() => {
-  timer = setInterval(() => {
-    if (!paused.value) next()
-  }, 4000)
-})
-
-onUnmounted(() => {
-  clearInterval(timer)
+watch(locale, async () => {
+  await nextTick()
+  updateScrollState()
 })
 </script>
+
+<style scoped>
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+</style>
