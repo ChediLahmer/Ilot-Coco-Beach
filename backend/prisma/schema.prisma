@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model MenuCategory {
+  id    Int    @id @default(autoincrement())
+  name  Json   // { fr, en, ar }
+  order Int    @default(0)
+  items MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id            Int          @id @default(autoincrement())
+  name          Json         // { fr, en, ar }
+  description   Json?        // { fr, en, ar }
+  image         String?
+  priceStandard Decimal      @db.Decimal(8, 2) @map("price_standard")
+  priceExtra    Decimal      @db.Decimal(8, 2) @map("price_extra")
+  available     Boolean      @default(true)
+  categoryId    Int          @map("category_id")
+  category      MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  order         Int          @default(0)
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@map("menu_items")
+}
+
+model Space {
+  id          Int     @id @default(autoincrement())
+  name        Json    // { fr, en, ar }
+  description Json?   // { fr, en, ar }
+  image       String?
+  price       Decimal @db.Decimal(8, 2)
+  capacity    Int
+  available   Boolean @default(true)
+  order       Int     @default(0)
+
+  @@map("spaces")
+}
+
+model GalleryImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  alt       String?
+  category  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("gallery_images")
+}
+
+model FlashSale {
+  id              Int      @id @default(autoincrement())
+  title           Json     // { fr, en, ar }
+  description     Json     // { fr, en, ar }
+  discountPercent Int      @map("discount_percent")
+  image           String?
+  endsAt          DateTime @map("ends_at")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("flash_sales")
+}
+
+model Voucher {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
+  discountPercent Int      @map("discount_percent")
+  validUntil      DateTime @map("valid_until")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("vouchers")
+}
+
+model SiteConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("site_config")
+}
