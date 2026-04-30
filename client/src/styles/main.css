@@ -1,0 +1,396 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ocean: #1a8f9a;
+  --color-ocean-light: #d4f0ee;
+  --color-ocean-dark: #0f5563;
+  --color-driftwood: #b88561;
+  --color-driftwood-light: #dcb28c;
+  --color-driftwood-dark: #8d6549;
+  --color-coral: #e86c50;
+  --color-coral-light: #f4a08c;
+  --color-sand: #faf7f2;
+  --color-sand-dark: #f0ebe3;
+  --color-charcoal: #1c2e35;
+  --color-leaf: #2f8f74;
+  --color-gold: #c9953a;
+  --color-gold-light: #e8c06a;
+  --color-mist: #f4fafa;
+  --color-foam: #f8fafb;
+  --color-deep: #0d1f28;
+
+  --font-display: "Playfair Display", serif;
+  --font-brand: "Playfair Display", serif;
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-arabic: "Tajawal", sans-serif;
+}
+
+/* ========================================
+   Base
+   ======================================== */
+
+html {
+  scroll-behavior: smooth;
+  background: #fff;
+}
+
+html[dir="rtl"] body {
+  font-family: var(--font-arabic), sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-charcoal);
+  background: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+/* ========================================
+   Scroll Reveal
+   ======================================== */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+[data-reveal="left"] {
+  transform: translateX(-24px) translateY(0);
+}
+
+[data-reveal="left"].revealed {
+  transform: translateX(0);
+}
+
+[data-reveal="right"] {
+  transform: translateX(24px) translateY(0);
+}
+
+[data-reveal="right"].revealed {
+  transform: translateX(0);
+}
+
+[data-reveal="scale"] {
+  transform: scale(0.95);
+}
+
+[data-reveal="scale"].revealed {
+  transform: scale(1);
+}
+
+::selection {
+  background: rgba(26, 143, 154, 0.15);
+  color: var(--color-deep);
+}
+
+/* ========================================
+   Font Utilities
+   ======================================== */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-brand {
+  font-family: var(--font-brand);
+}
+
+/* ========================================
+   Section Typography
+   ======================================== */
+
+.section-kicker {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ocean);
+}
+
+.section-title {
+  font-family: var(--font-brand);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-deep);
+}
+
+.section-copy {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: rgba(28, 46, 53, 0.65);
+}
+
+.section-divider {
+  width: 40px;
+  height: 2px;
+  background: var(--color-ocean);
+  margin-top: 16px;
+  border-radius: 1px;
+}
+
+/* ========================================
+   Cards
+   ======================================== */
+
+.premium-card {
+  border: 1px solid rgba(28, 46, 53, 0.08);
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.premium-card-dark {
+  background: var(--color-deep);
+  border-radius: 1rem;
+  color: #fff;
+}
+
+.editorial-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.metric-card {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.25rem;
+}
+
+/* ========================================
+   Buttons
+   ======================================== */
+
+.premium-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  background: var(--color-ocean);
+  color: white;
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.premium-button:hover {
+  background: var(--color-ocean-dark);
+}
+
+.premium-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.85rem 1.75rem;
+  color: white;
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.premium-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.tropical-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(28, 46, 53, 0.12);
+  background: #fff;
+  color: var(--color-charcoal);
+}
+
+.tropical-arrow:hover {
+  border-color: var(--color-ocean);
+  color: var(--color-ocean);
+}
+
+.tropical-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   Forms
+   ======================================== */
+
+.booking-field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(28, 46, 53, 0.12);
+  background: #fff;
+  padding: 0.85rem 1rem;
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+.booking-field:focus {
+  outline: none;
+  border-color: var(--color-ocean);
+  box-shadow: 0 0 0 3px rgba(26, 143, 154, 0.1);
+}
+
+/* ========================================
+   Dark Section
+   ======================================== */
+
+.section-dark {
+  background: var(--color-deep);
+}
+
+/* ========================================
+   Utilities
+   ======================================== */
+
+.soft-divider {
+  height: 1px;
+  width: 100%;
+  background: rgba(28, 46, 53, 0.08);
+}
+
+.sand-texture {
+  /* intentionally empty — removed for cleanliness */
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(28, 46, 53, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(28, 46, 53, 0.4);
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+  }
+}
+
+.whatsapp-pulse {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+/* ========================================
+   RTL
+   ======================================== */
+
+html[dir="rtl"] .font-display,
+html[dir="rtl"] .font-brand {
+  font-family: var(--font-arabic), var(--font-display), cursive;
+}
+
+html[dir="rtl"] .font-heading {
+  font-family: var(--font-arabic), var(--font-heading), sans-serif;
+}
+
+html[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+html[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Flip flex direction for horizontal layouts */
+html[dir="rtl"] .sm\:flex-row,
+html[dir="rtl"] .lg\:flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Flip grid col ordering */
+html[dir="rtl"] .lg\:grid-cols-\[5fr_7fr\] {
+  direction: rtl;
+}
+
+/* Navigation arrows flip */
+html[dir="rtl"] .tropical-arrow svg {
+  transform: scaleX(-1);
+}
+
+/* Spacing/margins that need logical flipping */
+html[dir="rtl"] .border-r {
+  border-right: none;
+  border-left: 1px solid rgba(28, 46, 53, 0.1);
+}
+
+html[dir="rtl"] .pr-4 {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
+/* Section kicker letter-spacing looks odd in Arabic */
+html[dir="rtl"] .section-kicker {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Swiper in RTL */
+html[dir="rtl"] .swiper {
+  direction: rtl;
+}
+
+/* Scroll progress bar from right */
+html[dir="rtl"] [style*="width"] {
+  left: auto;
+  right: 0;
+}
