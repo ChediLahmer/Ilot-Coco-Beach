@@ -38,7 +38,7 @@ const activeItems = computed(() => {
 });
 
 async function loadData() {
-  categories.value = await api.get("/menu/categories/all");
+  categories.value = await api.get("/menu/categories");
   if (!activeCategory.value && categories.value.length) {
     activeCategory.value = categories.value[0].id;
   }

@@ -16,18 +16,18 @@ const loading = ref(true);
 onMounted(async () => {
   try {
     const [cats, spaces, sales, vouchers, galleryCount] = await Promise.all([
-      api.get("/menu/categories/all"),
-      api.get("/spaces/all"),
-      api.get("/flash-sales/all"),
-      api.get("/vouchers/all"),
+      api.get("/menu/categories"),
+      api.get("/spaces"),
+      api.get("/flash-sales"),
+      api.get("/vouchers"),
       api.get("/gallery/count"),
     ]);
     stats.value = {
       categories: cats.length,
       items: cats.reduce((sum, c) => sum + (c.items?.length || 0), 0),
-      spaces: spaces.items?.length || spaces.length || 0,
-      flashSales: sales.items?.length || sales.length || 0,
-      vouchers: vouchers.items?.length || vouchers.length || 0,
+      spaces: spaces.length,
+      flashSales: sales.length,
+      vouchers: vouchers.length,
       gallery: galleryCount.total || 0,
     };
   } catch {

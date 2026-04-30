@@ -21,3 +21,13 @@ export async function authenticate(request, reply) {
     return reply.status(401).send({ error: "Invalid token" });
   }
 }
+
+export async function optionalAuth(request) {
+  const header = request.headers.authorization;
+  if (!header || !header.startsWith("Bearer ")) return;
+  try {
+    request.admin = verifyToken(header.slice(7));
+  } catch {
+    // invalid token — treat as public request
+  }
+}

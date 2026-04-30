@@ -15,8 +15,7 @@ function resetForm() {
 }
 
 async function loadData() {
-  const res = await api.get("/vouchers/all");
-  vouchers.value = res.items || res;
+  vouchers.value = await api.get("/vouchers");
 }
 
 onMounted(loadData);

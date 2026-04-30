@@ -36,8 +36,7 @@ function resetForm() {
 }
 
 async function loadData() {
-  const res = await api.get("/spaces/all");
-  spaces.value = res.items || res;
+  spaces.value = await api.get("/spaces");
 }
 
 onMounted(loadData);

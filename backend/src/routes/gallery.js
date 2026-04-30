@@ -9,7 +9,7 @@ export async function galleryRoutes(app) {
     properties: {
       id: { type: "integer" },
       url: { type: "string" },
-      alt: { type: "string" },
+      alt: { type: "string", nullable: true },
       category: { type: "string", nullable: true },
       order: { type: "integer" },
       createdAt: { type: "string", format: "date-time" },
@@ -25,27 +25,15 @@ export async function galleryRoutes(app) {
         querystring: {
           type: "object",
           properties: {
-            limit: { type: "integer", default: 20, maximum: 50 },
+            limit: { type: "integer", maximum: 100 },
             cursor: { type: "integer" },
             category: { type: "string" },
-          },
-        },
-        response: {
-          200: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
-                items: { $ref: "#/components/schemas/GalleryImage" },
-              },
-              nextCursor: { type: "integer", nullable: true },
-            },
           },
         },
       },
     },
     async (request) => {
-      const limit = Math.min(Number(request.query.limit) || 20, 50);
+      const limit = Math.min(Number(request.query.limit) || 20, 100);
       const cursor = Number(request.query.cursor) || undefined;
       const category = request.query.category || undefined;
 
@@ -60,7 +48,6 @@ export async function galleryRoutes(app) {
       const hasMore = images.length > limit;
       const items = hasMore ? images.slice(0, limit) : images;
       const nextCursor = hasMore ? items[items.length - 1].id : null;
-
       return { items, nextCursor };
     },
   );
@@ -71,12 +58,7 @@ export async function galleryRoutes(app) {
       schema: {
         tags: ["Gallery"],
         summary: "Get total image count",
-        response: {
-          200: {
-            type: "object",
-            properties: { total: { type: "integer" } },
-          },
-        },
+        response: { 200: { type: "object", properties: { total: { type: "integer" } } } },
       },
     },
     async () => {
@@ -94,15 +76,11 @@ export async function galleryRoutes(app) {
         summary: "Upload a gallery image",
         security: [{ BearerAuth: [] }],
         consumes: ["multipart/form-data"],
-        response: {
-          201: { $ref: "#/components/schemas/GalleryImage" },
-        },
       },
     },
     async (request, reply) => {
       const file = await request.file();
       if (!file) return reply.status(400).send({ error: "No file uploaded" });
-
       const buffer = await file.toBuffer();
       const url = await uploadFile(buffer, file.filename, file.mimetype);
       const category = file.fields?.category?.value || null;
@@ -121,18 +99,8 @@ export async function galleryRoutes(app) {
         tags: ["Gallery"],
         summary: "Update a gallery image",
         security: [{ BearerAuth: [] }],
-        params: {
-          type: "object",
-          properties: { id: { type: "integer" } },
-        },
-        body: {
-          type: "object",
-          properties: {
-            order: { type: "integer" },
-            alt: { type: "string" },
-            category: { type: "string" },
-          },
-        },
+        params: { type: "object", properties: { id: { type: "integer" } } },
+        body: { type: "object", properties: { order: { type: "integer" }, alt: { type: "string" }, category: { type: "string" } } },
       },
     },
     async (request) => {
@@ -141,10 +109,7 @@ export async function galleryRoutes(app) {
       if (order !== undefined) data.order = order;
       if (alt !== undefined) data.alt = alt;
       if (category !== undefined) data.category = category;
-      return prisma.galleryImage.update({
-        where: { id: Number(request.params.id) },
-        data,
-      });
+      return prisma.galleryImage.update({ where: { id: Number(request.params.id) }, data });
     },
   );
 
@@ -156,17 +121,12 @@ export async function galleryRoutes(app) {
         tags: ["Gallery"],
         summary: "Delete a gallery image",
         security: [{ BearerAuth: [] }],
-        params: {
-          type: "object",
-          properties: { id: { type: "integer" } },
-        },
+        params: { type: "object", properties: { id: { type: "integer" } } },
         response: { 204: { type: "null" } },
       },
     },
     async (request, reply) => {
-      const image = await prisma.galleryImage.findUnique({
-        where: { id: Number(request.params.id) },
-      });
+      const image = await prisma.galleryImage.findUnique({ where: { id: Number(request.params.id) } });
       if (image) {
         await deleteFile(image.url);
         await prisma.galleryImage.delete({ where: { id: image.id } });

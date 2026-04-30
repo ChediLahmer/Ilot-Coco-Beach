@@ -5,6 +5,18 @@ import { useApi } from "@/composables/useApi.js";
 const api = useApi();
 const images = ref([]);
 const uploading = ref(false);
+const previewUrl = ref(null);
+
+function isVideo(url) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+function openPreview(img) {
+  previewUrl.value = img.url;
+}
+function closePreview() {
+  previewUrl.value = null;
+}
 
 async function loadData() {
   let all = [];
@@ -74,10 +86,10 @@ async function remove(img) {
             d="M12 4v16m8-8H4"
           />
         </svg>
-        {{ uploading ? "Envoi en cours..." : "Ajouter des images" }}
+        {{ uploading ? "Envoi en cours..." : "Ajouter des médias" }}
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           multiple
           class="hidden"
           @change="handleUpload"
@@ -95,12 +107,27 @@ async function remove(img) {
         class="group bg-surface rounded-xl border border-border overflow-hidden transition-shadow hover:shadow-md"
       >
         <div class="relative aspect-[4/3] overflow-hidden bg-surface-alt">
+          <video
+            v-if="isVideo(img.url)"
+            :src="img.url"
+            class="w-full h-full object-cover cursor-pointer"
+            muted
+            @click="openPreview(img)"
+          />
           <img
+            v-else
             :src="img.url"
             :alt="img.alt"
-            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
             loading="lazy"
+            @click="openPreview(img)"
           />
+          <div
+            v-if="isVideo(img.url)"
+            class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
+          >
+            Vidéo
+          </div>
           <div
             class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center"
           >
@@ -161,5 +188,45 @@ async function remove(img) {
         Utilisez le bouton ci-dessus pour ajouter des images
       </p>
     </div>
+
+    <!-- Lightbox Preview -->
+    <Teleport to="body">
+      <div
+        v-if="previewUrl"
+        class="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+        @click.self="closePreview"
+      >
+        <button
+          @click="closePreview"
+          class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+        >
+          <svg
+            class="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+        <video
+          v-if="isVideo(previewUrl)"
+          :src="previewUrl"
+          controls
+          autoplay
+          class="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+        />
+        <img
+          v-else
+          :src="previewUrl"
+          class="max-w-full max-h-[90vh] rounded-lg shadow-2xl object-contain"
+        />
+      </div>
+    </Teleport>
   </div>
 </template>

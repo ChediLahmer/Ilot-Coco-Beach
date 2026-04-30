@@ -1,15 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { authenticate } from "../lib/auth.js";
-
-const paginatedResponse = {
-  type: "object",
-  properties: {
-    items: { type: "array", items: { $ref: "#/components/schemas/Space" } },
-    total: { type: "integer" },
-    page: { type: "integer" },
-    totalPages: { type: "integer" },
-  },
-};
+import { authenticate, optionalAuth } from "../lib/auth.js";
 
 export async function spacesRoutes(app) {
   app.addSchema({
@@ -19,99 +9,49 @@ export async function spacesRoutes(app) {
       id: { type: "integer" },
       name: { type: "object" },
       description: { type: "object" },
-      image: { type: "string" },
+      image: { type: "string", nullable: true },
       price: { type: "number" },
       capacity: { type: "integer" },
       order: { type: "integer" },
       available: { type: "boolean" },
-      createdAt: { type: "string", format: "date-time" },
     },
   });
 
   app.get(
     "/",
     {
+      preHandler: optionalAuth,
       schema: {
         tags: ["Spaces"],
-        summary: "List available spaces (public)",
+        summary: "List spaces. Auth=all, public=available only. ?page for pagination.",
         querystring: {
           type: "object",
           properties: {
-            page: { type: "integer", default: 1 },
-            limit: { type: "integer", default: 20, maximum: 50 },
-          },
-        },
-        response: { 200: paginatedResponse },
-      },
-    },
-    async (request) => {
-      const { page, limit: rawLimit } = request.query;
-      const limit = Math.min(Number(rawLimit) || 20, 50);
-      const offset = ((Number(page) || 1) - 1) * limit;
-
-      const where = { available: true };
-      const [items, total] = await Promise.all([
-        prisma.space.findMany({
-          where,
-          orderBy: { order: "asc" },
-          take: limit,
-          skip: offset,
-        }),
-        prisma.space.count({ where }),
-      ]);
-
-      return {
-        items,
-        total,
-        page: Number(page) || 1,
-        totalPages: Math.ceil(total / limit),
-      };
-    },
-  );
-
-  app.get(
-    "/all",
-    {
-      preHandler: authenticate,
-      schema: {
-        tags: ["Spaces"],
-        summary: "List all spaces (admin)",
-        security: [{ BearerAuth: [] }],
-        querystring: {
-          type: "object",
-          properties: {
-            page: { type: "integer", default: 1 },
-            limit: { type: "integer", default: 20, maximum: 50 },
+            page: { type: "integer" },
+            limit: { type: "integer", maximum: 100 },
             available: { type: "string", enum: ["true", "false"] },
           },
         },
-        response: { 200: paginatedResponse },
       },
     },
     async (request) => {
       const { page, limit: rawLimit, available } = request.query;
-      const limit = Math.min(Number(rawLimit) || 20, 50);
-      const offset = ((Number(page) || 1) - 1) * limit;
-
       const where = {};
-      if (available !== undefined) where.available = available === "true";
-
-      const [items, total] = await Promise.all([
-        prisma.space.findMany({
-          where,
-          orderBy: { order: "asc" },
-          take: limit,
-          skip: offset,
-        }),
-        prisma.space.count({ where }),
-      ]);
-
-      return {
-        items,
-        total,
-        page: Number(page) || 1,
-        totalPages: Math.ceil(total / limit),
-      };
+      if (request.admin) {
+        if (available !== undefined) where.available = available === "true";
+      } else {
+        where.available = true;
+      }
+      if (page) {
+        const limit = Math.min(Number(rawLimit) || 20, 100);
+        const offset = (Number(page) - 1) * limit;
+        const [items, total] = await Promise.all([
+          prisma.space.findMany({ where, orderBy: { order: "asc" }, take: limit, skip: offset }),
+          prisma.space.count({ where }),
+        ]);
+        return { items, total, page: Number(page), totalPages: Math.ceil(total / limit) };
+      }
+      return prisma.space.findMany({ where, orderBy: { order: "asc" } });
     },
   );
 
@@ -139,18 +79,9 @@ export async function spacesRoutes(app) {
       },
     },
     async (request) => {
-      const { name, description, image, price, capacity, order, available } =
-        request.body;
+      const { name, description, image, price, capacity, order, available } = request.body;
       return prisma.space.create({
-        data: {
-          name,
-          description,
-          image,
-          price,
-          capacity,
-          order: order || 0,
-          available: available ?? true,
-        },
+        data: { name, description, image, price, capacity, order: order || 0, available: available ?? true },
       });
     },
   );
@@ -163,10 +94,7 @@ export async function spacesRoutes(app) {
         tags: ["Spaces"],
         summary: "Update a space",
         security: [{ BearerAuth: [] }],
-        params: {
-          type: "object",
-          properties: { id: { type: "integer" } },
-        },
+        params: { type: "object", properties: { id: { type: "integer" } } },
         body: {
           type: "object",
           properties: {
@@ -182,11 +110,7 @@ export async function spacesRoutes(app) {
       },
     },
     async (request) => {
-      const data = request.body;
-      return prisma.space.update({
-        where: { id: Number(request.params.id) },
-        data,
-      });
+      return prisma.space.update({ where: { id: Number(request.params.id) }, data: request.body });
     },
   );
 
@@ -198,10 +122,7 @@ export async function spacesRoutes(app) {
         tags: ["Spaces"],
         summary: "Delete a space",
         security: [{ BearerAuth: [] }],
-        params: {
-          type: "object",
-          properties: { id: { type: "integer" } },
-        },
+        params: { type: "object", properties: { id: { type: "integer" } } },
         response: { 204: { type: "null" } },
       },
     },
