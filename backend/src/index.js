@@ -9,6 +9,7 @@ import { configRoutes } from "./routes/config.js";
 import { flashSalesRoutes } from "./routes/flash-sales.js";
 import { vouchersRoutes } from "./routes/vouchers.js";
 import { uploadRoutes } from "./routes/upload.js";
+import { passwordResetRoutes } from "./routes/password-reset.js";
 
 const app = Fastify({ logger: true });
 
@@ -37,6 +38,7 @@ await app.register(configRoutes, { prefix: "/api/config" });
 await app.register(flashSalesRoutes, { prefix: "/api/flash-sales" });
 await app.register(vouchersRoutes, { prefix: "/api/vouchers" });
 await app.register(uploadRoutes, { prefix: "/api/upload" });
+await app.register(passwordResetRoutes, { prefix: "/api/auth" });
 
 const port = process.env.PORT || 3000;
 

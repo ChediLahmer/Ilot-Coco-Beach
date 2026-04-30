@@ -334,18 +334,54 @@ pm2 monit
 
 ## Environment Variables Reference
 
-| Variable        | Description                       | Example                                           |
-| --------------- | --------------------------------- | ------------------------------------------------- |
-| `DATABASE_URL`  | PostgreSQL connection             | `postgresql://user:pass@localhost:5432/cocobeach` |
-| `JWT_SECRET`    | Token signing key (min 32 chars)  | Random string                                     |
-| `PORT`          | Backend port                      | `3000`                                            |
-| `S3_ENDPOINT`   | MinIO/S3 endpoint                 | `http://localhost:9000`                           |
-| `S3_ACCESS_KEY` | Storage access key                | `minioadmin`                                      |
-| `S3_SECRET_KEY` | Storage secret key                | Secret                                            |
-| `S3_BUCKET`     | Bucket name                       | `cocobeach`                                       |
-| `S3_REGION`     | Region                            | `us-east-1`                                       |
-| `S3_PUBLIC_URL` | Public URL for uploaded files     | `https://yourdomain.com/storage`                  |
-| `CORS_ORIGIN`   | Allowed origins (comma-separated) | `https://yourdomain.com`                          |
+| Variable             | Description                       | Example                                           |
+| -------------------- | --------------------------------- | ------------------------------------------------- |
+| `DATABASE_URL`       | PostgreSQL connection             | `postgresql://user:pass@localhost:5432/cocobeach` |
+| `JWT_SECRET`         | Token signing key (min 32 chars)  | Random string                                     |
+| `PORT`               | Backend port                      | `3000`                                            |
+| `S3_ENDPOINT`        | MinIO/S3 endpoint                 | `http://localhost:9000`                           |
+| `S3_ACCESS_KEY`      | Storage access key                | `minioadmin`                                      |
+| `S3_SECRET_KEY`      | Storage secret key                | Secret                                            |
+| `S3_BUCKET`          | Bucket name                       | `cocobeach`                                       |
+| `S3_REGION`          | Region                            | `us-east-1`                                       |
+| `S3_PUBLIC_URL`      | Public URL for uploaded files     | `https://yourdomain.com/storage`                  |
+| `CORS_ORIGIN`        | Allowed origins (comma-separated) | `https://yourdomain.com`                          |
+| `BREVO_API_KEY`      | Brevo transactional email API key | `xkeysib-...`                                     |
+| `BREVO_SENDER_EMAIL` | Sender email for password resets  | `noreply@ilotcocobeach.tn`                        |
+| `ADMIN_URL`          | Admin panel URL (for reset links) | `https://admin.yourdomain.com`                    |
+
+---
+
+## Password Reset (Brevo)
+
+The admin panel includes a "Forgot Password" flow that sends reset emails via [Brevo](https://www.brevo.com) (free tier: 300 emails/day).
+
+### Setup
+
+1. Create a free Brevo account at https://www.brevo.com
+2. Go to **SMTP & API** → **API Keys** → Generate a new key
+3. Add a verified sender email in **Senders, Domains & Dedicated IPs**
+4. Set these environment variables in `backend/.env`:
+   ```
+   BREVO_API_KEY=xkeysib-your-api-key-here
+   BREVO_SENDER_EMAIL=noreply@ilotcocobeach.tn
+   ADMIN_URL=https://admin.yourdomain.com
+   ```
+
+### Flow
+
+1. Admin clicks "Mot de passe oublié ?" on the login page
+2. Enters their email → backend sends a reset link (valid 15 min)
+3. Admin clicks the link → enters a new password → done
+
+### Emergency: CLI Reset
+
+If email is unavailable, you can still reset the password from the server:
+
+```bash
+cd /var/www/cocobeach/backend
+node scripts/reset-password.js admin@ilotcocobeach.tn newpassword123
+```
 
 ---
 

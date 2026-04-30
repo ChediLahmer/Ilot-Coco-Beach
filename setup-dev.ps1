@@ -177,6 +177,11 @@ S3_PUBLIC_URL=http://localhost:9100
 JWT_SECRET=dev-secret-change-in-production
 CORS_ORIGIN=http://localhost:5173,http://localhost:5174
 PORT=3000
+
+# -- Password Reset (Brevo) --
+BREVO_API_KEY=
+BREVO_SENDER_EMAIL=chedi.lahmer9@gmail.com
+ADMIN_URL=http://localhost:5174
 "@
     Set-Content -Path $envPath -Value $envContent -Encoding UTF8
     Write-Success "Created backend/.env"
@@ -203,7 +208,7 @@ Write-Success "Prisma client generated"
 
 Write-Host "  Seeding database..."
 npm run db:seed
-Write-Success "Database seeded (admin: admin@ilotcocobeach.tn / admin123)"
+Write-Success "Database seeded (admin: chedi.lahmer47@gmail.com / admin123)"
 
 Pop-Location
 
@@ -238,7 +243,7 @@ Write-Host "    Backend:  cd backend; npm run dev     (http://localhost:3000)" -
 Write-Host "    Client:   cd client; npm run dev      (http://localhost:5173)" -ForegroundColor Gray
 Write-Host "    Admin:    cd admin; npm run dev        (http://localhost:5174)" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  Admin login: admin@ilotcocobeach.tn / admin123" -ForegroundColor Gray
+Write-Host "  Admin login: chedi.lahmer47@gmail.com / admin123" -ForegroundColor Gray
 Write-Host "  MinIO Console: http://localhost:9101 (minioadmin/minioadmin)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Docker containers (db + minio) persist across reboots (restart: unless-stopped)" -ForegroundColor Gray
