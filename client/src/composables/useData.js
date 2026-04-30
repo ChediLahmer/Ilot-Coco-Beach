@@ -38,14 +38,17 @@ async function loadAll() {
       items: (c.items || []).map(normalizeItem),
     }));
   }
-  if (sp.status === "fulfilled" && sp.value?.length) {
-    spaces.value = sp.value.map(normalizeItem);
+  if (sp.status === "fulfilled") {
+    const data = sp.value?.items || sp.value || [];
+    if (data.length) spaces.value = data.map(normalizeItem);
   }
-  if (fs.status === "fulfilled" && fs.value?.length) {
-    flashSales.value = fs.value;
+  if (fs.status === "fulfilled") {
+    const data = fs.value?.items || fs.value || [];
+    if (data.length) flashSales.value = data;
   }
-  if (v.status === "fulfilled" && v.value?.length) {
-    vouchersList.value = v.value;
+  if (v.status === "fulfilled") {
+    const data = v.value?.items || v.value || [];
+    if (data.length) vouchersList.value = data;
   }
   if (g.status === "fulfilled" && g.value?.items?.length) {
     galleryImages.value = g.value.items;

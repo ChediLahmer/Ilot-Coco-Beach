@@ -2,7 +2,7 @@ import { reactive } from "vue";
 import { api } from "@/lib/supabase";
 
 const config = reactive({
-  name: "",
+  name: "Ilot Coco Beach",
   phone: "",
   whatsapp: "",
   email: "",

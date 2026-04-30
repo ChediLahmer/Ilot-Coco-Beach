@@ -25,9 +25,9 @@ onMounted(async () => {
     stats.value = {
       categories: cats.length,
       items: cats.reduce((sum, c) => sum + (c.items?.length || 0), 0),
-      spaces: spaces.length,
-      flashSales: sales.length,
-      vouchers: vouchers.length,
+      spaces: spaces.items?.length || spaces.length || 0,
+      flashSales: sales.items?.length || sales.length || 0,
+      vouchers: vouchers.items?.length || vouchers.length || 0,
       gallery: galleryCount.total || 0,
     };
   } catch {

@@ -9,6 +9,8 @@ const saved = ref(false);
 const uploading = ref("");
 
 const fields = [
+  { key: "name", label: "Nom du site", type: "text" },
+  { key: "email", label: "Email de contact", type: "email" },
   { key: "phone", label: "Téléphone", type: "text" },
   { key: "whatsapp", label: "WhatsApp (numéro)", type: "text" },
   { key: "instagram", label: "Instagram (URL)", type: "url" },
@@ -16,8 +18,8 @@ const fields = [
   { key: "facebook", label: "Facebook (URL)", type: "url" },
   { key: "address", label: "Adresse", type: "text" },
   { key: "hours", label: "Horaires", type: "text" },
-  { key: "latitude", label: "Latitude", type: "text" },
-  { key: "longitude", label: "Longitude", type: "text" },
+  { key: "lat", label: "Latitude", type: "text" },
+  { key: "lng", label: "Longitude", type: "text" },
   {
     key: "satisfaction_rate",
     label: "Taux de satisfaction (%)",

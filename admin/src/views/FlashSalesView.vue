@@ -31,7 +31,8 @@ function resetForm() {
 }
 
 async function loadData() {
-  sales.value = await api.get("/flash-sales/all");
+  const res = await api.get("/flash-sales/all");
+  sales.value = res.items || res;
 }
 
 onMounted(loadData);
