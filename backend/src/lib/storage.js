@@ -17,7 +17,8 @@ const s3 = new S3Client({
 const BUCKET = process.env.S3_BUCKET || "cocobeach";
 
 export async function uploadFile(buffer, filename, contentType) {
-  const key = `${Date.now()}-${filename}`;
+  const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const key = `${Date.now()}-${sanitized}`;
   await s3.send(
     new PutObjectCommand({
       Bucket: BUCKET,

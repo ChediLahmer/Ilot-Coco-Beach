@@ -23,35 +23,59 @@ export async function flashSalesRoutes(app) {
       preHandler: optionalAuth,
       schema: {
         tags: ["Flash Sales"],
-        summary: "List flash sales. Auth=all, public=active only. ?page for pagination.",
+        summary:
+          "List flash sales. Auth=all, public=active only. Supports search, sort, pagination.",
         querystring: {
           type: "object",
           properties: {
             page: { type: "integer" },
             limit: { type: "integer", maximum: 100 },
             active: { type: "string", enum: ["true", "false"] },
+            search: { type: "string" },
+            sort: { type: "string", enum: ["date", "title", "discount"] },
           },
         },
       },
     },
     async (request) => {
-      const { page, limit: rawLimit, active } = request.query;
+      const { page, limit: rawLimit, active, search, sort } = request.query;
       const where = {};
       if (request.admin) {
         if (active !== undefined) where.isActive = active === "true";
       } else {
         where.isActive = true;
       }
-      if (page) {
-        const limit = Math.min(Number(rawLimit) || 20, 100);
-        const offset = (Number(page) - 1) * limit;
-        const [items, total] = await Promise.all([
-          prisma.flashSale.findMany({ where, orderBy: { createdAt: "desc" }, take: limit, skip: offset }),
-          prisma.flashSale.count({ where }),
-        ]);
-        return { items, total, page: Number(page), totalPages: Math.ceil(total / limit) };
+      if (search) {
+        where.title = { path: ["fr"], string_contains: search };
       }
-      return prisma.flashSale.findMany({ where, orderBy: { createdAt: "desc" } });
+      let orderBy;
+      switch (sort) {
+        case "title":
+          orderBy = { title: "asc" };
+          break;
+        case "discount":
+          orderBy = { discountPercent: "desc" };
+          break;
+        default:
+          orderBy = { createdAt: "desc" };
+      }
+      const limit = Math.min(Number(rawLimit) || 20, 100);
+      const offset = page ? (Number(page) - 1) * limit : 0;
+      const [items, total] = await Promise.all([
+        prisma.flashSale.findMany({
+          where,
+          orderBy,
+          take: limit,
+          skip: offset,
+        }),
+        prisma.flashSale.count({ where }),
+      ]);
+      return {
+        items,
+        total,
+        page: Number(page) || 1,
+        totalPages: Math.ceil(total / limit),
+      };
     },
   );
 
@@ -78,9 +102,17 @@ export async function flashSalesRoutes(app) {
       },
     },
     async (request) => {
-      const { title, description, discountPercent, image, endsAt, isActive } = request.body;
+      const { title, description, discountPercent, image, endsAt, isActive } =
+        request.body;
       return prisma.flashSale.create({
-        data: { title, description: description || {}, discountPercent, image, endsAt: new Date(endsAt), isActive: isActive ?? true },
+        data: {
+          title,
+          description: description || {},
+          discountPercent,
+          image,
+          endsAt: new Date(endsAt),
+          isActive: isActive ?? true,
+        },
       });
     },
   );
@@ -100,7 +132,7 @@ export async function flashSalesRoutes(app) {
             title: { type: "object" },
             description: { type: "object" },
             discountPercent: { type: "integer" },
-            image: { type: "string" },
+            image: { type: "string", nullable: true },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },
           },
@@ -110,7 +142,10 @@ export async function flashSalesRoutes(app) {
     async (request) => {
       const data = { ...request.body };
       if (data.endsAt) data.endsAt = new Date(data.endsAt);
-      return prisma.flashSale.update({ where: { id: Number(request.params.id) }, data });
+      return prisma.flashSale.update({
+        where: { id: Number(request.params.id) },
+        data,
+      });
     },
   );
 
@@ -127,7 +162,9 @@ export async function flashSalesRoutes(app) {
       },
     },
     async (request, reply) => {
-      await prisma.flashSale.delete({ where: { id: Number(request.params.id) } });
+      await prisma.flashSale.delete({
+        where: { id: Number(request.params.id) },
+      });
       return reply.status(204).send();
     },
   );

@@ -32,9 +32,25 @@
       <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <router-link
           to="/gallery"
-          class="group relative min-h-[14rem] overflow-hidden rounded-lg sm:col-span-2 lg:col-span-2 sm:min-h-[18rem]"
+          :class="[
+            'group relative min-h-[14rem] overflow-hidden rounded-lg',
+            images.length > 1
+              ? 'sm:col-span-2 lg:col-span-2 sm:min-h-[18rem]'
+              : 'sm:min-h-[18rem]',
+          ]"
         >
+          <video
+            v-if="images[0].video"
+            :src="images[0].src"
+            class="absolute inset-0 h-full w-full object-cover"
+            muted
+            autoplay
+            loop
+            playsinline
+            preload="metadata"
+          />
           <img
+            v-else
             :src="images[0].src"
             :alt="images[0].alt"
             class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
@@ -52,12 +68,24 @@
           to="/gallery"
           class="group relative min-h-[11rem] overflow-hidden rounded-lg"
         >
+          <video
+            v-if="image.video"
+            :src="image.src"
+            class="absolute inset-0 h-full w-full object-cover"
+            muted
+            autoplay
+            loop
+            playsinline
+            preload="metadata"
+          />
           <img
+            v-else
             :src="image.src"
             :alt="image.alt"
             class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
             decoding="async"
+          />
           />
           <div
             class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"
@@ -76,10 +104,15 @@ import { useData } from "@/composables/useData";
 const { t } = useI18n();
 const { galleryImages } = useData();
 
+function isVideo(url) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
 const images = computed(() =>
   galleryImages.value.map((img) => ({
     src: img.url,
     alt: img.alt || "Ilot Coco Beach",
+    video: isVideo(img.url),
     labelKey: img.category
       ? `gallery.labels.${img.category}`
       : "gallery.labels.overwater",

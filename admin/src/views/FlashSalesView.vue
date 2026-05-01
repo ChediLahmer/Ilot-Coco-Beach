@@ -1,22 +1,79 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
 
 const api = useApi();
 const sales = ref([]);
+const totalItems = ref(0);
 const showModal = ref(false);
 const editing = ref(null);
 const form = ref(resetForm());
 const imagePreview = ref(null);
+const removeImage = ref(false);
 
-const currentImage = computed(() => editing.value?.image || null);
+// Search, filter, sort, pagination
+const searchQuery = ref("");
+const filterStatus = ref("all");
+const sortBy = ref("date");
+const page = ref(1);
+const ITEMS_PER_PAGE = 20;
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(totalItems.value / ITEMS_PER_PAGE)),
+);
+
+let debounceTimer = null;
+
+function buildQuery() {
+  const params = new URLSearchParams();
+  params.set("page", page.value);
+  params.set("limit", ITEMS_PER_PAGE);
+  if (searchQuery.value.trim()) params.set("search", searchQuery.value.trim());
+  if (filterStatus.value !== "all")
+    params.set("active", filterStatus.value === "active" ? "true" : "false");
+  if (sortBy.value !== "date") params.set("sort", sortBy.value);
+  return params.toString();
+}
+
+async function loadData() {
+  const res = await api.get(`/flash-sales?${buildQuery()}`);
+  sales.value = res.items;
+  totalItems.value = res.total;
+}
+
+watch([filterStatus, sortBy, page], loadData);
+watch(searchQuery, () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    page.value = 1;
+    loadData();
+  }, 300);
+});
+
+onMounted(loadData);
+
+const currentImage = computed(() => {
+  if (removeImage.value) return null;
+  return editing.value?.image || null;
+});
 
 function onFileChange(e) {
   const file = e.target.files[0];
   form.value.imageFile = file;
-  imagePreview.value = file ? URL.createObjectURL(file) : null;
+  if (file) {
+    imagePreview.value = URL.createObjectURL(file);
+    removeImage.value = false;
+  } else {
+    imagePreview.value = null;
+  }
+}
+
+function clearImage() {
+  removeImage.value = true;
+  imagePreview.value = null;
+  form.value.imageFile = null;
 }
 
 function resetForm() {
@@ -30,15 +87,10 @@ function resetForm() {
   };
 }
 
-async function loadData() {
-  sales.value = await api.get("/flash-sales");
-}
-
-onMounted(loadData);
-
 function openModal(sale = null) {
   editing.value = sale;
   imagePreview.value = null;
+  removeImage.value = false;
   form.value = sale
     ? {
         title: { ...sale.title },
@@ -54,7 +106,9 @@ function openModal(sale = null) {
 
 async function save() {
   let imageUrl = editing.value?.image || null;
-  if (form.value.imageFile) {
+  if (removeImage.value) {
+    imageUrl = null;
+  } else if (form.value.imageFile) {
     const res = await api.upload("/upload", form.value.imageFile);
     imageUrl = res.url;
   }
@@ -62,7 +116,7 @@ async function save() {
     title: form.value.title,
     description: form.value.description,
     discountPercent: Number(form.value.discountPercent),
-    endsAt: form.value.endsAt,
+    endsAt: new Date(form.value.endsAt).toISOString(),
     isActive: form.value.isActive,
     image: imageUrl,
   };
@@ -129,6 +183,50 @@ function formatDate(d) {
     <div
       class="bg-surface rounded-xl border border-border overflow-hidden shadow-sm"
     >
+      <!-- Toolbar -->
+      <div
+        class="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-border"
+      >
+        <div class="relative flex-1 max-w-xs min-w-[160px]">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            v-model="searchQuery"
+            placeholder="Rechercher..."
+            class="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+          />
+        </div>
+        <select
+          v-model="filterStatus"
+          class="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+        >
+          <option value="all">Tous</option>
+          <option value="active">Actives</option>
+          <option value="inactive">Inactives</option>
+        </select>
+        <select
+          v-model="sortBy"
+          class="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+        >
+          <option value="date">Tri: Date</option>
+          <option value="title">Tri: Titre</option>
+          <option value="discount">Tri: Réduction</option>
+        </select>
+        <p class="text-sm text-text-muted whitespace-nowrap">
+          {{ totalItems }} résultat(s)
+        </p>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -230,10 +328,41 @@ function formatDate(d) {
         </table>
       </div>
       <div
-        v-if="!sales.length"
+        v-if="!sales.length && !searchQuery && filterStatus === 'all'"
         class="py-12 text-center text-text-muted text-sm"
       >
         Aucune vente flash pour le moment
+      </div>
+      <div
+        v-else-if="!sales.length"
+        class="py-8 text-center text-text-muted text-sm"
+      >
+        Aucun résultat
+      </div>
+      <!-- Pagination -->
+      <div
+        v-if="totalPages > 1"
+        class="flex items-center justify-between px-5 py-3 border-t border-border"
+      >
+        <p class="text-xs text-text-muted">
+          Page {{ page }} / {{ totalPages }}
+        </p>
+        <div class="flex gap-1">
+          <button
+            :disabled="page <= 1"
+            @click="page--"
+            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+          >
+            ← Précédent
+          </button>
+          <button
+            :disabled="page >= totalPages"
+            @click="page++"
+            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+          >
+            Suivant →
+          </button>
+        </div>
       </div>
     </div>
 
@@ -371,9 +500,18 @@ function formatDate(d) {
                 :src="imagePreview || currentImage"
                 class="h-24 w-36 rounded-lg object-cover border border-border"
               />
-              <span class="text-xs text-text-muted">{{
-                imagePreview ? "Nouvelle image" : "Image actuelle"
-              }}</span>
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-text-muted">{{
+                  imagePreview ? "Nouvelle image" : "Image actuelle"
+                }}</span>
+                <button
+                  type="button"
+                  @click="clearImage"
+                  class="text-xs text-danger hover:text-red-700 font-medium transition-colors text-left"
+                >
+                  Supprimer l'image
+                </button>
+              </div>
             </div>
             <input
               type="file"

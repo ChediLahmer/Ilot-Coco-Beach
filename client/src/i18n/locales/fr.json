@@ -57,10 +57,11 @@
     "unavailable": "Indisponible"
   },
   "gallery": {
-    "eyebrow": "En images",
+    "eyebrow": "Galerie",
     "title": "Un cadre marin pensé pour séduire avant même l'arrivée",
     "subtitle": "Nous avons retenu les vues qui valorisent le lieu, ses matières et sa qualité d'accueil.",
     "viewAll": "Voir la galerie",
+    "allCategories": "Tout",
     "backHome": "Retour à l'accueil",
     "noMore": "Vous avez tout vu.",
     "labels": {

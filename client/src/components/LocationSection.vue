@@ -48,7 +48,7 @@
                   {{ t("location.hours") }}
                 </p>
                 <p class="mt-1.5 text-sm text-charcoal/75">
-                  {{ t("location.hoursValue") }}
+                  {{ hoursText }}
                 </p>
               </div>
               <div>
@@ -116,8 +116,17 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfig } from "@/composables/useConfig";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const config = useConfig();
+
+const hoursText = computed(() => {
+  try {
+    const parsed = JSON.parse(config.hours || "{}");
+    return parsed[locale.value] || parsed.fr || config.hours || "";
+  } catch {
+    return config.hours || "";
+  }
+});
 
 const mapUrl = computed(
   () =>

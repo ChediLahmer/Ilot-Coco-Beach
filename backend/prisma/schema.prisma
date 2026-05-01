@@ -68,13 +68,24 @@ model Space {
   @@map("spaces")
 }
 
+model GalleryCategory {
+  id     Int    @id @default(autoincrement())
+  name   Json   // { fr, en, ar }
+  order  Int    @default(0)
+  images GalleryImage[]
+
+  @@map("gallery_categories")
+}
+
 model GalleryImage {
-  id        Int      @id @default(autoincrement())
-  url       String
-  alt       String?
-  category  String?
-  order     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
+  id         Int              @id @default(autoincrement())
+  url        String
+  alt        String?
+  category   String?
+  categoryId Int?             @map("category_id")
+  catRef     GalleryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  order      Int              @default(0)
+  createdAt  DateTime         @default(now()) @map("created_at")
 
   @@map("gallery_images")
 }

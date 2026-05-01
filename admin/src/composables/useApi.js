@@ -1,6 +1,8 @@
 import { useAuth } from "./useAuth.js";
 
 const BASE = "/api";
+const UPLOAD_BASE =
+  import.meta.env.VITE_UPLOAD_URL || "http://localhost:3000/api";
 
 async function request(path, options = {}) {
   const { token } = useAuth();
@@ -11,7 +13,8 @@ async function request(path, options = {}) {
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
-  const res = await fetch(`${BASE}${path}`, { ...options, headers });
+  const base = options._directUpload ? UPLOAD_BASE : BASE;
+  const res = await fetch(`${base}${path}`, { ...options, headers });
   if (res.status === 401) {
     useAuth().logout();
     window.location.href = "/login";
@@ -39,7 +42,7 @@ export function useApi() {
       for (const [k, v] of Object.entries(extraFields)) {
         form.append(k, v);
       }
-      return request(path, { method: "POST", body: form });
+      return request(path, { method: "POST", body: form, _directUpload: true });
     },
   };
 }

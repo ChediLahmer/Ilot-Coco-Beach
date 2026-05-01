@@ -104,7 +104,7 @@
       </div>
 
       <div class="mt-8 text-sm text-charcoal/50">
-        {{ t("reservation.hoursLabel") }} · {{ t("location.hoursValue") }}
+        {{ t("reservation.hoursLabel") }} · {{ hoursText }}
       </div>
     </div>
   </section>
@@ -115,8 +115,17 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfig } from "@/composables/useConfig";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const config = useConfig();
+
+const hoursText = computed(() => {
+  try {
+    const parsed = JSON.parse(config.hours || "{}");
+    return parsed[locale.value] || parsed.fr || config.hours || "";
+  } catch {
+    return config.hours || "";
+  }
+});
 
 const whatsappUrl = computed(() => {
   const text = encodeURIComponent(

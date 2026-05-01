@@ -4,6 +4,7 @@ import { useApi } from "@/composables/useApi.js";
 
 const api = useApi();
 const config = ref({});
+const hours = ref({ fr: "", en: "", ar: "" });
 const saving = ref(false);
 const saved = ref(false);
 const uploading = ref("");
@@ -17,7 +18,6 @@ const fields = [
   { key: "messenger", label: "Messenger (URL)", type: "url" },
   { key: "facebook", label: "Facebook (URL)", type: "url" },
   { key: "address", label: "Adresse", type: "text" },
-  { key: "hours", label: "Horaires", type: "text" },
   { key: "lat", label: "Latitude", type: "text" },
   { key: "lng", label: "Longitude", type: "text" },
   {
@@ -26,6 +26,10 @@ const fields = [
     type: "number",
   },
 ];
+
+function isVideoUrl(url) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
 
 const mediaFields = [
   {
@@ -36,6 +40,16 @@ const mediaFields = [
   {
     key: "hero_poster_url",
     label: "Poster Hero (image de couverture)",
+    accept: "image/*",
+  },
+  {
+    key: "section_video_url",
+    label: "Vidéo section (présentation)",
+    accept: "video/mp4,video/webm",
+  },
+  {
+    key: "section_poster_url",
+    label: "Poster section vidéo",
     accept: "image/*",
   },
 ];
@@ -54,8 +68,27 @@ async function uploadMedia(key, event) {
   uploading.value = "";
 }
 
+async function removeMedia(key) {
+  config.value[key] = "";
+  await api.put(`/config/${key}`, { value: "" });
+}
+
 async function loadData() {
   config.value = await api.get("/config");
+  try {
+    const parsed = JSON.parse(config.value.hours || "{}");
+    if (typeof parsed === "object" && parsed !== null) {
+      hours.value = {
+        fr: parsed.fr || "",
+        en: parsed.en || "",
+        ar: parsed.ar || "",
+      };
+    } else {
+      hours.value = { fr: config.value.hours || "", en: "", ar: "" };
+    }
+  } catch {
+    hours.value = { fr: config.value.hours || "", en: "", ar: "" };
+  }
 }
 
 onMounted(loadData);
@@ -70,6 +103,7 @@ async function save() {
       });
     }
   }
+  await api.put("/config/hours", { value: JSON.stringify(hours.value) });
   saving.value = false;
   saved.value = true;
   setTimeout(() => (saved.value = false), 2000);
@@ -78,7 +112,9 @@ async function save() {
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4"
+    >
       <div>
         <h2 class="text-xl font-bold text-text">Configuration du site</h2>
         <p class="text-sm text-text-muted mt-0.5">
@@ -161,6 +197,49 @@ async function save() {
       </div>
     </div>
 
+    <!-- Horaires multilangues -->
+    <h3 class="text-lg font-bold text-text mt-8 mb-4">Horaires</h3>
+    <div
+      class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+    >
+      <div class="divide-y divide-border">
+        <div class="px-6 py-4">
+          <label class="block text-sm font-medium text-text mb-1.5"
+            >Français</label
+          >
+          <input
+            v-model="hours.fr"
+            type="text"
+            placeholder="Ex: Tous les jours 10h - 00h"
+            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+          />
+        </div>
+        <div class="px-6 py-4">
+          <label class="block text-sm font-medium text-text mb-1.5"
+            >English</label
+          >
+          <input
+            v-model="hours.en"
+            type="text"
+            placeholder="Ex: Every day 10am - 12am"
+            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+          />
+        </div>
+        <div class="px-6 py-4">
+          <label class="block text-sm font-medium text-text mb-1.5"
+            >العربية</label
+          >
+          <input
+            v-model="hours.ar"
+            type="text"
+            dir="rtl"
+            placeholder="مثال: كل يوم 10 صباحًا - 12 مساءً"
+            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Media uploads -->
     <h3 class="text-lg font-bold text-text mt-8 mb-4">Médias Hero</h3>
     <div
@@ -202,12 +281,16 @@ async function save() {
               class="text-xs text-green-600 truncate max-w-[200px]"
               >✓ {{ config[mf.key].split("/").pop() }}</span
             >
+            <button
+              v-if="config[mf.key]"
+              @click="removeMedia(mf.key)"
+              class="text-xs text-danger hover:text-red-700 font-medium transition-colors"
+            >
+              Supprimer
+            </button>
             <span v-else class="text-xs text-text-muted">Aucun fichier</span>
           </div>
-          <div
-            v-if="config[mf.key] && mf.accept.startsWith('video')"
-            class="mt-3"
-          >
+          <div v-if="config[mf.key] && isVideoUrl(config[mf.key])" class="mt-3">
             <video
               :src="config[mf.key]"
               class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
@@ -216,7 +299,7 @@ async function save() {
             />
           </div>
           <div
-            v-else-if="config[mf.key] && mf.accept.startsWith('image')"
+            v-else-if="config[mf.key] && !isVideoUrl(config[mf.key])"
             class="mt-3"
           >
             <img

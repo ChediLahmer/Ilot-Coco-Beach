@@ -33,6 +33,7 @@
 html {
   scroll-behavior: smooth;
   background: #fff;
+  overflow-x: hidden;
 }
 
 html[dir="rtl"] body {
@@ -384,13 +385,10 @@ html[dir="rtl"] .section-kicker {
   text-transform: none;
 }
 
-/* Swiper in RTL */
+/* Swiper/carousel: keep LTR scroll mechanics, content handles its own direction */
 html[dir="rtl"] .swiper {
-  direction: rtl;
+  direction: ltr;
 }
-
-/* Scroll progress bar from right */
-html[dir="rtl"] [style*="width"] {
-  left: auto;
-  right: 0;
+html[dir="rtl"] .swiper-slide > * {
+  direction: rtl;
 }

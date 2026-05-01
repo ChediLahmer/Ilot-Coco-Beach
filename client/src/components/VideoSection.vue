@@ -1,5 +1,5 @@
 <template>
-  <section class="px-4 py-20 sm:px-6 md:px-12 lg:px-20">
+  <section v-if="sectionVideo" class="px-4 py-20 sm:px-6 md:px-12 lg:px-20">
     <div class="mx-auto max-w-4xl text-center">
       <h2 class="font-brand text-2xl text-deep md:text-3xl">
         {{ t("video.title") }}
@@ -11,13 +11,13 @@
       >
         <video
           ref="videoEl"
-          :poster="heroPoster"
+          :poster="sectionPoster"
           class="w-full aspect-video object-cover"
           playsinline
           preload="metadata"
           @click="togglePlay"
         >
-          <source :src="heroVideo" type="video/mp4" />
+          <source :src="sectionVideo" type="video/mp4" />
         </video>
 
         <Transition name="fade">
@@ -45,13 +45,15 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
-
-import heroVideo from "@/assets/images/beach-video.mp4";
-import heroPoster from "@/assets/images/hero-beach-lounge.jpg";
+import { useConfig } from "@/composables/useConfig";
 
 const { t } = useI18n();
+const config = useConfig();
+
+const sectionVideo = computed(() => config.sectionVideo || "");
+const sectionPoster = computed(() => config.sectionPoster || "");
 
 const videoEl = ref(null);
 const isPlaying = ref(false);

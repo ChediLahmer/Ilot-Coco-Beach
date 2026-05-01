@@ -21,35 +21,54 @@ export async function vouchersRoutes(app) {
       preHandler: optionalAuth,
       schema: {
         tags: ["Vouchers"],
-        summary: "List vouchers. Auth=all, public=active only. ?page for pagination.",
+        summary:
+          "List vouchers. Auth=all, public=active only. Supports search, sort, pagination.",
         querystring: {
           type: "object",
           properties: {
             page: { type: "integer" },
             limit: { type: "integer", maximum: 100 },
             active: { type: "string", enum: ["true", "false"] },
+            search: { type: "string" },
+            sort: { type: "string", enum: ["date", "code", "discount"] },
           },
         },
       },
     },
     async (request) => {
-      const { page, limit: rawLimit, active } = request.query;
+      const { page, limit: rawLimit, active, search, sort } = request.query;
       const where = {};
       if (request.admin) {
         if (active !== undefined) where.isActive = active === "true";
       } else {
         where.isActive = true;
       }
-      if (page) {
-        const limit = Math.min(Number(rawLimit) || 20, 100);
-        const offset = (Number(page) - 1) * limit;
-        const [items, total] = await Promise.all([
-          prisma.voucher.findMany({ where, orderBy: { createdAt: "desc" }, take: limit, skip: offset }),
-          prisma.voucher.count({ where }),
-        ]);
-        return { items, total, page: Number(page), totalPages: Math.ceil(total / limit) };
+      if (search) {
+        where.code = { contains: search, mode: "insensitive" };
       }
-      return prisma.voucher.findMany({ where, orderBy: { createdAt: "desc" } });
+      let orderBy;
+      switch (sort) {
+        case "code":
+          orderBy = { code: "asc" };
+          break;
+        case "discount":
+          orderBy = { discountPercent: "desc" };
+          break;
+        default:
+          orderBy = { createdAt: "desc" };
+      }
+      const limit = Math.min(Number(rawLimit) || 20, 100);
+      const offset = page ? (Number(page) - 1) * limit : 0;
+      const [items, total] = await Promise.all([
+        prisma.voucher.findMany({ where, orderBy, take: limit, skip: offset }),
+        prisma.voucher.count({ where }),
+      ]);
+      return {
+        items,
+        total,
+        page: Number(page) || 1,
+        totalPages: Math.ceil(total / limit),
+      };
     },
   );
 
@@ -76,7 +95,12 @@ export async function vouchersRoutes(app) {
     async (request) => {
       const { code, discountPercent, validUntil, isActive } = request.body;
       return prisma.voucher.create({
-        data: { code, discountPercent, validUntil: new Date(validUntil), isActive: isActive ?? true },
+        data: {
+          code,
+          discountPercent,
+          validUntil: new Date(validUntil),
+          isActive: isActive ?? true,
+        },
       });
     },
   );
@@ -104,7 +128,10 @@ export async function vouchersRoutes(app) {
     async (request) => {
       const data = { ...request.body };
       if (data.validUntil) data.validUntil = new Date(data.validUntil);
-      return prisma.voucher.update({ where: { id: Number(request.params.id) }, data });
+      return prisma.voucher.update({
+        where: { id: Number(request.params.id) },
+        data,
+      });
     },
   );
 

@@ -17,17 +17,17 @@ onMounted(async () => {
   try {
     const [cats, spaces, sales, vouchers, galleryCount] = await Promise.all([
       api.get("/menu/categories"),
-      api.get("/spaces"),
-      api.get("/flash-sales"),
-      api.get("/vouchers"),
+      api.get("/spaces?limit=1"),
+      api.get("/flash-sales?limit=1"),
+      api.get("/vouchers?limit=1"),
       api.get("/gallery/count"),
     ]);
     stats.value = {
       categories: cats.length,
       items: cats.reduce((sum, c) => sum + (c.items?.length || 0), 0),
-      spaces: spaces.length,
-      flashSales: sales.length,
-      vouchers: vouchers.length,
+      spaces: spaces.total || 0,
+      flashSales: sales.total || 0,
+      vouchers: vouchers.total || 0,
       gallery: galleryCount.total || 0,
     };
   } catch {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -12,6 +12,12 @@ const showItemModal = ref(false);
 const editingCat = ref(null);
 const editingItem = ref(null);
 
+// Search, sort & pagination
+const itemSearch = ref("");
+const itemSort = ref("order");
+const itemPage = ref(1);
+const ITEMS_PER_PAGE = 10;
+
 const catForm = ref({ name: { fr: "", en: "", ar: "" }, order: 0 });
 const itemForm = ref({
   name: { fr: "", en: "", ar: "" },
@@ -23,13 +29,28 @@ const itemForm = ref({
   image: null,
 });
 const itemImagePreview = ref(null);
+const removeItemImage = ref(false);
 
-const currentItemImage = computed(() => editingItem.value?.image || null);
+const currentItemImage = computed(() => {
+  if (removeItemImage.value) return null;
+  return editingItem.value?.image || null;
+});
 
 function onItemFileChange(e) {
   const file = e.target.files[0];
   itemForm.value.image = file;
-  itemImagePreview.value = file ? URL.createObjectURL(file) : null;
+  if (file) {
+    itemImagePreview.value = URL.createObjectURL(file);
+    removeItemImage.value = false;
+  } else {
+    itemImagePreview.value = null;
+  }
+}
+
+function clearItemImage() {
+  removeItemImage.value = true;
+  itemImagePreview.value = null;
+  itemForm.value.image = null;
 }
 
 const activeItems = computed(() => {
@@ -37,14 +58,39 @@ const activeItems = computed(() => {
   return cat?.items || [];
 });
 
+const filteredItems = computed(() => {
+  let items = activeItems.value;
+  if (itemSearch.value.trim()) {
+    const q = itemSearch.value.toLowerCase();
+    items = items.filter(
+      (item) =>
+        (item.name.fr || "").toLowerCase().includes(q) ||
+        (item.name.en || "").toLowerCase().includes(q) ||
+        (item.name.ar || "").includes(q),
+    );
+  }
+  return items;
+});
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredItems.value.length / ITEMS_PER_PAGE)),
+);
+
+const paginatedItems = computed(() => {
+  const start = (itemPage.value - 1) * ITEMS_PER_PAGE;
+  return filteredItems.value.slice(start, start + ITEMS_PER_PAGE);
+});
+
 async function loadData() {
-  categories.value = await api.get("/menu/categories");
+  const sort = itemSort.value !== "order" ? `?sort=${itemSort.value}` : "";
+  categories.value = await api.get(`/menu/categories${sort}`);
   if (!activeCategory.value && categories.value.length) {
     activeCategory.value = categories.value[0].id;
   }
 }
 
 onMounted(loadData);
+watch(itemSort, loadData);
 
 function openCatModal(cat = null) {
   editingCat.value = cat;
@@ -75,6 +121,7 @@ async function deleteCat(cat) {
 function openItemModal(item = null) {
   editingItem.value = item;
   itemImagePreview.value = null;
+  removeItemImage.value = false;
   itemForm.value = item
     ? {
         name: { ...item.name },
@@ -99,7 +146,9 @@ function openItemModal(item = null) {
 
 async function saveItem() {
   let imageUrl = editingItem.value?.image || null;
-  if (itemForm.value.image) {
+  if (removeItemImage.value) {
+    imageUrl = null;
+  } else if (itemForm.value.image) {
     const res = await api.upload("/upload", itemForm.value.image);
     imageUrl = res.url;
   }
@@ -174,7 +223,11 @@ async function toggleAvailability(item) {
         class="group flex items-center"
       >
         <button
-          @click="activeCategory = cat.id"
+          @click="
+            activeCategory = cat.id;
+            itemPage = 1;
+            itemSearch = '';
+          "
           class="px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-150"
           :class="
             activeCategory === cat.id
@@ -185,7 +238,7 @@ async function toggleAvailability(item) {
           {{ cat.name.fr }}
         </button>
         <div
-          class="ml-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          class="ml-1 flex gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
         >
           <button
             @click="openCatModal(cat)"
@@ -229,14 +282,45 @@ async function toggleAvailability(item) {
 
     <!-- Items table -->
     <div
-      class="rounded-2xl border border-border bg-surface shadow-sm overflow-hidden"
+      class="rounded-2xl border border-border bg-surface shadow-sm overflow-x-auto"
     >
       <div
-        class="flex justify-between items-center px-6 py-4 border-b border-border"
+        class="flex flex-wrap justify-between items-center gap-3 px-6 py-4 border-b border-border"
       >
-        <p class="text-sm text-text-muted">
-          {{ activeItems.length }} article(s)
-        </p>
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <div class="relative flex-1 max-w-xs min-w-[160px]">
+            <svg
+              class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              v-model="itemSearch"
+              placeholder="Rechercher un plat..."
+              class="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              @input="itemPage = 1"
+            />
+          </div>
+          <p class="text-sm text-text-muted whitespace-nowrap">
+            {{ filteredItems.length }} article(s)
+          </p>
+          <select
+            v-model="itemSort"
+            class="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+          >
+            <option value="order">Tri: Ordre</option>
+            <option value="name">Tri: Nom</option>
+            <option value="price">Tri: Prix</option>
+          </select>
+        </div>
         <button
           @click="openItemModal()"
           :disabled="!activeCategory"
@@ -272,11 +356,13 @@ async function toggleAvailability(item) {
         </thead>
         <tbody class="divide-y divide-border">
           <tr
-            v-for="item in activeItems"
+            v-for="item in paginatedItems"
             :key="item.id"
             class="hover:bg-surface-alt/50 transition-colors"
           >
-            <td class="px-6 py-3.5 font-medium text-text">
+            <td
+              class="px-6 py-3.5 font-medium text-text max-w-[200px] truncate"
+            >
               {{ item.name.fr }}
             </td>
             <td class="px-6 py-3.5 text-text-muted">
@@ -339,6 +425,37 @@ async function toggleAvailability(item) {
         class="px-6 py-12 text-center text-text-muted text-sm"
       >
         Aucun article dans cette catégorie
+      </div>
+      <div
+        v-else-if="!filteredItems.length"
+        class="px-6 py-8 text-center text-text-muted text-sm"
+      >
+        Aucun résultat pour "{{ itemSearch }}"
+      </div>
+      <!-- Pagination -->
+      <div
+        v-if="totalPages > 1"
+        class="flex items-center justify-between px-6 py-3 border-t border-border"
+      >
+        <p class="text-xs text-text-muted">
+          Page {{ itemPage }} / {{ totalPages }}
+        </p>
+        <div class="flex gap-1">
+          <button
+            :disabled="itemPage <= 1"
+            @click="itemPage--"
+            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+          >
+            ← Précédent
+          </button>
+          <button
+            :disabled="itemPage >= totalPages"
+            @click="itemPage++"
+            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+          >
+            Suivant →
+          </button>
+        </div>
       </div>
     </div>
 
@@ -525,9 +642,18 @@ async function toggleAvailability(item) {
                 :src="itemImagePreview || currentItemImage"
                 class="h-20 w-20 rounded-lg object-cover border border-border"
               />
-              <span class="text-xs text-text-muted">{{
-                itemImagePreview ? "Nouvelle image" : "Image actuelle"
-              }}</span>
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-text-muted">{{
+                  itemImagePreview ? "Nouvelle image" : "Image actuelle"
+                }}</span>
+                <button
+                  type="button"
+                  @click="clearItemImage"
+                  class="text-xs text-danger hover:text-red-700 font-medium transition-colors text-left"
+                >
+                  Supprimer l'image
+                </button>
+              </div>
             </div>
             <input
               type="file"

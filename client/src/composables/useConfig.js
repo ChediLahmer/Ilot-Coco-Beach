@@ -15,6 +15,8 @@ const config = reactive({
   hours: "",
   heroVideo: "",
   heroPoster: "",
+  sectionVideo: "",
+  sectionPoster: "",
   aboutText: "",
   loaded: false,
 });
@@ -33,6 +35,8 @@ const KEY_MAP = {
   hours: "hours",
   hero_video_url: "heroVideo",
   hero_poster_url: "heroPoster",
+  section_video_url: "sectionVideo",
+  section_poster_url: "sectionPoster",
   about_text: "aboutText",
 };
 

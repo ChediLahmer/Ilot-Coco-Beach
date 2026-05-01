@@ -194,7 +194,7 @@ const navItems = [
     </aside>
 
     <!-- Main content -->
-    <main class="flex-1 overflow-y-auto md:ml-0">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden md:ml-0">
       <!-- Mobile header -->
       <div
         class="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden"

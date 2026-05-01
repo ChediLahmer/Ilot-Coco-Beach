@@ -53,16 +53,16 @@
               </p>
 
               <div
-                class="mt-6 inline-flex w-fit items-center rounded-full border border-charcoal/10 bg-white/80 p-1 shadow-[0_14px_34px_rgba(10,24,32,0.06)]"
+                class="mt-6 inline-flex w-fit items-center rounded-lg border border-charcoal/8 bg-sand/50 p-1"
               >
                 <button
                   v-for="mode in ['standard', 'extra']"
                   :key="mode"
                   :class="[
-                    'rounded-full px-4 py-2 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] transition-colors duration-200',
+                    'rounded-md px-5 py-2 text-sm font-medium transition-all',
                     priceMode === mode
-                      ? 'bg-[linear-gradient(135deg,var(--color-coral),var(--color-ocean))] text-white shadow-[0_10px_24px_rgba(255,125,97,0.18)]'
-                      : 'text-charcoal/52 hover:text-deep',
+                      ? 'bg-white text-deep shadow-sm'
+                      : 'text-charcoal/50 hover:text-charcoal/70',
                   ]"
                   @click="priceMode = mode"
                 >
@@ -72,7 +72,7 @@
 
               <router-link
                 :to="{ path: '/', hash: '#reservation' }"
-                class="mt-6 inline-flex items-center gap-3 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-coral hover:text-deep"
+                class="mt-6 flex items-center gap-3 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-coral hover:text-deep"
               >
                 {{ t("menu.reserveCta") }}
                 <span class="block h-px w-8 bg-coral/45" />
@@ -81,13 +81,15 @@
           </div>
 
           <div class="grid gap-4 sm:grid-cols-3">
-            <article class="premium-card rounded-[1.75rem] p-6 sm:col-span-1">
+            <article
+              class="premium-card rounded-[1.75rem] p-6 sm:col-span-1 overflow-hidden"
+            >
               <p
                 class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
               >
                 {{ copy.activeCategory }}
               </p>
-              <p class="mt-4 font-brand text-3xl text-deep">
+              <p class="mt-4 font-brand text-2xl text-deep truncate">
                 {{ activeCategoryLabel }}
               </p>
             </article>
@@ -120,10 +122,10 @@
                   v-for="category in menuCategories"
                   :key="category.id"
                   :class="[
-                    'rounded-full border px-4 py-2 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] transition-colors duration-200',
+                    'rounded-full px-4 py-1.5 text-sm font-medium transition-all',
                     activeCategory === category.id
-                      ? 'border-transparent bg-[linear-gradient(135deg,var(--color-coral),var(--color-ocean))] text-white shadow-[0_10px_24px_rgba(255,125,97,0.18)]'
-                      : 'border-charcoal/10 bg-white/65 text-charcoal/58 hover:border-ocean/30 hover:text-ocean',
+                      ? 'bg-deep text-white'
+                      : 'bg-sand text-charcoal/55 hover:bg-sand-dark hover:text-charcoal/75',
                   ]"
                   @click="activeCategory = category.id"
                 >
@@ -167,11 +169,15 @@
                   </div>
                 </div>
 
-                <div class="p-6">
-                  <h2 class="font-brand text-[2rem] leading-tight text-deep">
+                <div class="p-6 overflow-hidden">
+                  <h2
+                    class="font-brand text-[2rem] leading-tight text-deep line-clamp-2"
+                  >
                     {{ item.name[locale] || item.name.fr }}
                   </h2>
-                  <p class="mt-4 text-sm leading-7 text-charcoal/66">
+                  <p
+                    class="mt-4 text-sm leading-7 text-charcoal/66 line-clamp-3"
+                  >
                     {{ item.desc[locale] || item.desc.fr }}
                   </p>
                 </div>
@@ -200,7 +206,7 @@
 
             <div class="mt-8 space-y-4">
               <article
-                v-for="item in activeItems"
+                v-for="item in visibleItems"
                 :key="item.id"
                 class="rounded-[1.35rem] border border-charcoal/8 bg-white/70 px-5 py-4"
               >
@@ -226,6 +232,14 @@
                 </div>
               </article>
             </div>
+
+            <button
+              v-if="hasMoreItems"
+              @click="showAllItems = true"
+              class="mt-6 w-full rounded-xl border border-charcoal/10 bg-white/60 py-3 text-sm font-heading font-semibold text-charcoal/60 hover:bg-white hover:text-charcoal transition-colors"
+            >
+              Voir les {{ activeItems.length - ITEMS_PAGE_SIZE }} autres plats
+            </button>
           </div>
         </div>
       </div>
@@ -236,7 +250,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import FooterSection from "@/components/FooterSection.vue";
@@ -248,6 +262,10 @@ const { menuCategories } = useData();
 
 const priceMode = ref("standard");
 const activeCategory = ref(menuCategories.value[0]?.id || 1);
+
+watch(activeCategory, () => {
+  showAllItems.value = false;
+});
 
 const activeCategoryData = computed(
   () =>
@@ -264,6 +282,18 @@ const activeCategoryLabel = computed(
 const activeItems = computed(() => activeCategoryData.value?.items || []);
 const featureItems = computed(() =>
   activeItems.value.filter((item) => item.image).slice(0, 4),
+);
+
+const ITEMS_PAGE_SIZE = 8;
+const showAllItems = ref(false);
+const visibleItems = computed(() => {
+  if (showAllItems.value || activeItems.value.length <= ITEMS_PAGE_SIZE) {
+    return activeItems.value;
+  }
+  return activeItems.value.slice(0, ITEMS_PAGE_SIZE);
+});
+const hasMoreItems = computed(
+  () => !showAllItems.value && activeItems.value.length > ITEMS_PAGE_SIZE,
 );
 
 const copy = computed(

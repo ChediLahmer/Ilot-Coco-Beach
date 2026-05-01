@@ -23,35 +23,60 @@ export async function spacesRoutes(app) {
       preHandler: optionalAuth,
       schema: {
         tags: ["Spaces"],
-        summary: "List spaces. Auth=all, public=available only. ?page for pagination.",
+        summary:
+          "List spaces. Auth=all, public=available only. Supports search, sort, pagination.",
         querystring: {
           type: "object",
           properties: {
             page: { type: "integer" },
             limit: { type: "integer", maximum: 100 },
             available: { type: "string", enum: ["true", "false"] },
+            search: { type: "string" },
+            sort: {
+              type: "string",
+              enum: ["order", "name", "price", "capacity"],
+            },
           },
         },
       },
     },
     async (request) => {
-      const { page, limit: rawLimit, available } = request.query;
+      const { page, limit: rawLimit, available, search, sort } = request.query;
       const where = {};
       if (request.admin) {
         if (available !== undefined) where.available = available === "true";
       } else {
         where.available = true;
       }
-      if (page) {
-        const limit = Math.min(Number(rawLimit) || 20, 100);
-        const offset = (Number(page) - 1) * limit;
-        const [items, total] = await Promise.all([
-          prisma.space.findMany({ where, orderBy: { order: "asc" }, take: limit, skip: offset }),
-          prisma.space.count({ where }),
-        ]);
-        return { items, total, page: Number(page), totalPages: Math.ceil(total / limit) };
+      if (search) {
+        where.name = { path: ["fr"], string_contains: search };
       }
-      return prisma.space.findMany({ where, orderBy: { order: "asc" } });
+      let orderBy;
+      switch (sort) {
+        case "name":
+          orderBy = { name: "asc" };
+          break;
+        case "price":
+          orderBy = { price: "asc" };
+          break;
+        case "capacity":
+          orderBy = { capacity: "desc" };
+          break;
+        default:
+          orderBy = { order: "asc" };
+      }
+      const limit = Math.min(Number(rawLimit) || 20, 100);
+      const offset = page ? (Number(page) - 1) * limit : 0;
+      const [items, total] = await Promise.all([
+        prisma.space.findMany({ where, orderBy, take: limit, skip: offset }),
+        prisma.space.count({ where }),
+      ]);
+      return {
+        items,
+        total,
+        page: Number(page) || 1,
+        totalPages: Math.ceil(total / limit),
+      };
     },
   );
 
@@ -79,9 +104,18 @@ export async function spacesRoutes(app) {
       },
     },
     async (request) => {
-      const { name, description, image, price, capacity, order, available } = request.body;
+      const { name, description, image, price, capacity, order, available } =
+        request.body;
       return prisma.space.create({
-        data: { name, description, image, price, capacity, order: order || 0, available: available ?? true },
+        data: {
+          name,
+          description,
+          image,
+          price,
+          capacity,
+          order: order || 0,
+          available: available ?? true,
+        },
       });
     },
   );
@@ -100,7 +134,7 @@ export async function spacesRoutes(app) {
           properties: {
             name: { type: "object" },
             description: { type: "object" },
-            image: { type: "string" },
+            image: { type: "string", nullable: true },
             price: { type: "number" },
             capacity: { type: "integer" },
             order: { type: "integer" },
@@ -110,7 +144,10 @@ export async function spacesRoutes(app) {
       },
     },
     async (request) => {
-      return prisma.space.update({ where: { id: Number(request.params.id) }, data: request.body });
+      return prisma.space.update({
+        where: { id: Number(request.params.id) },
+        data: request.body,
+      });
     },
   );
 

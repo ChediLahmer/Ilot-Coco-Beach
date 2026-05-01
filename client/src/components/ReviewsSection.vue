@@ -121,6 +121,7 @@
         >
           <div
             ref="scrollerEl"
+            dir="ltr"
             class="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
             @scroll="updateScrollState"
           >
@@ -128,6 +129,7 @@
               v-for="review in reviews"
               :key="review.id"
               data-rail-item
+              :dir="locale === 'ar' ? 'rtl' : 'ltr'"
               class="flex min-h-[14rem] min-w-[17rem] shrink-0 flex-col justify-between rounded-lg border border-charcoal/8 bg-white p-5 sm:min-w-[18rem]"
             >
               <div class="flex gap-0.5 text-coral">

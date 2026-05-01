@@ -4,7 +4,17 @@
 
     <!-- Hero banner -->
     <div class="relative h-[40vh] mt-[72px] overflow-hidden">
+      <video
+        v-if="isVideo(heroImage)"
+        :src="heroImage"
+        class="absolute inset-0 w-full h-full object-cover"
+        autoplay
+        loop
+        muted
+        playsinline
+      />
       <img
+        v-else
         :src="heroImage"
         alt=""
         class="absolute inset-0 w-full h-full object-cover"
@@ -32,6 +42,7 @@
       class="sticky top-[72px] z-30 bg-[#FAF7F2]/95 backdrop-blur-sm border-b border-charcoal/5"
     >
       <div
+        dir="ltr"
         class="max-w-7xl mx-auto px-6 py-4 flex gap-6 overflow-x-auto scrollbar-hide"
       >
         <button
@@ -56,16 +67,33 @@
         <div
           v-for="(img, idx) in visibleImages"
           :key="img.key + '-' + idx"
-          class="break-inside-avoid cursor-pointer overflow-hidden rounded-xl"
+          class="break-inside-avoid cursor-pointer overflow-hidden rounded-xl relative"
           @click="openLightbox(idx)"
         >
+          <video
+            v-if="isVideo(img.src)"
+            :src="img.src"
+            class="w-full object-cover rounded-xl pointer-events-none"
+            muted
+            autoplay
+            loop
+            playsinline
+            preload="metadata"
+          />
           <img
+            v-else
             :src="img.src"
             :alt="img.alt"
             class="w-full object-cover transition-all duration-500 hover:brightness-110 hover:scale-[1.02] rounded-xl"
             loading="lazy"
             decoding="async"
           />
+          <div
+            v-if="isVideo(img.src)"
+            class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
+          >
+            Vidéo
+          </div>
         </div>
       </div>
 
@@ -105,7 +133,18 @@
           >
             &#8249;
           </button>
+          <video
+            v-if="isVideo(visibleImages[lightboxIndex]?.src)"
+            :key="visibleImages[lightboxIndex]?.src"
+            :src="visibleImages[lightboxIndex]?.src"
+            class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+            controls
+            autoplay
+            muted
+            playsinline
+          />
           <img
+            v-else
             :src="visibleImages[lightboxIndex]?.src"
             :alt="visibleImages[lightboxIndex]?.alt"
             class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
@@ -159,8 +198,12 @@ import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
 import { useData } from "@/composables/useData";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { galleryImages, galleryHasMore, loadMoreGallery } = useData();
+
+function isVideo(url) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
 
 const heroImage = computed(() => galleryImages.value[0]?.url ?? "");
 
@@ -169,18 +212,30 @@ const allMappedImages = computed(() =>
     key: img.id,
     src: img.url,
     alt: img.alt || "Ilot Coco Beach",
-    category: img.category || "ambiance",
+    categoryId: img.categoryId || null,
+    categoryLabel: img.catRef
+      ? img.catRef.name[locale.value] || img.catRef.name.fr
+      : null,
   })),
 );
 
-// --- Categories ---
-const categories = [
-  { id: "all", label: "Tout" },
-  { id: "espaces", label: "Espaces" },
-  { id: "cuisine", label: "Cuisine" },
-  { id: "ambiance", label: "Ambiance" },
-  { id: "evenements", label: "Événements" },
-];
+// --- Categories (dynamic from data, i18n-aware) ---
+const categories = computed(() => {
+  const catMap = new Map();
+  for (const img of galleryImages.value) {
+    if (img.catRef && !catMap.has(img.catRef.id)) {
+      catMap.set(img.catRef.id, img.catRef);
+    }
+  }
+  const sorted = [...catMap.values()].sort((a, b) => a.order - b.order);
+  return [
+    { id: "all", label: t("gallery.allCategories") || "Tout" },
+    ...sorted.map((c) => ({
+      id: c.id,
+      label: c.name[locale.value] || c.name.fr,
+    })),
+  ];
+});
 
 const activeCategory = ref("all");
 
@@ -188,7 +243,7 @@ const activeCategory = ref("all");
 const filteredImages = computed(() => {
   if (activeCategory.value === "all") return allMappedImages.value;
   return allMappedImages.value.filter(
-    (img) => img.category === activeCategory.value,
+    (img) => img.categoryId === activeCategory.value,
   );
 });
 

@@ -6,6 +6,9 @@
     <!-- Video background -->
     <div class="absolute inset-0">
       <video
+        v-if="heroVideo"
+        :key="heroVideo"
+        :src="heroVideo"
         class="h-full w-full object-cover"
         :poster="heroPoster"
         autoplay
@@ -13,9 +16,12 @@
         loop
         playsinline
         preload="auto"
-      >
-        <source :src="heroVideo" type="video/mp4" />
-      </video>
+      />
+      <img
+        v-else-if="heroPoster"
+        :src="heroPoster"
+        class="h-full w-full object-cover"
+      />
       <div
         class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"
       />
@@ -71,14 +77,12 @@ import { useI18n } from "vue-i18n";
 import gsap from "gsap";
 
 import { useConfig } from "@/composables/useConfig";
-import fallbackVideo from "@/assets/images/beach-video.mp4";
-import fallbackPoster from "@/assets/images/overwater-cabin.jpg";
 
 const { t } = useI18n();
 const config = useConfig();
 
-const heroVideo = computed(() => config.heroVideo || fallbackVideo);
-const heroPoster = computed(() => config.heroPoster || fallbackPoster);
+const heroVideo = computed(() => config.heroVideo || "");
+const heroPoster = computed(() => config.heroPoster || "");
 
 const contentEl = ref(null);
 

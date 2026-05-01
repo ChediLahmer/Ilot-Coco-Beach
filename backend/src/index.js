@@ -54,7 +54,7 @@ await app.register(swaggerUi, {
 await app.register(cors, {
   origin: (
     process.env.CORS_ORIGIN ||
-    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176"
+    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177"
   ).split(","),
 });
 await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } });

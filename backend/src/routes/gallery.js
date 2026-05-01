@@ -3,18 +3,46 @@ import { authenticate } from "../lib/auth.js";
 import { uploadFile, deleteFile } from "../lib/storage.js";
 
 export async function galleryRoutes(app) {
-  app.addSchema({
-    $id: "GalleryImage",
-    type: "object",
-    properties: {
-      id: { type: "integer" },
-      url: { type: "string" },
-      alt: { type: "string", nullable: true },
-      category: { type: "string", nullable: true },
-      order: { type: "integer" },
-      createdAt: { type: "string", format: "date-time" },
-    },
+  // ─── Gallery Categories ───────────────────────────────────────────
+  app.get("/categories", async () => {
+    return prisma.galleryCategory.findMany({ orderBy: { order: "asc" } });
   });
+
+  app.post(
+    "/categories",
+    { preHandler: authenticate },
+    async (request, reply) => {
+      const { name, order } = request.body;
+      const cat = await prisma.galleryCategory.create({
+        data: { name, order: order ?? 0 },
+      });
+      return reply.status(201).send(cat);
+    },
+  );
+
+  app.put("/categories/:id", { preHandler: authenticate }, async (request) => {
+    const { name, order } = request.body;
+    const data = {};
+    if (name !== undefined) data.name = name;
+    if (order !== undefined) data.order = order;
+    return prisma.galleryCategory.update({
+      where: { id: Number(request.params.id) },
+      data,
+    });
+  });
+
+  app.delete(
+    "/categories/:id",
+    { preHandler: authenticate },
+    async (request, reply) => {
+      await prisma.galleryCategory.delete({
+        where: { id: Number(request.params.id) },
+      });
+      return reply.status(204).send();
+    },
+  );
+
+  // ─── Gallery Images ───────────────────────────────────────────────
 
   app.get(
     "/",
@@ -36,10 +64,15 @@ export async function galleryRoutes(app) {
       const limit = Math.min(Number(request.query.limit) || 20, 100);
       const cursor = Number(request.query.cursor) || undefined;
       const category = request.query.category || undefined;
+      const categoryId = Number(request.query.categoryId) || undefined;
 
-      const where = category ? { category } : {};
+      const where = {};
+      if (category) where.category = category;
+      if (categoryId) where.categoryId = categoryId;
+
       const images = await prisma.galleryImage.findMany({
         where,
+        include: { catRef: true },
         orderBy: { order: "asc" },
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -58,7 +91,9 @@ export async function galleryRoutes(app) {
       schema: {
         tags: ["Gallery"],
         summary: "Get total image count",
-        response: { 200: { type: "object", properties: { total: { type: "integer" } } } },
+        response: {
+          200: { type: "object", properties: { total: { type: "integer" } } },
+        },
       },
     },
     async () => {
@@ -84,8 +119,12 @@ export async function galleryRoutes(app) {
       const buffer = await file.toBuffer();
       const url = await uploadFile(buffer, file.filename, file.mimetype);
       const category = file.fields?.category?.value || null;
+      const categoryId = file.fields?.categoryId?.value
+        ? Number(file.fields.categoryId.value)
+        : null;
       const image = await prisma.galleryImage.create({
-        data: { url, alt: file.filename, category, order: 0 },
+        data: { url, alt: file.filename, category, categoryId, order: 0 },
+        include: { catRef: true },
       });
       return reply.status(201).send(image);
     },
@@ -100,16 +139,28 @@ export async function galleryRoutes(app) {
         summary: "Update a gallery image",
         security: [{ BearerAuth: [] }],
         params: { type: "object", properties: { id: { type: "integer" } } },
-        body: { type: "object", properties: { order: { type: "integer" }, alt: { type: "string" }, category: { type: "string" } } },
+        body: {
+          type: "object",
+          properties: {
+            order: { type: "integer" },
+            alt: { type: "string" },
+            category: { type: "string" },
+          },
+        },
       },
     },
     async (request) => {
-      const { order, alt, category } = request.body;
+      const { order, alt, category, categoryId } = request.body;
       const data = {};
       if (order !== undefined) data.order = order;
       if (alt !== undefined) data.alt = alt;
       if (category !== undefined) data.category = category;
-      return prisma.galleryImage.update({ where: { id: Number(request.params.id) }, data });
+      if (categoryId !== undefined) data.categoryId = categoryId;
+      return prisma.galleryImage.update({
+        where: { id: Number(request.params.id) },
+        data,
+        include: { catRef: true },
+      });
     },
   );
 
@@ -126,7 +177,9 @@ export async function galleryRoutes(app) {
       },
     },
     async (request, reply) => {
-      const image = await prisma.galleryImage.findUnique({ where: { id: Number(request.params.id) } });
+      const image = await prisma.galleryImage.findUnique({
+        where: { id: Number(request.params.id) },
+      });
       if (image) {
         await deleteFile(image.url);
         await prisma.galleryImage.delete({ where: { id: image.id } });

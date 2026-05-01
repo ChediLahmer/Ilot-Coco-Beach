@@ -12,10 +12,10 @@ async function request(path, options = {}) {
 
 export const api = {
   getMenuCategories: () => request("/menu/categories"),
-  getSpaces: () => request("/spaces"),
+  getSpaces: () => request("/spaces").then((r) => r.items || r),
   getGallery: (cursor, limit = 20) =>
     request(`/gallery?limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`),
-  getFlashSales: () => request("/flash-sales"),
-  getVouchers: () => request("/vouchers"),
+  getFlashSales: () => request("/flash-sales").then((r) => r.items || r),
+  getVouchers: () => request("/vouchers").then((r) => r.items || r),
   getConfig: () => request("/config"),
 };

@@ -9,7 +9,10 @@ export async function menuRoutes(app) {
       id: { type: "integer" },
       name: { type: "object" },
       order: { type: "integer" },
-      items: { type: "array", items: { $ref: "#/components/schemas/MenuItem" } },
+      items: {
+        type: "array",
+        items: { $ref: "#/components/schemas/MenuItem" },
+      },
     },
   });
 
@@ -36,20 +39,37 @@ export async function menuRoutes(app) {
       preHandler: optionalAuth,
       schema: {
         tags: ["Menu"],
-        summary: "List categories with items. Auth=all, public=available items only.",
+        summary:
+          "List categories with items. Auth=all, public=available items only. Supports search, sort.",
         querystring: {
           type: "object",
-          properties: { search: { type: "string" } },
+          properties: {
+            search: { type: "string" },
+            sort: { type: "string", enum: ["order", "name", "price"] },
+          },
         },
       },
     },
     async (request) => {
-      const { search } = request.query;
-      const where = search ? { name: { path: ["fr"], string_contains: search } } : {};
+      const { search, sort } = request.query;
+      const where = search
+        ? { name: { path: ["fr"], string_contains: search } }
+        : {};
       const itemWhere = request.admin ? {} : { available: true };
+      let itemOrderBy;
+      switch (sort) {
+        case "name":
+          itemOrderBy = { name: "asc" };
+          break;
+        case "price":
+          itemOrderBy = { priceStandard: "asc" };
+          break;
+        default:
+          itemOrderBy = { order: "asc" };
+      }
       return prisma.menuCategory.findMany({
         where,
-        include: { items: { where: itemWhere, orderBy: { order: "asc" } } },
+        include: { items: { where: itemWhere, orderBy: itemOrderBy } },
         orderBy: { order: "asc" },
       });
     },
@@ -63,7 +83,11 @@ export async function menuRoutes(app) {
         tags: ["Menu"],
         summary: "Create a category",
         security: [{ BearerAuth: [] }],
-        body: { type: "object", required: ["name"], properties: { name: { type: "object" }, order: { type: "integer" } } },
+        body: {
+          type: "object",
+          required: ["name"],
+          properties: { name: { type: "object" }, order: { type: "integer" } },
+        },
       },
     },
     async (request) => {
@@ -81,12 +105,18 @@ export async function menuRoutes(app) {
         summary: "Update a category",
         security: [{ BearerAuth: [] }],
         params: { type: "object", properties: { id: { type: "integer" } } },
-        body: { type: "object", properties: { name: { type: "object" }, order: { type: "integer" } } },
+        body: {
+          type: "object",
+          properties: { name: { type: "object" }, order: { type: "integer" } },
+        },
       },
     },
     async (request) => {
       const { name, order } = request.body;
-      return prisma.menuCategory.update({ where: { id: Number(request.params.id) }, data: { name, order } });
+      return prisma.menuCategory.update({
+        where: { id: Number(request.params.id) },
+        data: { name, order },
+      });
     },
   );
 
@@ -103,7 +133,9 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
-      await prisma.menuCategory.delete({ where: { id: Number(request.params.id) } });
+      await prisma.menuCategory.delete({
+        where: { id: Number(request.params.id) },
+      });
       return reply.status(204).send();
     },
   );
@@ -115,7 +147,8 @@ export async function menuRoutes(app) {
       preHandler: optionalAuth,
       schema: {
         tags: ["Menu"],
-        summary: "List menu items. Auth=all, public=available only. ?page for pagination.",
+        summary:
+          "List menu items. Auth=all, public=available only. ?page for pagination.",
         querystring: {
           type: "object",
           properties: {
@@ -135,10 +168,20 @@ export async function menuRoutes(app) {
         const limit = Math.min(Number(rawLimit) || 20, 100);
         const offset = (Number(page) - 1) * limit;
         const [items, total] = await Promise.all([
-          prisma.menuItem.findMany({ where, orderBy: { order: "asc" }, take: limit, skip: offset }),
+          prisma.menuItem.findMany({
+            where,
+            orderBy: { order: "asc" },
+            take: limit,
+            skip: offset,
+          }),
           prisma.menuItem.count({ where }),
         ]);
-        return { items, total, page: Number(page), totalPages: Math.ceil(total / limit) };
+        return {
+          items,
+          total,
+          page: Number(page),
+          totalPages: Math.ceil(total / limit),
+        };
       }
       return prisma.menuItem.findMany({ where, orderBy: { order: "asc" } });
     },
@@ -169,9 +212,27 @@ export async function menuRoutes(app) {
       },
     },
     async (request) => {
-      const { name, description, image, priceStandard, priceExtra, available, categoryId, order } = request.body;
+      const {
+        name,
+        description,
+        image,
+        priceStandard,
+        priceExtra,
+        available,
+        categoryId,
+        order,
+      } = request.body;
       return prisma.menuItem.create({
-        data: { name, description, image, priceStandard, priceExtra: priceExtra || 0, available, categoryId, order: order || 0 },
+        data: {
+          name,
+          description,
+          image,
+          priceStandard,
+          priceExtra: priceExtra || 0,
+          available,
+          categoryId,
+          order: order || 0,
+        },
       });
     },
   );
@@ -190,7 +251,7 @@ export async function menuRoutes(app) {
           properties: {
             name: { type: "object" },
             description: { type: "object" },
-            image: { type: "string" },
+            image: { type: "string", nullable: true },
             priceStandard: { type: "number" },
             priceExtra: { type: "number" },
             available: { type: "boolean" },
@@ -201,7 +262,10 @@ export async function menuRoutes(app) {
       },
     },
     async (request) => {
-      return prisma.menuItem.update({ where: { id: Number(request.params.id) }, data: request.body });
+      return prisma.menuItem.update({
+        where: { id: Number(request.params.id) },
+        data: request.body,
+      });
     },
   );
 
@@ -218,7 +282,9 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
-      await prisma.menuItem.delete({ where: { id: Number(request.params.id) } });
+      await prisma.menuItem.delete({
+        where: { id: Number(request.params.id) },
+      });
       return reply.status(204).send();
     },
   );
