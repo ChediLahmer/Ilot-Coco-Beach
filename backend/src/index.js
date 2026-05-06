@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import compress from "@fastify/compress";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
+import { prisma } from "./lib/prisma.js";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { menuRoutes } from "./routes/menu.js";
@@ -16,7 +17,10 @@ import { uploadRoutes } from "./routes/upload.js";
 import { passwordResetRoutes } from "./routes/password-reset.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: true,
+  trustProxy: true,
+});
 
 await app.register(swagger, {
   openapi: {
@@ -101,8 +105,6 @@ await app.register(vouchersRoutes, { prefix: "/api/vouchers" });
 await app.register(uploadRoutes, { prefix: "/api/upload" });
 await app.register(passwordResetRoutes, { prefix: "/api/auth" });
 await app.register(analyticsRoutes, { prefix: "/api/analytics" });
-
-import { prisma } from "./lib/prisma.js";
 
 const port = process.env.PORT || 3000;
 

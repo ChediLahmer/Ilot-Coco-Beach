@@ -1,23 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ocean: #1a8f9a;
-  --color-ocean-light: #d4f0ee;
-  --color-ocean-dark: #0f5563;
-  --color-driftwood: #b88561;
-  --color-driftwood-light: #dcb28c;
-  --color-driftwood-dark: #8d6549;
-  --color-coral: #e86c50;
-  --color-coral-light: #f4a08c;
-  --color-sand: #faf7f2;
-  --color-sand-dark: #f0ebe3;
-  --color-charcoal: #1c2e35;
-  --color-leaf: #2f8f74;
-  --color-gold: #c9953a;
-  --color-gold-light: #e8c06a;
-  --color-mist: #f4fafa;
-  --color-foam: #f8fafb;
-  --color-deep: #0d1f28;
+  --color-ocean: #00b4a2;
+  --color-ocean-light: #7dffe8;
+  --color-ocean-dark: #008075;
+  --color-driftwood: #e08a38;
+  --color-driftwood-light: #f5b347;
+  --color-driftwood-dark: #a65e20;
+  --color-coral: #ff6b6b;
+  --color-coral-light: #ff9e9e;
+  --color-sand: #fff9f2;
+  --color-sand-dark: #ffecd2;
+  --color-charcoal: #2b3a3e;
+  --color-leaf: #34c759;
+  --color-gold: #ffbf40;
+  --color-gold-light: #ffd97a;
+  --color-mist: #e8fff9;
+  --color-foam: #f0fff8;
+  --color-deep: #1a3c40;
+  --color-sunset: #ff8c5a;
+  --color-lagoon: #45e3c8;
 
   --font-display: "Playfair Display", serif;
   --font-brand: "Playfair Display", serif;
@@ -104,7 +106,7 @@ textarea {
 }
 
 ::selection {
-  background: rgba(26, 143, 154, 0.15);
+  background: rgba(0, 180, 162, 0.15);
   color: var(--color-deep);
 }
 

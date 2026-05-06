@@ -11,6 +11,7 @@ export async function vouchersRoutes(app) {
       discountPercent: { type: "integer" },
       validUntil: { type: "string", format: "date-time" },
       isActive: { type: "boolean" },
+      visible: { type: "boolean" },
       createdAt: { type: "string", format: "date-time" },
     },
   });
@@ -41,7 +42,7 @@ export async function vouchersRoutes(app) {
       if (request.admin) {
         if (active !== undefined) where.isActive = active === "true";
       } else {
-        where.isActive = true;
+        where.visible = true;
       }
       if (search) {
         where.code = { contains: search, mode: "insensitive" };

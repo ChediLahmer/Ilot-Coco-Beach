@@ -2,7 +2,7 @@
   <section
     v-if="images.length > 0"
     id="gallery"
-    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-b from-white to-sand/50"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-b from-mist via-white to-sand-dark/30"
   >
     <div class="mx-auto max-w-6xl">
       <div class="max-w-md">

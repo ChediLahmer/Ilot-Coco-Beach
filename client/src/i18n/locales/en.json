@@ -166,7 +166,8 @@
     "copy": "Copy code",
     "validUntil": "Valid until",
     "off": "off",
-    "useCode": "Use this code when booking your reservation"
+    "useCode": "Use this code when booking your reservation",
+    "unavailable": "Unavailable"
   },
   "flash": {
     "title": "Flash Sale",
@@ -178,7 +179,8 @@
     "expired": "This offer has expired",
     "bookNow": "Grab the deal",
     "seeAll": "See all offers",
-    "moreOffers": "more offers available"
+    "moreOffers": "more offers available",
+    "unavailable": "Unavailable"
   },
   "reviews": {
     "eyebrow": "Social proof",

@@ -1,8 +1,8 @@
 <template>
   <section
-    v-if="displayedSales.length > 0"
+    v-if="flashSales.length > 0"
     id="flash-offers"
-    class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-br from-coral/5 via-white to-gold-light/10"
+    class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-r from-ocean-dark/5 via-lagoon/8 to-sunset/10"
   >
     <div class="mx-auto max-w-6xl">
       <div
@@ -70,19 +70,21 @@
           }"
           :navigation="{ prevEl: flashPrev, nextEl: flashNext }"
           :breakpoints="{
-            640: { slidesPerView: 1.8 },
-            1024: { slidesPerView: 2.5 },
+            640: { slidesPerView: 2, spaceBetween: 16 },
+            1024: { slidesPerView: 3, spaceBetween: 20 },
           }"
+          :centered-slides="false"
           :grab-cursor="true"
-          class="!overflow-visible"
+          class="overflow-hidden rounded-xl"
         >
           <SwiperSlide
-            v-for="sale in displayedSales"
+            v-for="sale in flashSales"
             :key="sale.id"
             class="!h-auto"
           >
             <article
               class="group relative flex min-h-[14rem] h-full flex-col justify-between overflow-hidden rounded-lg text-white"
+              :class="{ 'opacity-60': !sale.isActive }"
             >
               <img
                 v-if="sale.image"
@@ -105,6 +107,12 @@
                     class="rounded bg-coral px-2.5 py-1 text-xs font-semibold text-white"
                   >
                     -{{ sale.discountPercent }}%
+                  </span>
+                  <span
+                    v-if="!sale.isActive"
+                    class="rounded bg-red-500/80 px-2.5 py-1 text-xs font-medium text-white"
+                  >
+                    {{ t("flash.unavailable") }}
                   </span>
                 </div>
 
@@ -155,7 +163,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Autoplay } from "swiper/modules";
@@ -170,10 +178,6 @@ const now = ref(Date.now());
 let countdownTimer = null;
 
 const { flashSales } = useData();
-const activeSales = computed(() =>
-  flashSales.value.filter((sale) => sale.isActive),
-);
-const displayedSales = computed(() => activeSales.value);
 
 const flashPrev = ref(null);
 const flashNext = ref(null);

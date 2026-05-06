@@ -1,5 +1,8 @@
 <template>
-  <section id="reservation" class="px-6 py-20 md:px-12 lg:px-20 bg-sand/30">
+  <section
+    id="reservation"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-tr from-ocean-light/35 via-mist to-sand-dark/25"
+  >
     <div class="mx-auto max-w-3xl text-center">
       <p class="text-sm font-medium text-ocean">
         {{ t("reservation.eyebrow") }}

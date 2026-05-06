@@ -2,7 +2,7 @@
   <section
     v-if="spaces.length > 0"
     id="experience"
-    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-ocean-light/30 via-sand/40 to-mist"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-lagoon/10 via-ocean-light/25 to-foam"
   >
     <div class="mx-auto max-w-6xl">
       <div class="text-center">
@@ -66,11 +66,11 @@
           }"
           :navigation="{ prevEl: spacePrev, nextEl: spaceNext }"
           :breakpoints="{
-            640: { slidesPerView: 1.8 },
-            1024: { slidesPerView: 2.5 },
+            640: { slidesPerView: 2, spaceBetween: 16 },
+            1024: { slidesPerView: 3, spaceBetween: 20 },
           }"
           :grab-cursor="true"
-          class="!overflow-visible"
+          class="overflow-hidden rounded-xl"
         >
           <SwiperSlide v-for="space in spaces" :key="space.id" class="!h-auto">
             <article

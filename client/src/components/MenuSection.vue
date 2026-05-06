@@ -2,7 +2,7 @@
   <section
     v-if="menuCategories.length > 0"
     id="menu"
-    class="px-6 py-20 md:px-12 lg:px-20 bg-sand/40"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-bl from-sand-dark/50 via-sand to-ocean-light/20"
   >
     <div class="mx-auto max-w-6xl">
       <div class="text-center">
@@ -106,11 +106,11 @@
           }"
           :navigation="{ prevEl: menuPrev, nextEl: menuNext }"
           :breakpoints="{
-            640: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
+            640: { slidesPerView: 2, spaceBetween: 16 },
+            1024: { slidesPerView: 3, spaceBetween: 20 },
           }"
           :grab-cursor="true"
-          class="!overflow-visible"
+          class="overflow-hidden rounded-xl"
         >
           <SwiperSlide v-for="item in activeItems" :key="item.id">
             <article

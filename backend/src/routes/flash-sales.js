@@ -13,6 +13,7 @@ export async function flashSalesRoutes(app) {
       image: { type: "string", nullable: true },
       endsAt: { type: "string", format: "date-time" },
       isActive: { type: "boolean" },
+      visible: { type: "boolean" },
       createdAt: { type: "string", format: "date-time" },
     },
   });
@@ -43,7 +44,7 @@ export async function flashSalesRoutes(app) {
       if (request.admin) {
         if (active !== undefined) where.isActive = active === "true";
       } else {
-        where.isActive = true;
+        where.visible = true;
       }
       if (search) {
         where.title = { path: ["fr"], string_contains: search };

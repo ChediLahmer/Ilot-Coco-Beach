@@ -100,6 +100,7 @@ model FlashSale {
   image           String?
   endsAt          DateTime @map("ends_at")
   isActive        Boolean  @default(true) @map("is_active")
+  visible         Boolean  @default(true)
   createdAt       DateTime @default(now()) @map("created_at")
 
   @@map("flash_sales")
@@ -111,6 +112,7 @@ model Voucher {
   discountPercent Int      @map("discount_percent")
   validUntil      DateTime @map("valid_until")
   isActive        Boolean  @default(true) @map("is_active")
+  visible         Boolean  @default(true)
   createdAt       DateTime @default(now()) @map("created_at")
 
   @@map("vouchers")

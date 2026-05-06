@@ -47,9 +47,10 @@
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
       >
         <div
-          v-for="sale in activeSales"
+          v-for="sale in flashSales"
           :key="sale.id"
           class="relative rounded-2xl overflow-hidden group aspect-[3/4] sm:aspect-[3/4]"
+          :class="{ 'opacity-60 pointer-events-none': !sale.isActive }"
         >
           <!-- Full card image -->
           <img
@@ -72,6 +73,12 @@
             class="absolute top-4 right-4 bg-coral text-white font-heading font-bold text-sm px-3 py-1 rounded-full z-10"
           >
             -{{ sale.discountPercent }}%
+          </span>
+          <span
+            v-if="!sale.isActive"
+            class="absolute top-4 left-4 bg-red-500/90 text-white font-heading font-bold text-xs px-3 py-1 rounded-full z-10"
+          >
+            {{ t("flash.unavailable") }}
           </span>
 
           <!-- Content at bottom -->
@@ -149,9 +156,10 @@
 
         <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <article
-            v-for="voucher in activeVouchers"
+            v-for="voucher in vouchers"
             :key="voucher.id"
             class="rounded-[1.5rem] border border-charcoal/8 bg-white/72 p-5"
+            :class="{ 'opacity-60': !voucher.isActive }"
           >
             <p
               class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.18em] text-coral/80"
@@ -168,6 +176,12 @@
               {{ t("vouchers.validUntil") }}:
               {{ formatVoucherDate(voucher.validUntil) }}
             </p>
+            <span
+              v-if="!voucher.isActive"
+              class="mt-3 inline-block rounded bg-red-500/10 px-2.5 py-0.5 text-xs font-medium text-red-600"
+            >
+              {{ t("vouchers.unavailable") }}
+            </span>
           </article>
         </div>
       </div>
@@ -178,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import NavBar from "@/components/NavBar.vue";
@@ -191,9 +205,6 @@ const { flashSales, vouchers } = useData();
 
 const now = ref(Date.now());
 let countdownTimer = null;
-
-const activeSales = computed(() => flashSales.value.filter((s) => s.isActive));
-const activeVouchers = computed(() => vouchers.value.filter((v) => v.isActive));
 
 function isSaleExpired(sale) {
   return now.value >= new Date(sale.endsAt).getTime();

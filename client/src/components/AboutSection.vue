@@ -1,5 +1,8 @@
 <template>
-  <section id="about" class="px-6 py-20 md:px-12 lg:px-20">
+  <section
+    id="about"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-ocean-light/30 via-mist to-sand-dark/40"
+  >
     <div class="mx-auto max-w-6xl">
       <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
         <div class="lg:sticky lg:top-28">

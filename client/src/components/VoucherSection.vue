@@ -1,6 +1,6 @@
 <template>
   <section
-    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-gold-light/10 via-sand/30 to-coral/5"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-sunset/8 via-gold-light/15 to-coral-light/10"
   >
     <div class="mx-auto max-w-6xl">
       <div class="text-center">
@@ -54,7 +54,7 @@
       </div>
 
       <!-- Swiper -->
-      <div v-if="activeVouchers.length > 0" class="mt-8">
+      <div v-if="vouchers.length > 0" class="mt-8">
         <Swiper
           :modules="swiperModules"
           :slides-per-view="1"
@@ -67,19 +67,20 @@
           }"
           :navigation="{ prevEl: voucherPrev, nextEl: voucherNext }"
           :breakpoints="{
-            640: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
+            640: { slidesPerView: 2, spaceBetween: 16 },
+            1024: { slidesPerView: 3, spaceBetween: 20 },
           }"
           :grab-cursor="true"
-          class="!overflow-visible"
+          class="overflow-hidden rounded-xl"
         >
           <SwiperSlide
-            v-for="voucher in activeVouchers"
+            v-for="voucher in vouchers"
             :key="voucher.id"
             class="!h-auto"
           >
             <div
               class="h-full rounded-lg border border-charcoal/8 bg-white p-5"
+              :class="{ 'opacity-60': !voucher.isActive }"
             >
               <div class="text-center">
                 <span class="text-3xl font-bold text-coral"
@@ -88,6 +89,12 @@
                 <span class="block text-sm text-charcoal/40 mt-1">{{
                   t("vouchers.off")
                 }}</span>
+                <span
+                  v-if="!voucher.isActive"
+                  class="mt-2 inline-block rounded bg-red-500/10 px-2.5 py-0.5 text-xs font-medium text-red-600"
+                >
+                  {{ t("vouchers.unavailable") }}
+                </span>
               </div>
 
               <div class="my-4 h-px bg-charcoal/6" />
@@ -143,7 +150,7 @@
       </div>
 
       <p
-        v-if="activeVouchers.length === 0"
+        v-if="vouchers.length === 0"
         class="mt-8 text-center text-sm text-charcoal/40"
       >
         {{ t("vouchers.subtitle") }}
@@ -153,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Autoplay, Scrollbar } from "swiper/modules";
@@ -166,7 +173,6 @@ const swiperModules = [Navigation, Autoplay, Scrollbar];
 const { t } = useI18n();
 const { vouchers } = useData();
 
-const activeVouchers = computed(() => vouchers.value.filter((v) => v.isActive));
 const copiedCode = ref(null);
 
 const voucherPrev = ref(null);

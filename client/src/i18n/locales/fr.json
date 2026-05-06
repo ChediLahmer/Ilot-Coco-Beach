@@ -114,7 +114,8 @@
     "copy": "Copier le code",
     "validUntil": "Valable jusqu'au",
     "off": "de réduction",
-    "useCode": "Utilisez ce code lors de votre réservation"
+    "useCode": "Utilisez ce code lors de votre réservation",
+    "unavailable": "Indisponible"
   },
   "flash": {
     "title": "Vente Flash",
@@ -126,7 +127,8 @@
     "expired": "Cette offre a expiré",
     "bookNow": "Profiter de l'offre",
     "seeAll": "Voir toutes les offres",
-    "moreOffers": "offres disponibles"
+    "moreOffers": "offres disponibles",
+    "unavailable": "Indisponible"
   },
   "reviews": {
     "eyebrow": "Preuve sociale",
