@@ -87,6 +87,7 @@
     "perPerson": "per guest",
     "startingAt": "Starting at",
     "reserveCta": "Reserve this space",
+    "unavailable": "Unavailable",
     "cards": {
       "overwater": {
         "title": "Overwater Cabin",

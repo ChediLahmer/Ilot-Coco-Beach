@@ -1,5 +1,7 @@
 <template>
-  <section class="px-6 py-20 md:px-12 lg:px-20 bg-sand/30">
+  <section
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-gold-light/10 via-sand/30 to-coral/5"
+  >
     <div class="mx-auto max-w-6xl">
       <div class="text-center">
         <h2 class="font-brand text-2xl text-deep md:text-3xl">

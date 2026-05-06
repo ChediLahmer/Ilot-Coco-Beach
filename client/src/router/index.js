@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { trackPageView } from "@/composables/useAnalytics";
 
 const routes = [
   {
@@ -40,6 +41,10 @@ const router = createRouter({
     }
     return { top: 0, behavior: "smooth" };
   },
+});
+
+router.afterEach((to) => {
+  trackPageView(to.fullPath);
 });
 
 export default router;

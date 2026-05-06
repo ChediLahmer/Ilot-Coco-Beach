@@ -14,6 +14,7 @@ export async function spacesRoutes(app) {
       capacity: { type: "integer" },
       order: { type: "integer" },
       available: { type: "boolean" },
+      visible: { type: "boolean" },
     },
   });
 
@@ -46,7 +47,7 @@ export async function spacesRoutes(app) {
       if (request.admin) {
         if (available !== undefined) where.available = available === "true";
       } else {
-        where.available = true;
+        where.visible = true;
       }
       if (search) {
         where.name = { path: ["fr"], string_contains: search };
@@ -99,13 +100,22 @@ export async function spacesRoutes(app) {
             capacity: { type: "integer" },
             order: { type: "integer" },
             available: { type: "boolean", default: true },
+            visible: { type: "boolean", default: true },
           },
         },
       },
     },
     async (request) => {
-      const { name, description, image, price, capacity, order, available } =
-        request.body;
+      const {
+        name,
+        description,
+        image,
+        price,
+        capacity,
+        order,
+        available,
+        visible,
+      } = request.body;
       return prisma.space.create({
         data: {
           name,
@@ -115,6 +125,7 @@ export async function spacesRoutes(app) {
           capacity,
           order: order || 0,
           available: available ?? true,
+          visible: visible ?? true,
         },
       });
     },
@@ -139,6 +150,7 @@ export async function spacesRoutes(app) {
             capacity: { type: "integer" },
             order: { type: "integer" },
             available: { type: "boolean" },
+            visible: { type: "boolean" },
           },
         },
       },

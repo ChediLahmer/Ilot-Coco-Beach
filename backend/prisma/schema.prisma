@@ -47,6 +47,7 @@ model MenuItem {
   priceStandard Decimal      @db.Decimal(8, 2) @map("price_standard")
   priceExtra    Decimal      @db.Decimal(8, 2) @map("price_extra")
   available     Boolean      @default(true)
+  visible       Boolean      @default(true)
   categoryId    Int          @map("category_id")
   category      MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   order         Int          @default(0)
@@ -63,6 +64,7 @@ model Space {
   price       Decimal @db.Decimal(8, 2)
   capacity    Int
   available   Boolean @default(true)
+  visible     Boolean @default(true)
   order       Int     @default(0)
 
   @@map("spaces")
@@ -120,4 +122,14 @@ model SiteConfig {
   value String
 
   @@map("site_config")
+}
+
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  event     String   // "page_view", "click_reserve"
+  path      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([event, createdAt])
+  @@map("analytics_events")
 }

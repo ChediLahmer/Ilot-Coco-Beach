@@ -217,6 +217,12 @@
                         {{ item.name[locale] || item.name.fr }}
                       </h3>
                       <span
+                        v-if="item.available === false"
+                        class="shrink-0 rounded bg-red-100 px-2 py-0.5 text-[0.65rem] font-semibold text-red-600"
+                      >
+                        {{ t("menu.unavailable") }}
+                      </span>
+                      <span
                         class="flex-1 border-b border-dotted border-charcoal/18"
                       />
                       <span

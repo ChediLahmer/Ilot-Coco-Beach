@@ -2,7 +2,7 @@
   <section
     v-if="spaces.length > 0"
     id="experience"
-    class="px-6 py-20 md:px-12 lg:px-20 bg-sand/40"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-ocean-light/30 via-sand/40 to-mist"
   >
     <div class="mx-auto max-w-6xl">
       <div class="text-center">
@@ -95,6 +95,12 @@
               >
                 <div class="flex flex-wrap items-center gap-2">
                   <span
+                    v-if="!space.available"
+                    class="rounded bg-red-500/80 px-2.5 py-1 text-xs font-medium text-white"
+                  >
+                    {{ t("experience.unavailable") }}
+                  </span>
+                  <span
                     class="rounded bg-white/15 px-2.5 py-1 text-xs font-medium text-white/90"
                   >
                     {{ t("experience.startingAt") }} {{ space.price }} DT
@@ -141,6 +147,7 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 
 import { useData } from "@/composables/useData";
+import { trackReserveClick } from "@/composables/useAnalytics";
 
 const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
@@ -150,6 +157,7 @@ const spacePrev = ref(null);
 const spaceNext = ref(null);
 
 function scrollToReservation() {
+  trackReserveClick();
   const el = document.getElementById("reservation");
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }

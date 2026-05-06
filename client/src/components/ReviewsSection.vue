@@ -1,5 +1,8 @@
 <template>
-  <section id="reviews" class="px-6 py-20 md:px-12 lg:px-20">
+  <section
+    id="reviews"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-ocean-light/20 via-white to-sand/30"
+  >
     <div
       class="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[5fr_7fr] lg:items-start"
     >
@@ -122,7 +125,7 @@
           <div
             ref="scrollerEl"
             dir="ltr"
-            class="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
+            class="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth snap-x snap-mandatory"
             @scroll="updateScrollState"
           >
             <article
@@ -130,7 +133,7 @@
               :key="review.id"
               data-rail-item
               :dir="locale === 'ar' ? 'rtl' : 'ltr'"
-              class="flex min-h-[14rem] min-w-[17rem] shrink-0 flex-col justify-between rounded-lg border border-charcoal/8 bg-white p-5 sm:min-w-[18rem]"
+              class="flex min-h-[14rem] min-w-[17rem] shrink-0 flex-col justify-between rounded-lg border border-charcoal/8 bg-white p-5 sm:min-w-[18rem] snap-start"
             >
               <div class="flex gap-0.5 text-coral">
                 <span v-for="star in 5" :key="star">

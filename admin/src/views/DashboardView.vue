@@ -11,17 +11,20 @@ const stats = ref({
   vouchers: 0,
   gallery: 0,
 });
+const analytics = ref({ pageViews: 0, reserveClicks: 0, conversionRate: 0 });
 const loading = ref(true);
 
 onMounted(async () => {
   try {
-    const [cats, spaces, sales, vouchers, galleryCount] = await Promise.all([
-      api.get("/menu/categories"),
-      api.get("/spaces?limit=1"),
-      api.get("/flash-sales?limit=1"),
-      api.get("/vouchers?limit=1"),
-      api.get("/gallery/count"),
-    ]);
+    const [cats, spaces, sales, vouchers, galleryCount, analyticsData] =
+      await Promise.all([
+        api.get("/menu/categories"),
+        api.get("/spaces?limit=1"),
+        api.get("/flash-sales?limit=1"),
+        api.get("/vouchers?limit=1"),
+        api.get("/gallery/count"),
+        api.get("/analytics/stats?days=30").catch(() => null),
+      ]);
     stats.value = {
       categories: cats.length,
       items: cats.reduce((sum, c) => sum + (c.items?.length || 0), 0),
@@ -30,6 +33,7 @@ onMounted(async () => {
       vouchers: vouchers.total || 0,
       gallery: galleryCount.total || 0,
     };
+    if (analyticsData) analytics.value = analyticsData;
   } catch {
     /* ignore */
   } finally {
@@ -157,6 +161,38 @@ const cards = [
           class="absolute -bottom-6 -right-6 h-20 w-20 rounded-full opacity-5 bg-gradient-to-br"
           :class="card.gradient"
         ></div>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="mt-10">
+      <h2 class="text-lg font-bold text-text mb-4">Analytique (30 jours)</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <p class="text-sm font-medium text-text-muted">Visites</p>
+          <p class="mt-2 text-3xl font-bold text-text">
+            {{ analytics.pageViews }}
+          </p>
+        </div>
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <p class="text-sm font-medium text-text-muted">Clics Réserver</p>
+          <p class="mt-2 text-3xl font-bold text-text">
+            {{ analytics.reserveClicks }}
+          </p>
+        </div>
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <p class="text-sm font-medium text-text-muted">Taux de conversion</p>
+          <p
+            class="mt-2 text-3xl font-bold"
+            :class="
+              analytics.conversionRate >= 5
+                ? 'text-emerald-600'
+                : 'text-amber-600'
+            "
+          >
+            {{ analytics.conversionRate }}%
+          </p>
+        </div>
       </div>
     </div>
 

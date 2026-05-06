@@ -27,6 +27,7 @@ export async function menuRoutes(app) {
       priceStandard: { type: "number" },
       priceExtra: { type: "number" },
       available: { type: "boolean" },
+      visible: { type: "boolean" },
       categoryId: { type: "integer" },
       order: { type: "integer" },
     },
@@ -55,7 +56,7 @@ export async function menuRoutes(app) {
       const where = search
         ? { name: { path: ["fr"], string_contains: search } }
         : {};
-      const itemWhere = request.admin ? {} : { available: true };
+      const itemWhere = request.admin ? {} : { visible: true };
       let itemOrderBy;
       switch (sort) {
         case "name":
@@ -161,7 +162,7 @@ export async function menuRoutes(app) {
     },
     async (request) => {
       const { categoryId, page, limit: rawLimit } = request.query;
-      const where = request.admin ? {} : { available: true };
+      const where = request.admin ? {} : { visible: true };
       if (categoryId) where.categoryId = Number(categoryId);
 
       if (page) {
@@ -205,6 +206,7 @@ export async function menuRoutes(app) {
             priceStandard: { type: "number" },
             priceExtra: { type: "number" },
             available: { type: "boolean" },
+            visible: { type: "boolean" },
             categoryId: { type: "integer" },
             order: { type: "integer" },
           },
@@ -219,6 +221,7 @@ export async function menuRoutes(app) {
         priceStandard,
         priceExtra,
         available,
+        visible,
         categoryId,
         order,
       } = request.body;
@@ -230,6 +233,7 @@ export async function menuRoutes(app) {
           priceStandard,
           priceExtra: priceExtra || 0,
           available,
+          visible: visible ?? true,
           categoryId,
           order: order || 0,
         },
@@ -255,6 +259,7 @@ export async function menuRoutes(app) {
             priceStandard: { type: "number" },
             priceExtra: { type: "number" },
             available: { type: "boolean" },
+            visible: { type: "boolean" },
             categoryId: { type: "integer" },
             order: { type: "integer" },
           },

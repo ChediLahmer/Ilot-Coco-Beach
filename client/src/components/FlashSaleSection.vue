@@ -2,7 +2,7 @@
   <section
     v-if="displayedSales.length > 0"
     id="flash-offers"
-    class="px-6 py-20 md:px-12 lg:px-20"
+    class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-br from-coral/5 via-white to-gold-light/10"
   >
     <div class="mx-auto max-w-6xl">
       <div
@@ -82,7 +82,7 @@
             class="!h-auto"
           >
             <article
-              class="group relative flex min-h-[18rem] h-full flex-col justify-between overflow-hidden rounded-lg text-white"
+              class="group relative flex min-h-[14rem] h-full flex-col justify-between overflow-hidden rounded-lg text-white"
             >
               <img
                 v-if="sale.image"
@@ -162,6 +162,7 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 
 import { useData } from "@/composables/useData";
+import { trackReserveClick } from "@/composables/useAnalytics";
 
 const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
@@ -194,6 +195,7 @@ function getSaleCountdown(sale) {
 }
 
 function scrollToReservation() {
+  trackReserveClick();
   const el = document.getElementById("reservation");
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }

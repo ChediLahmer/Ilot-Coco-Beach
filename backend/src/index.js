@@ -1,6 +1,8 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import compress from "@fastify/compress";
 import multipart from "@fastify/multipart";
+import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { menuRoutes } from "./routes/menu.js";
@@ -12,6 +14,7 @@ import { flashSalesRoutes } from "./routes/flash-sales.js";
 import { vouchersRoutes } from "./routes/vouchers.js";
 import { uploadRoutes } from "./routes/upload.js";
 import { passwordResetRoutes } from "./routes/password-reset.js";
+import { analyticsRoutes } from "./routes/analytics.js";
 
 const app = Fastify({ logger: true });
 
@@ -57,6 +60,11 @@ await app.register(cors, {
     "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177"
   ).split(","),
 });
+await app.register(rateLimit, {
+  max: 200,
+  timeWindow: "1 minute",
+});
+await app.register(compress, { global: true });
 await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } });
 
 app.setErrorHandler((error, request, reply) => {
@@ -64,6 +72,21 @@ app.setErrorHandler((error, request, reply) => {
   const message = statusCode < 500 ? error.message : "Internal Server Error";
   request.log.error(error);
   reply.status(statusCode).send({ error: message });
+});
+
+// Cache public GET responses for 60s (CDN/browser), revalidate after
+app.addHook("onSend", (request, reply, payload, done) => {
+  if (
+    request.method === "GET" &&
+    !request.headers.authorization &&
+    reply.statusCode === 200
+  ) {
+    reply.header(
+      "Cache-Control",
+      "public, max-age=60, stale-while-revalidate=120",
+    );
+  }
+  done();
 });
 
 app.get("/api/health", () => ({ status: "ok" }));
@@ -77,6 +100,9 @@ await app.register(flashSalesRoutes, { prefix: "/api/flash-sales" });
 await app.register(vouchersRoutes, { prefix: "/api/vouchers" });
 await app.register(uploadRoutes, { prefix: "/api/upload" });
 await app.register(passwordResetRoutes, { prefix: "/api/auth" });
+await app.register(analyticsRoutes, { prefix: "/api/analytics" });
+
+import { prisma } from "./lib/prisma.js";
 
 const port = process.env.PORT || 3000;
 
@@ -86,3 +112,13 @@ try {
   app.log.error(err);
   process.exit(1);
 }
+
+// Graceful shutdown
+async function shutdown(signal) {
+  app.log.info(`${signal} received, shutting down...`);
+  await app.close();
+  await prisma.$disconnect();
+  process.exit(0);
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

@@ -17,6 +17,7 @@ const fields = [
   { key: "instagram", label: "Instagram (URL)", type: "url" },
   { key: "messenger", label: "Messenger (URL)", type: "url" },
   { key: "facebook", label: "Facebook (URL)", type: "url" },
+  { key: "tiktok", label: "TikTok (URL)", type: "url" },
   { key: "address", label: "Adresse", type: "text" },
   { key: "lat", label: "Latitude", type: "text" },
   { key: "lng", label: "Longitude", type: "text" },
