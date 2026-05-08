@@ -39,7 +39,6 @@ services:
   - type: web
     name: cocobeach-client
     runtime: static
-    plan: free
     rootDir: client
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -80,7 +79,6 @@ services:
   - type: web
     name: cocobeach-admin
     runtime: static
-    plan: free
     rootDir: admin
     buildCommand: npm install && npm run build
     staticPublishPath: dist
