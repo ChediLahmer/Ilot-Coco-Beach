@@ -11,7 +11,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npx prisma migrate deploy
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
@@ -40,7 +40,7 @@ services:
     name: cocobeach-client
     runtime: static
     rootDir: client
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     staticPublishPath: dist
     headers:
       - path: /*
@@ -80,7 +80,7 @@ services:
     name: cocobeach-admin
     runtime: static
     rootDir: admin
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     staticPublishPath: dist
     headers:
       - path: /*
