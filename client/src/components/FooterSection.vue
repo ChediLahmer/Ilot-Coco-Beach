@@ -21,7 +21,7 @@
               v-for="link in footerLinks"
               :key="link.key"
               :href="link.path || '#' + link.id"
-              class="text-sm text-white/60 hover:text-white"
+              class="text-sm text-white/60 hover:text-white py-1.5"
               @click.prevent="navigate(link)"
             >
               {{ link.label }}

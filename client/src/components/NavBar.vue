@@ -119,7 +119,7 @@
       </div>
 
       <button
-        class="flex h-10 w-10 items-center justify-center rounded-md border border-charcoal/10 lg:hidden"
+        class="flex h-11 w-11 items-center justify-center rounded-md border border-charcoal/10 lg:hidden"
         @click="mobileOpen = true"
       >
         <svg
@@ -152,7 +152,7 @@
                 </p>
               </div>
               <button
-                class="flex h-10 w-10 items-center justify-center rounded-md border border-charcoal/10"
+                class="flex h-11 w-11 items-center justify-center rounded-md border border-charcoal/10"
                 @click="mobileOpen = false"
               >
                 <svg
@@ -220,7 +220,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
@@ -237,6 +237,10 @@ const mobileOpen = ref(false);
 const scrollProgress = ref(0);
 const currentLang = computed(() => locale.value);
 const langs = ["fr", "ar", "en"];
+
+watch(mobileOpen, (open) => {
+  document.body.style.overflow = open ? "hidden" : "";
+});
 
 function updateProgress() {
   const h = document.documentElement.scrollHeight - window.innerHeight;

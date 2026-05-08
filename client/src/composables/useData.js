@@ -24,9 +24,9 @@ async function loadAll() {
 
   const results = await Promise.allSettled([
     api.getMenuCategories(),
-    api.getSpaces(),
-    api.getFlashSales(),
-    api.getVouchers(),
+    api.getSpaces(1, 100),
+    api.getFlashSales(1, 100),
+    api.getVouchers(1, 100),
     api.getGallery(),
   ]);
 
@@ -39,15 +39,15 @@ async function loadAll() {
     }));
   }
   if (sp.status === "fulfilled") {
-    const data = sp.value || [];
+    const data = sp.value?.items || sp.value || [];
     if (data.length) spaces.value = data.map(normalizeItem);
   }
   if (fs.status === "fulfilled") {
-    const data = fs.value || [];
+    const data = fs.value?.items || fs.value || [];
     if (data.length) flashSales.value = data;
   }
   if (v.status === "fulfilled") {
-    const data = v.value || [];
+    const data = v.value?.items || v.value || [];
     if (data.length) vouchersList.value = data;
   }
   if (g.status === "fulfilled" && g.value?.items?.length) {

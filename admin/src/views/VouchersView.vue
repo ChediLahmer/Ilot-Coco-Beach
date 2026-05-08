@@ -16,7 +16,7 @@ const searchQuery = ref("");
 const filterStatus = ref("all");
 const sortBy = ref("date");
 const page = ref(1);
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(totalItems.value / ITEMS_PER_PAGE)),
@@ -51,7 +51,13 @@ watch(searchQuery, () => {
 });
 
 function resetForm() {
-  return { code: "", discountPercent: 10, validUntil: "", isActive: true };
+  return {
+    code: "",
+    discountPercent: 10,
+    validUntil: "",
+    isActive: true,
+    visible: true,
+  };
 }
 
 onMounted(loadData);
@@ -64,6 +70,7 @@ function openModal(v = null) {
         discountPercent: v.discountPercent,
         validUntil: v.validUntil.slice(0, 10),
         isActive: v.isActive,
+        visible: v.visible,
       }
     : resetForm();
   showModal.value = true;
@@ -91,6 +98,11 @@ async function remove(v) {
 
 async function toggleActive(v) {
   await api.put(`/vouchers/${v.id}`, { isActive: !v.isActive });
+  await loadData();
+}
+
+async function toggleVisible(v) {
+  await api.put(`/vouchers/${v.id}`, { visible: !v.visible });
   await loadData();
 }
 
@@ -200,7 +212,12 @@ function formatDate(d) {
               <th
                 class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted"
               >
-                Statut
+                Disponible
+              </th>
+              <th
+                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted"
+              >
+                Visible
               </th>
               <th
                 class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted"
@@ -237,10 +254,16 @@ function formatDate(d) {
                 />
               </td>
               <td class="px-5 py-3.5">
+                <AppToggle
+                  :model-value="v.visible"
+                  @update:model-value="toggleVisible(v)"
+                />
+              </td>
+              <td class="px-5 py-3.5">
                 <div class="flex items-center justify-end gap-1">
                   <button
                     @click="openModal(v)"
-                    class="p-1.5 rounded-md text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+                    class="p-2.5 rounded-md text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
                   >
                     <svg
                       class="w-4 h-4"
@@ -258,7 +281,7 @@ function formatDate(d) {
                   </button>
                   <button
                     @click="remove(v)"
-                    class="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                    class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
                   >
                     <svg
                       class="w-4 h-4"
@@ -304,14 +327,14 @@ function formatDate(d) {
           <button
             :disabled="page <= 1"
             @click="page--"
-            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+            class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
           >
             ← Précédent
           </button>
           <button
             :disabled="page >= totalPages"
             @click="page++"
-            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+            class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
           >
             Suivant →
           </button>
@@ -386,6 +409,12 @@ function formatDate(d) {
             >
               <AppToggle v-model="form.isActive" />
               Actif
+            </label>
+            <label
+              class="flex items-center gap-2.5 text-sm text-text cursor-pointer"
+            >
+              <AppToggle v-model="form.visible" />
+              Visible
             </label>
           </div>
         </div>

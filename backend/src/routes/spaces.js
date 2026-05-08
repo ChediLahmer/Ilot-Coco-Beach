@@ -55,16 +55,16 @@ export async function spacesRoutes(app) {
       let orderBy;
       switch (sort) {
         case "name":
-          orderBy = { name: "asc" };
+          orderBy = [{ name: "asc" }, { id: "asc" }];
           break;
         case "price":
-          orderBy = { price: "asc" };
+          orderBy = [{ price: "asc" }, { id: "asc" }];
           break;
         case "capacity":
-          orderBy = { capacity: "desc" };
+          orderBy = [{ capacity: "desc" }, { id: "asc" }];
           break;
         default:
-          orderBy = { order: "asc" };
+          orderBy = [{ order: "asc" }, { id: "asc" }];
       }
       const limit = Math.min(Number(rawLimit) || 20, 100);
       const offset = page ? (Number(page) - 1) * limit : 0;

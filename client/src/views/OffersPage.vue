@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#FAF7F2]">
+  <div class="min-h-screen bg-sand">
     <NavBar />
 
     <!-- Page header -->
@@ -128,6 +128,8 @@
           </div>
         </div>
       </div>
+      <!-- Sales sentinel for infinite scroll -->
+      <div ref="salesSentinel" class="h-1" />
     </div>
 
     <div class="max-w-7xl mx-auto px-6 pb-20">
@@ -184,6 +186,8 @@
             </span>
           </article>
         </div>
+        <!-- Vouchers sentinel for infinite scroll -->
+        <div ref="vouchersSentinel" class="h-1" />
       </div>
     </div>
 
@@ -197,14 +201,84 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
-import { useData } from "@/composables/useData";
+import { api } from "@/lib/supabase";
 
 const { t, locale } = useI18n();
 const router = useRouter();
-const { flashSales, vouchers } = useData();
+
+const PAGE_SIZE = 10;
+
+// Flash Sales state
+const flashSales = ref([]);
+const salesPage = ref(1);
+const hasMoreSales = ref(true);
+const loadingSales = ref(false);
+const salesSentinel = ref(null);
+
+// Vouchers state
+const vouchers = ref([]);
+const vouchersPage = ref(1);
+const hasMoreVouchers = ref(true);
+const loadingVouchers = ref(false);
+const vouchersSentinel = ref(null);
+
+async function loadSales() {
+  if (loadingSales.value || !hasMoreSales.value) return;
+  loadingSales.value = true;
+  const res = await api.getFlashSales(salesPage.value, PAGE_SIZE);
+  flashSales.value = [...flashSales.value, ...res.items];
+  hasMoreSales.value = salesPage.value < res.totalPages;
+  salesPage.value++;
+  loadingSales.value = false;
+}
+
+async function loadVouchers() {
+  if (loadingVouchers.value || !hasMoreVouchers.value) return;
+  loadingVouchers.value = true;
+  const res = await api.getVouchers(vouchersPage.value, PAGE_SIZE);
+  vouchers.value = [...vouchers.value, ...res.items];
+  hasMoreVouchers.value = vouchersPage.value < res.totalPages;
+  vouchersPage.value++;
+  loadingVouchers.value = false;
+}
+
+let salesObserver = null;
+let vouchersObserver = null;
+
+onMounted(async () => {
+  await loadSales();
+  await loadVouchers();
+
+  salesObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadSales();
+    },
+    { rootMargin: "300px" },
+  );
+  vouchersObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadVouchers();
+    },
+    { rootMargin: "300px" },
+  );
+  if (salesSentinel.value) salesObserver.observe(salesSentinel.value);
+  if (vouchersSentinel.value) vouchersObserver.observe(vouchersSentinel.value);
+});
+
+onUnmounted(() => {
+  salesObserver?.disconnect();
+  vouchersObserver?.disconnect();
+  if (countdownTimer) clearInterval(countdownTimer);
+});
 
 const now = ref(Date.now());
 let countdownTimer = null;
+
+onMounted(() => {
+  countdownTimer = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+});
 
 function isSaleExpired(sale) {
   return now.value >= new Date(sale.endsAt).getTime();

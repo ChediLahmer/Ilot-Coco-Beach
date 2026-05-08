@@ -6,7 +6,7 @@
       class="relative overflow-hidden px-6 pb-16 pt-[7.5rem] md:px-16 md:pb-20 md:pt-[8.5rem]"
     >
       <div
-        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,125,97,0.16),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(29,166,179,0.16),transparent_28%)]"
+        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(232,93,74,0.12),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(32,178,170,0.12),transparent_28%)]"
       />
       <div class="sand-texture absolute inset-0 opacity-40" />
 
@@ -117,12 +117,12 @@
             </article>
 
             <div class="premium-card rounded-[1.75rem] p-4 sm:col-span-3">
-              <div class="flex flex-wrap gap-3">
+              <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 <button
                   v-for="category in menuCategories"
                   :key="category.id"
                   :class="[
-                    'rounded-full px-4 py-1.5 text-sm font-medium transition-all',
+                    'rounded-full px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap shrink-0',
                     activeCategory === category.id
                       ? 'bg-deep text-white'
                       : 'bg-sand text-charcoal/55 hover:bg-sand-dark hover:text-charcoal/75',
@@ -162,7 +162,7 @@
                       {{ activeCategoryLabel }}
                     </p>
                     <p
-                      class="rounded-full bg-[linear-gradient(135deg,var(--color-coral),var(--color-gold))] px-3 py-1 text-[0.72rem] font-heading font-bold uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(255,125,97,0.18)]"
+                      class="rounded-full bg-[linear-gradient(135deg,var(--color-sunset),var(--color-gold))] px-3 py-1 text-[0.72rem] font-heading font-bold uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(255,123,58,0.18)]"
                     >
                       {{ displayPrice(item) }} {{ copy.currency }}
                     </p>

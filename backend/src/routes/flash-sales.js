@@ -52,13 +52,13 @@ export async function flashSalesRoutes(app) {
       let orderBy;
       switch (sort) {
         case "title":
-          orderBy = { title: "asc" };
+          orderBy = [{ title: "asc" }, { id: "asc" }];
           break;
         case "discount":
-          orderBy = { discountPercent: "desc" };
+          orderBy = [{ discountPercent: "desc" }, { id: "asc" }];
           break;
         default:
-          orderBy = { createdAt: "desc" };
+          orderBy = [{ createdAt: "desc" }, { id: "asc" }];
       }
       const limit = Math.min(Number(rawLimit) || 20, 100);
       const offset = page ? (Number(page) - 1) * limit : 0;
@@ -98,13 +98,21 @@ export async function flashSalesRoutes(app) {
             image: { type: "string" },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean", default: true },
+            visible: { type: "boolean", default: true },
           },
         },
       },
     },
     async (request) => {
-      const { title, description, discountPercent, image, endsAt, isActive } =
-        request.body;
+      const {
+        title,
+        description,
+        discountPercent,
+        image,
+        endsAt,
+        isActive,
+        visible,
+      } = request.body;
       return prisma.flashSale.create({
         data: {
           title,
@@ -113,6 +121,7 @@ export async function flashSalesRoutes(app) {
           image,
           endsAt: new Date(endsAt),
           isActive: isActive ?? true,
+          visible: visible ?? true,
         },
       });
     },
@@ -136,6 +145,7 @@ export async function flashSalesRoutes(app) {
             image: { type: "string", nullable: true },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },
+            visible: { type: "boolean" },
           },
         },
       },

@@ -87,6 +87,7 @@ model GalleryImage {
   categoryId Int?             @map("category_id")
   catRef     GalleryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   order      Int              @default(0)
+  visible    Boolean          @default(true)
   createdAt  DateTime         @default(now()) @map("created_at")
 
   @@map("gallery_images")

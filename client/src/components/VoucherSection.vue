@@ -105,12 +105,12 @@
                 >
                   {{ voucher.code }}
                   <button
-                    class="p-1 rounded text-charcoal/30 hover:text-charcoal transition-colors"
+                    class="p-2 rounded text-charcoal/30 hover:text-charcoal transition-colors"
                     @click.stop="copyCode(voucher.code)"
                   >
                     <svg
                       v-if="copiedCode !== voucher.code"
-                      class="w-3.5 h-3.5"
+                      class="w-4 h-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

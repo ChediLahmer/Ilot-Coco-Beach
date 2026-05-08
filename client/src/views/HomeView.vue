@@ -1,5 +1,5 @@
 <template>
-  <div ref="homeRef" class="min-h-screen">
+  <div ref="homeRef" class="min-h-screen bg-sand">
     <NavBar />
     <main>
       <HeroSection />
@@ -30,7 +30,7 @@
       </div>
       <a
         href="#reservation"
-        class="shrink-0 rounded-full bg-ocean px-5 py-2.5 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white shadow-[0_14px_28px_rgba(49,112,124,0.24)]"
+        class="shrink-0 rounded-full bg-ocean px-5 py-2.5 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white shadow-[0_14px_28px_rgba(32,178,170,0.24)]"
         @click.prevent="scrollToRes"
       >
         {{ t("nav.reservation") }}

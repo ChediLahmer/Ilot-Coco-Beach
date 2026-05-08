@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ocean: #00b4a2;
-  --color-ocean-light: #7dffe8;
-  --color-ocean-dark: #008075;
-  --color-driftwood: #e08a38;
-  --color-driftwood-light: #f5b347;
-  --color-driftwood-dark: #a65e20;
-  --color-coral: #ff6b6b;
-  --color-coral-light: #ff9e9e;
-  --color-sand: #fff9f2;
-  --color-sand-dark: #ffecd2;
-  --color-charcoal: #2b3a3e;
-  --color-leaf: #34c759;
-  --color-gold: #ffbf40;
-  --color-gold-light: #ffd97a;
-  --color-mist: #e8fff9;
-  --color-foam: #f0fff8;
-  --color-deep: #1a3c40;
-  --color-sunset: #ff8c5a;
-  --color-lagoon: #45e3c8;
+  --color-ocean: #20b2aa;
+  --color-ocean-light: #7ed4c8;
+  --color-ocean-dark: #178a84;
+  --color-driftwood: #e86a33;
+  --color-driftwood-light: #f49d6e;
+  --color-driftwood-dark: #b84a1c;
+  --color-coral: #e85d4a;
+  --color-coral-light: #f29b8f;
+  --color-sand: #fff8f0;
+  --color-sand-dark: #ffe8cc;
+  --color-charcoal: #2c3639;
+  --color-leaf: #2eb872;
+  --color-gold: #f5a623;
+  --color-gold-light: #ffc857;
+  --color-mist: #e8f6f3;
+  --color-foam: #f5fbf8;
+  --color-deep: #1b2d2f;
+  --color-sunset: #ff7b3a;
+  --color-lagoon: #3cc8b4;
 
   --font-display: "Playfair Display", serif;
   --font-brand: "Playfair Display", serif;
@@ -34,7 +34,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #fff;
+  background: var(--color-sand);
   overflow-x: hidden;
 }
 
@@ -45,7 +45,7 @@ html[dir="rtl"] body {
 body {
   font-family: var(--font-body);
   color: var(--color-charcoal);
-  background: #fff;
+  background: var(--color-sand);
   min-height: 100vh;
   overflow-x: hidden;
   text-rendering: optimizeLegibility;
@@ -106,7 +106,7 @@ textarea {
 }
 
 ::selection {
-  background: rgba(0, 180, 162, 0.15);
+  background: rgba(32, 178, 170, 0.15);
   color: var(--color-deep);
 }
 
@@ -241,8 +241,8 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 2.25rem;
-  width: 2.25rem;
+  height: 2.75rem;
+  width: 2.75rem;
   border-radius: 9999px;
   border: 1px solid rgba(28, 46, 53, 0.12);
   background: #fff;
@@ -277,7 +277,7 @@ textarea {
 .booking-field:focus {
   outline: none;
   border-color: var(--color-ocean);
-  box-shadow: 0 0 0 3px rgba(26, 143, 154, 0.1);
+  box-shadow: 0 0 0 3px rgba(32, 178, 170, 0.1);
 }
 
 /* ========================================
@@ -393,4 +393,12 @@ html[dir="rtl"] .swiper {
 }
 html[dir="rtl"] .swiper-slide > * {
   direction: rtl;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

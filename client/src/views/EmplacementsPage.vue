@@ -1,17 +1,58 @@
 <script setup>
-import { onMounted, onUnmounted } from "vue";
+import { ref, nextTick, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
-import { useData } from "@/composables/useData";
+import { api } from "@/lib/supabase";
 import waterSwingImg from "@/assets/images/water-swing.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const { locale } = useI18n();
-const { spaces: emplacements } = useData();
+
+const PAGE_SIZE = 10;
+const emplacements = ref([]);
+const currentPage = ref(1);
+const hasMore = ref(true);
+const loading = ref(false);
+const sentinel = ref(null);
+
+function normalizeItem(item) {
+  if (item.description && !item.desc) item.desc = item.description;
+  return item;
+}
+
+async function loadMore() {
+  if (loading.value || !hasMore.value) return;
+  loading.value = true;
+  const res = await api.getSpaces(currentPage.value, PAGE_SIZE);
+  const newItems = (res.items || []).map(normalizeItem);
+  emplacements.value = [...emplacements.value, ...newItems];
+  hasMore.value = currentPage.value < res.totalPages;
+  currentPage.value++;
+  loading.value = false;
+
+  // Animate newly added cards
+  await nextTick();
+  const sections = document.querySelectorAll(".emp-section:not(.animated)");
+  sections.forEach((section, idx) => {
+    section.classList.add("animated");
+    const isReversed = idx % 2 !== 0;
+    gsap.from(section, {
+      x: isReversed ? 80 : -80,
+      opacity: 0,
+      duration: 0.8,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: section,
+        start: "top 80%",
+        once: true,
+      },
+    });
+  });
+}
 
 const labels = {
   fr: {
@@ -55,54 +96,43 @@ function l(key) {
   return labels[locale.value]?.[key] ?? labels.fr[key];
 }
 
-let ctx;
+let observer = null;
 
-onMounted(() => {
-  ctx = gsap.context(() => {
-    const sections = document.querySelectorAll(".emp-section");
-    sections.forEach((section, idx) => {
-      const isReversed = idx % 2 !== 0;
-      gsap.from(section, {
-        x: isReversed ? 80 : -80,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          once: true,
-        },
-      });
-    });
+onMounted(async () => {
+  await loadMore();
 
-    gsap.from(".emp-cta", {
-      y: 50,
-      opacity: 0,
-      duration: 0.7,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: ".emp-cta",
-        start: "top 85%",
-        once: true,
-      },
-    });
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadMore();
+    },
+    { rootMargin: "300px" },
+  );
+  if (sentinel.value) observer.observe(sentinel.value);
+
+  gsap.from(".emp-cta", {
+    y: 50,
+    opacity: 0,
+    duration: 0.7,
+    ease: "power2.out",
+    scrollTrigger: {
+      trigger: ".emp-cta",
+      start: "top 85%",
+      once: true,
+    },
   });
 });
 
 onUnmounted(() => {
-  if (ctx) ctx.revert();
+  observer?.disconnect();
 });
 </script>
 
 <template>
-  <div>
+  <div class="min-h-screen bg-sand">
     <NavBar />
 
     <!-- Hero Section -->
-    <section
-      class="relative w-full overflow-hidden"
-      style="height: 60vh; margin-top: 72px"
-    >
+    <section class="relative w-full overflow-hidden h-[60vh] mt-[72px]">
       <div class="absolute inset-0">
         <img
           :src="waterSwingImg"
@@ -229,6 +259,8 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+      <!-- Sentinel for infinite scroll -->
+      <div ref="sentinel" class="h-1" />
     </div>
 
     <!-- Bottom CTA Section -->

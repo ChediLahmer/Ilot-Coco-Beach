@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import AppToggle from "@/components/AppToggle.vue";
 
 const api = useApi();
 const images = ref([]);
@@ -12,6 +13,10 @@ const previewUrl = ref(null);
 const searchQuery = ref("");
 const filterCategory = ref("");
 const sortBy = ref("order"); // order | date | name
+
+// Pagination
+const page = ref(1);
+const ITEMS_PER_PAGE = 24;
 
 // Category modal
 const showCatModal = ref(false);
@@ -58,6 +63,19 @@ const filteredImages = computed(() => {
   return sorted;
 });
 
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredImages.value.length / ITEMS_PER_PAGE)),
+);
+
+const paginatedImages = computed(() => {
+  const start = (page.value - 1) * ITEMS_PER_PAGE;
+  return filteredImages.value.slice(start, start + ITEMS_PER_PAGE);
+});
+
+watch([searchQuery, filterCategory, sortBy], () => {
+  page.value = 1;
+});
+
 async function loadCategories() {
   categories.value = await api.get("/gallery/categories");
 }
@@ -101,6 +119,11 @@ async function updateImage(img, data) {
 async function remove(img) {
   if (!confirm("Supprimer cette image ?")) return;
   await api.del(`/gallery/${img.id}`);
+  await loadData();
+}
+
+async function toggleVisible(img) {
+  await api.put(`/gallery/${img.id}`, { visible: !img.visible });
   await loadData();
 }
 
@@ -190,13 +213,13 @@ async function deleteCat(cat) {
           <span class="text-text-muted">/ {{ cat.name.en || "–" }}</span>
           <button
             @click="openCatModal(cat)"
-            class="ml-1 text-text-muted hover:text-primary transition-colors"
+            class="ml-1 p-2 rounded text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
           >
             ✎
           </button>
           <button
             @click="deleteCat(cat)"
-            class="text-text-muted hover:text-danger transition-colors"
+            class="p-2 rounded text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
           >
             ✕
           </button>
@@ -253,12 +276,13 @@ async function deleteCat(cat) {
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
     >
       <div
-        v-for="img in filteredImages"
+        v-for="img in paginatedImages"
         :key="img.id"
         class="group bg-surface rounded-xl border border-border overflow-hidden transition-shadow hover:shadow-md"
       >
         <div
           class="relative aspect-[4/3] overflow-hidden bg-surface-alt cursor-pointer"
+          :class="{ 'opacity-40': !img.visible }"
           @click="openPreview(img)"
         >
           <video
@@ -300,6 +324,10 @@ async function deleteCat(cat) {
           </button>
         </div>
         <div class="p-3 flex gap-2 items-center">
+          <AppToggle
+            :model-value="img.visible"
+            @update:model-value="toggleVisible(img)"
+          />
           <select
             :value="img.categoryId || ''"
             @change="
@@ -347,6 +375,27 @@ async function deleteCat(cat) {
     </div>
     <div v-else-if="!filteredImages.length" class="py-12 text-center">
       <p class="text-sm text-text-muted">Aucun résultat pour ce filtre</p>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex items-center justify-between mt-6">
+      <p class="text-xs text-text-muted">Page {{ page }} / {{ totalPages }}</p>
+      <div class="flex gap-1">
+        <button
+          :disabled="page <= 1"
+          @click="page--"
+          class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+        >
+          ← Précédent
+        </button>
+        <button
+          :disabled="page >= totalPages"
+          @click="page++"
+          class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+        >
+          Suivant →
+        </button>
+      </div>
     </div>
 
     <!-- Lightbox Preview -->

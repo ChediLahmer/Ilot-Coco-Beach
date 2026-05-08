@@ -25,6 +25,7 @@ const itemForm = ref({
   priceStandard: 0,
   priceExtra: 0,
   available: true,
+  visible: true,
   order: 0,
   image: null,
 });
@@ -129,6 +130,7 @@ function openItemModal(item = null) {
         priceStandard: Number(item.priceStandard),
         priceExtra: Number(item.priceExtra),
         available: item.available,
+        visible: item.visible,
         order: item.order,
         image: null,
       }
@@ -138,6 +140,7 @@ function openItemModal(item = null) {
         priceStandard: 0,
         priceExtra: 0,
         available: true,
+        visible: true,
         order: activeItems.value.length,
         image: null,
       };
@@ -158,6 +161,7 @@ async function saveItem() {
     priceStandard: Number(itemForm.value.priceStandard),
     priceExtra: Number(itemForm.value.priceExtra),
     available: itemForm.value.available,
+    visible: itemForm.value.visible,
     order: itemForm.value.order,
     categoryId: activeCategory.value,
     image: imageUrl,
@@ -179,6 +183,11 @@ async function deleteItem(item) {
 
 async function toggleAvailability(item) {
   await api.put(`/menu/items/${item.id}`, { available: !item.available });
+  await loadData();
+}
+
+async function toggleVisible(item) {
+  await api.put(`/menu/items/${item.id}`, { visible: !item.visible });
   await loadData();
 }
 </script>
@@ -216,11 +225,11 @@ async function toggleAvailability(item) {
     </div>
 
     <!-- Categories tabs -->
-    <div class="flex gap-2 mb-6 flex-wrap">
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
       <div
         v-for="cat in categories"
         :key="cat.id"
-        class="group flex items-center"
+        class="group flex items-center shrink-0"
       >
         <button
           @click="
@@ -238,14 +247,14 @@ async function toggleAvailability(item) {
           {{ cat.name.fr }}
         </button>
         <div
-          class="ml-1 flex gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+          class="ml-1 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
         >
           <button
             @click="openCatModal(cat)"
-            class="p-1 rounded text-text-muted hover:text-primary hover:bg-primary/5"
+            class="p-2 rounded text-text-muted hover:text-primary hover:bg-primary/5"
           >
             <svg
-              class="h-3.5 w-3.5"
+              class="h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -260,10 +269,10 @@ async function toggleAvailability(item) {
           </button>
           <button
             @click="deleteCat(cat)"
-            class="p-1 rounded text-text-muted hover:text-danger hover:bg-danger/5"
+            class="p-2 rounded text-text-muted hover:text-danger hover:bg-danger/5"
           >
             <svg
-              class="h-3.5 w-3.5"
+              class="h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -351,6 +360,7 @@ async function toggleAvailability(item) {
             <th class="px-6 py-3 font-medium">Standard</th>
             <th class="px-6 py-3 font-medium">Extra</th>
             <th class="px-6 py-3 font-medium">Disponible</th>
+            <th class="px-6 py-3 font-medium">Visible</th>
             <th class="px-6 py-3 font-medium">Actions</th>
           </tr>
         </thead>
@@ -378,10 +388,16 @@ async function toggleAvailability(item) {
               />
             </td>
             <td class="px-6 py-3.5">
+              <AppToggle
+                :model-value="item.visible"
+                @update:model-value="toggleVisible(item)"
+              />
+            </td>
+            <td class="px-6 py-3.5">
               <div class="flex gap-1">
                 <button
                   @click="openItemModal(item)"
-                  class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+                  class="p-2.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
                 >
                   <svg
                     class="h-4 w-4"
@@ -399,7 +415,7 @@ async function toggleAvailability(item) {
                 </button>
                 <button
                   @click="deleteItem(item)"
-                  class="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                  class="p-2.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
                 >
                   <svg
                     class="h-4 w-4"
@@ -444,14 +460,14 @@ async function toggleAvailability(item) {
           <button
             :disabled="itemPage <= 1"
             @click="itemPage--"
-            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+            class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
           >
             ← Précédent
           </button>
           <button
             :disabled="itemPage >= totalPages"
             @click="itemPage++"
-            class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+            class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
           >
             Suivant →
           </button>
@@ -627,6 +643,14 @@ async function toggleAvailability(item) {
               >
                 <AppToggle v-model="itemForm.available" />
                 Disponible
+              </label>
+            </div>
+            <div class="flex items-end pb-1">
+              <label
+                class="flex items-center gap-3 text-sm text-text cursor-pointer"
+              >
+                <AppToggle v-model="itemForm.visible" />
+                Visible
               </label>
             </div>
           </div>

@@ -76,12 +76,12 @@
       </div>
 
       <!-- Category filter -->
-      <div class="mt-5 flex flex-wrap gap-2">
+      <div class="mt-5 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         <button
           v-for="category in menuCategories"
           :key="category.id"
           :class="[
-            'rounded-full px-4 py-1.5 text-sm font-medium transition-all',
+            'rounded-full px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap shrink-0',
             activeCategory === category.id
               ? 'bg-deep text-white'
               : 'bg-sand text-charcoal/55 hover:bg-sand-dark hover:text-charcoal/75',

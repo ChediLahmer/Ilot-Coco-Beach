@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { authenticate } from "../lib/auth.js";
+import { authenticate, optionalAuth } from "../lib/auth.js";
 import { uploadFile, deleteFile } from "../lib/storage.js";
 
 export async function galleryRoutes(app) {
@@ -47,6 +47,7 @@ export async function galleryRoutes(app) {
   app.get(
     "/",
     {
+      preHandler: optionalAuth,
       schema: {
         tags: ["Gallery"],
         summary: "List gallery images (cursor pagination)",
@@ -69,6 +70,7 @@ export async function galleryRoutes(app) {
       const where = {};
       if (category) where.category = category;
       if (categoryId) where.categoryId = categoryId;
+      if (!request.admin) where.visible = true;
 
       const images = await prisma.galleryImage.findMany({
         where,
@@ -145,17 +147,19 @@ export async function galleryRoutes(app) {
             order: { type: "integer" },
             alt: { type: "string" },
             category: { type: "string" },
+            visible: { type: "boolean" },
           },
         },
       },
     },
     async (request) => {
-      const { order, alt, category, categoryId } = request.body;
+      const { order, alt, category, categoryId, visible } = request.body;
       const data = {};
       if (order !== undefined) data.order = order;
       if (alt !== undefined) data.alt = alt;
       if (category !== undefined) data.category = category;
       if (categoryId !== undefined) data.categoryId = categoryId;
+      if (visible !== undefined) data.visible = visible;
       return prisma.galleryImage.update({
         where: { id: Number(request.params.id) },
         data,

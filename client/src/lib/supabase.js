@@ -12,10 +12,13 @@ async function request(path, options = {}) {
 
 export const api = {
   getMenuCategories: () => request("/menu/categories"),
-  getSpaces: () => request("/spaces").then((r) => r.items || r),
+  getSpaces: (page = 1, limit = 10) =>
+    request(`/spaces?page=${page}&limit=${limit}`),
   getGallery: (cursor, limit = 20) =>
     request(`/gallery?limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`),
-  getFlashSales: () => request("/flash-sales").then((r) => r.items || r),
-  getVouchers: () => request("/vouchers").then((r) => r.items || r),
+  getFlashSales: (page = 1, limit = 10) =>
+    request(`/flash-sales?page=${page}&limit=${limit}`),
+  getVouchers: (page = 1, limit = 10) =>
+    request(`/vouchers?page=${page}&limit=${limit}`),
   getConfig: () => request("/config"),
 };

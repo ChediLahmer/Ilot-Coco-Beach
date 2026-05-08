@@ -18,7 +18,7 @@ const searchQuery = ref("");
 const filterStatus = ref("all");
 const sortBy = ref("order");
 const page = ref(1);
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(totalItems.value / ITEMS_PER_PAGE)),
@@ -86,6 +86,7 @@ function resetForm() {
     price: 0,
     capacity: 2,
     available: true,
+    visible: true,
     order: 0,
     imageFile: null,
   };
@@ -102,6 +103,7 @@ function openModal(space = null) {
         price: Number(space.price),
         capacity: space.capacity,
         available: space.available,
+        visible: space.visible,
         order: space.order,
         imageFile: null,
       }
@@ -123,6 +125,7 @@ async function save() {
     price: Number(form.value.price),
     capacity: Number(form.value.capacity),
     available: form.value.available,
+    visible: form.value.visible,
     order: form.value.order,
     image: imageUrl,
   };
@@ -143,6 +146,11 @@ async function remove(space) {
 
 async function toggleAvailability(space) {
   await api.put(`/spaces/${space.id}`, { available: !space.available });
+  await loadData();
+}
+
+async function toggleVisible(space) {
+  await api.put(`/spaces/${space.id}`, { visible: !space.visible });
   await loadData();
 }
 </script>
@@ -261,25 +269,34 @@ async function toggleAvailability(space) {
                 {{ space.capacity }} places · {{ space.price }} DT
               </p>
             </div>
-            <AppToggle
-              :model-value="space.available"
-              @update:model-value="toggleAvailability(space)"
-              class="shrink-0"
-            />
+          </div>
+          <div class="flex items-center gap-4 mt-3">
+            <label
+              class="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer"
+            >
+              <AppToggle
+                :model-value="space.available"
+                @update:model-value="toggleAvailability(space)"
+              />
+              Disponible
+            </label>
+            <label
+              class="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer"
+            >
+              <AppToggle
+                :model-value="space.visible"
+                @update:model-value="toggleVisible(space)"
+              />
+              Visible
+            </label>
           </div>
           <div
-            class="flex items-center justify-between mt-4 pt-3 border-t border-border"
+            class="flex items-center justify-end mt-4 pt-3 border-t border-border"
           >
-            <span
-              class="text-xs font-medium"
-              :class="space.available ? 'text-success' : 'text-danger'"
-            >
-              {{ space.available ? "Disponible" : "Indisponible" }}
-            </span>
             <div class="flex items-center gap-1">
               <button
                 @click="openModal(space)"
-                class="p-1.5 rounded-md text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+                class="p-2.5 rounded-md text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
               >
                 <svg
                   class="w-4 h-4"
@@ -297,7 +314,7 @@ async function toggleAvailability(space) {
               </button>
               <button
                 @click="remove(space)"
-                class="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
               >
                 <svg
                   class="w-4 h-4"
@@ -337,14 +354,14 @@ async function toggleAvailability(space) {
         <button
           :disabled="page <= 1"
           @click="page--"
-          class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+          class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
         >
           ← Précédent
         </button>
         <button
           :disabled="page >= totalPages"
           @click="page++"
-          class="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+          class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
         >
           Suivant →
         </button>
@@ -480,6 +497,12 @@ async function toggleAvailability(space) {
             >
               <AppToggle v-model="form.available" />
               Disponible
+            </label>
+            <label
+              class="flex items-center gap-2.5 text-sm text-text cursor-pointer"
+            >
+              <AppToggle v-model="form.visible" />
+              Visible
             </label>
           </div>
           <div>

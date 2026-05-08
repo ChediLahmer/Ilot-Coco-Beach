@@ -98,7 +98,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="min-h-screen bg-sand">
     <NavBar />
 
     <!-- Page Hero -->
@@ -201,7 +201,7 @@ onUnmounted(() => {
           </button>
 
           <!-- Image -->
-          <div class="max-w-5xl max-h-[85vh] px-16">
+          <div class="max-w-5xl max-h-[85vh] px-4 sm:px-16">
             <img
               :src="images[lightboxIndex].src"
               :alt="images[lightboxIndex].alt"

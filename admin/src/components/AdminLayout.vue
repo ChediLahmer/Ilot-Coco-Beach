@@ -79,7 +79,7 @@ const navItems = [
           :key="item.to"
           :to="item.to"
           @click="mobileMenuOpen = false"
-          class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-[0.8rem] font-medium transition-all duration-150"
+          class="group flex items-center gap-3 px-3 py-3 rounded-lg text-[0.8rem] font-medium transition-all duration-150"
           :class="[
             route.path === item.to
               ? 'bg-primary/20 text-primary-light'
@@ -201,7 +201,7 @@ const navItems = [
       >
         <button
           @click="mobileMenuOpen = true"
-          class="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-muted hover:text-text"
+          class="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted hover:text-text"
         >
           <svg
             class="h-5 w-5"

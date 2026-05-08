@@ -5,7 +5,7 @@
     target="_blank"
     rel="noopener"
     title="WhatsApp"
-    class="fixed bottom-6 end-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg whatsapp-pulse lg:hidden"
+    class="fixed bottom-20 end-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg whatsapp-pulse lg:hidden"
   >
     <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
       <path

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#FAF7F2]">
+  <div class="min-h-screen bg-sand">
     <NavBar />
 
     <!-- Hero banner -->
@@ -39,7 +39,7 @@
 
     <!-- Category tabs -->
     <div
-      class="sticky top-[72px] z-30 bg-[#FAF7F2]/95 backdrop-blur-sm border-b border-charcoal/5"
+      class="sticky top-[72px] z-30 bg-sand/95 backdrop-blur-sm border-b border-charcoal/5"
     >
       <div
         dir="ltr"
@@ -122,13 +122,13 @@
           @click.self="closeLightbox"
         >
           <button
-            class="absolute top-4 right-4 text-white/80 hover:text-white text-4xl leading-none z-10"
+            class="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 text-4xl leading-none z-10"
             @click="closeLightbox"
           >
             &times;
           </button>
           <button
-            class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-4xl z-10 p-2"
+            class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 text-4xl z-10"
             @click="prevImage"
           >
             &#8249;
@@ -150,7 +150,7 @@
             class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
           />
           <button
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-4xl z-10 p-2"
+            class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 text-4xl z-10"
             @click="nextImage"
           >
             &#8250;

@@ -50,13 +50,13 @@ export async function vouchersRoutes(app) {
       let orderBy;
       switch (sort) {
         case "code":
-          orderBy = { code: "asc" };
+          orderBy = [{ code: "asc" }, { id: "asc" }];
           break;
         case "discount":
-          orderBy = { discountPercent: "desc" };
+          orderBy = [{ discountPercent: "desc" }, { id: "asc" }];
           break;
         default:
-          orderBy = { createdAt: "desc" };
+          orderBy = [{ createdAt: "desc" }, { id: "asc" }];
       }
       const limit = Math.min(Number(rawLimit) || 20, 100);
       const offset = page ? (Number(page) - 1) * limit : 0;
@@ -89,18 +89,21 @@ export async function vouchersRoutes(app) {
             discountPercent: { type: "integer" },
             validUntil: { type: "string", format: "date-time" },
             isActive: { type: "boolean", default: true },
+            visible: { type: "boolean", default: true },
           },
         },
       },
     },
     async (request) => {
-      const { code, discountPercent, validUntil, isActive } = request.body;
+      const { code, discountPercent, validUntil, isActive, visible } =
+        request.body;
       return prisma.voucher.create({
         data: {
           code,
           discountPercent,
           validUntil: new Date(validUntil),
           isActive: isActive ?? true,
+          visible: visible ?? true,
         },
       });
     },
@@ -122,6 +125,7 @@ export async function vouchersRoutes(app) {
             discountPercent: { type: "integer" },
             validUntil: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },
+            visible: { type: "boolean" },
           },
         },
       },
