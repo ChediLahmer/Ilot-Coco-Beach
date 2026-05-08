@@ -34,6 +34,8 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "20.18.0"
 
   # ─── Client (public website) ────────────────────────────
   - type: web
