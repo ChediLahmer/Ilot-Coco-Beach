@@ -16,6 +16,7 @@ import { vouchersRoutes } from "./routes/vouchers.js";
 import { uploadRoutes } from "./routes/upload.js";
 import { passwordResetRoutes } from "./routes/password-reset.js";
 import { analyticsRoutes } from "./routes/analytics.js";
+import { reviewRoutes } from "./routes/reviews.js";
 
 const app = Fastify({
   logger: true,
@@ -69,9 +70,12 @@ await app.register(rateLimit, {
   timeWindow: "1 minute",
 });
 await app.register(compress, { global: true });
-await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } });
+await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
 
 app.setErrorHandler((error, request, reply) => {
+  if (error.code === "P2025") {
+    return reply.status(404).send({ error: "Record not found" });
+  }
   const statusCode = error.statusCode || 500;
   const message = statusCode < 500 ? error.message : "Internal Server Error";
   request.log.error(error);
@@ -105,6 +109,7 @@ await app.register(vouchersRoutes, { prefix: "/api/vouchers" });
 await app.register(uploadRoutes, { prefix: "/api/upload" });
 await app.register(passwordResetRoutes, { prefix: "/api/auth" });
 await app.register(analyticsRoutes, { prefix: "/api/analytics" });
+await app.register(reviewRoutes, { prefix: "/api/reviews" });
 
 const port = process.env.PORT || 3000;
 

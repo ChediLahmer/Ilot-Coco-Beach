@@ -225,25 +225,37 @@ const vouchersSentinel = ref(null);
 async function loadSales() {
   if (loadingSales.value || !hasMoreSales.value) return;
   loadingSales.value = true;
-  const res = await api.getFlashSales(salesPage.value, PAGE_SIZE);
-  flashSales.value = [...flashSales.value, ...res.items];
-  hasMoreSales.value = salesPage.value < res.totalPages;
-  salesPage.value++;
-  loadingSales.value = false;
+  try {
+    const res = await api.getFlashSales(salesPage.value, PAGE_SIZE);
+    flashSales.value = [...flashSales.value, ...res.items];
+    hasMoreSales.value = salesPage.value < res.totalPages;
+    salesPage.value++;
+  } catch {
+    /* keep current */
+  } finally {
+    loadingSales.value = false;
+  }
 }
 
 async function loadVouchers() {
   if (loadingVouchers.value || !hasMoreVouchers.value) return;
   loadingVouchers.value = true;
-  const res = await api.getVouchers(vouchersPage.value, PAGE_SIZE);
-  vouchers.value = [...vouchers.value, ...res.items];
-  hasMoreVouchers.value = vouchersPage.value < res.totalPages;
-  vouchersPage.value++;
-  loadingVouchers.value = false;
+  try {
+    const res = await api.getVouchers(vouchersPage.value, PAGE_SIZE);
+    vouchers.value = [...vouchers.value, ...res.items];
+    hasMoreVouchers.value = vouchersPage.value < res.totalPages;
+    vouchersPage.value++;
+  } catch {
+    /* keep current */
+  } finally {
+    loadingVouchers.value = false;
+  }
 }
 
 let salesObserver = null;
 let vouchersObserver = null;
+const now = ref(Date.now());
+let countdownTimer = null;
 
 onMounted(async () => {
   await loadSales();
@@ -263,21 +275,16 @@ onMounted(async () => {
   );
   if (salesSentinel.value) salesObserver.observe(salesSentinel.value);
   if (vouchersSentinel.value) vouchersObserver.observe(vouchersSentinel.value);
+
+  countdownTimer = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
 });
 
 onUnmounted(() => {
   salesObserver?.disconnect();
   vouchersObserver?.disconnect();
   if (countdownTimer) clearInterval(countdownTimer);
-});
-
-const now = ref(Date.now());
-let countdownTimer = null;
-
-onMounted(() => {
-  countdownTimer = setInterval(() => {
-    now.value = Date.now();
-  }, 1000);
 });
 
 function isSaleExpired(sale) {
@@ -297,7 +304,7 @@ function getSaleCountdown(sale) {
 
 function formatVoucherDate(dateStr) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString(locale.value, {
+  return d.toLocaleDateString(locale.value || "fr-FR", {
     day: "numeric",
     month: "short",
     year: "numeric",

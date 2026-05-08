@@ -86,7 +86,7 @@ export async function vouchersRoutes(app) {
           required: ["code", "discountPercent", "validUntil"],
           properties: {
             code: { type: "string" },
-            discountPercent: { type: "integer" },
+            discountPercent: { type: "integer", minimum: 0, maximum: 100 },
             validUntil: { type: "string", format: "date-time" },
             isActive: { type: "boolean", default: true },
             visible: { type: "boolean", default: true },
@@ -122,7 +122,7 @@ export async function vouchersRoutes(app) {
           type: "object",
           properties: {
             code: { type: "string" },
-            discountPercent: { type: "integer" },
+            discountPercent: { type: "integer", minimum: 0, maximum: 100 },
             validUntil: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },
             visible: { type: "boolean" },

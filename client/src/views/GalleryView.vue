@@ -338,6 +338,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
   if (observer) observer.disconnect();
+  document.body.style.overflow = "";
 });
 </script>
 

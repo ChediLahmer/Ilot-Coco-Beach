@@ -156,9 +156,28 @@ export async function spacesRoutes(app) {
       },
     },
     async (request) => {
+      const {
+        name,
+        description,
+        image,
+        price,
+        capacity,
+        order,
+        available,
+        visible,
+      } = request.body;
       return prisma.space.update({
         where: { id: Number(request.params.id) },
-        data: request.body,
+        data: {
+          name,
+          description,
+          image,
+          price,
+          capacity,
+          order,
+          available,
+          visible,
+        },
       });
     },
   );

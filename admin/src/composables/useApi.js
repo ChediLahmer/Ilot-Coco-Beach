@@ -36,7 +36,10 @@ export function useApi() {
         body: body instanceof FormData ? body : JSON.stringify(body),
       }),
     put: (path, body) =>
-      request(path, { method: "PUT", body: JSON.stringify(body) }),
+      request(path, {
+        method: "PUT",
+        body: body instanceof FormData ? body : JSON.stringify(body),
+      }),
     del: (path) => request(path, { method: "DELETE" }),
     upload: (path, file, extraFields = {}) => {
       const form = new FormData();

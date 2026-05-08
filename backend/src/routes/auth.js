@@ -6,15 +6,17 @@ export async function authRoutes(app) {
   app.post(
     "/login",
     {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
       schema: {
         tags: ["Auth"],
         summary: "Admin login",
         body: {
           type: "object",
           required: ["email", "password"],
+          additionalProperties: false,
           properties: {
             email: { type: "string", format: "email" },
-            password: { type: "string" },
+            password: { type: "string", maxLength: 128 },
           },
         },
         response: {

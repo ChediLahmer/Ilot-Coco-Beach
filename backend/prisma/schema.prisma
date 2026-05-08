@@ -27,6 +27,7 @@ model PasswordReset {
   usedAt    DateTime? @map("used_at")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([adminId])
   @@map("password_resets")
 }
 
@@ -53,6 +54,7 @@ model MenuItem {
   order         Int          @default(0)
   createdAt     DateTime     @default(now()) @map("created_at")
 
+  @@index([categoryId])
   @@map("menu_items")
 }
 
@@ -90,6 +92,7 @@ model GalleryImage {
   visible    Boolean          @default(true)
   createdAt  DateTime         @default(now()) @map("created_at")
 
+  @@index([categoryId])
   @@map("gallery_images")
 }
 
@@ -135,4 +138,15 @@ model AnalyticsEvent {
 
   @@index([event, createdAt])
   @@map("analytics_events")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userName  String   @map("user_name")
+  comment   String
+  rating    Int
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("reviews")
 }

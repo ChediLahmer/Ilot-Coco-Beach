@@ -267,9 +267,30 @@ export async function menuRoutes(app) {
       },
     },
     async (request) => {
+      const {
+        name,
+        description,
+        image,
+        priceStandard,
+        priceExtra,
+        available,
+        visible,
+        categoryId,
+        order,
+      } = request.body;
       return prisma.menuItem.update({
         where: { id: Number(request.params.id) },
-        data: request.body,
+        data: {
+          name,
+          description,
+          image,
+          priceStandard,
+          priceExtra,
+          available,
+          visible,
+          categoryId,
+          order,
+        },
       });
     },
   );

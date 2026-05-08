@@ -118,6 +118,19 @@ export async function galleryRoutes(app) {
     async (request, reply) => {
       const file = await request.file();
       if (!file) return reply.status(400).send({ error: "No file uploaded" });
+
+      const allowed = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+      ];
+      if (!allowed.includes(file.mimetype)) {
+        return reply.status(400).send({ error: "File type not allowed" });
+      }
+
       const buffer = await file.toBuffer();
       const url = await uploadFile(buffer, file.filename, file.mimetype);
       const category = file.fields?.category?.value || null;

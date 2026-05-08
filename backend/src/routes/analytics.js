@@ -16,7 +16,7 @@ export async function analyticsRoutes(app) {
           required: ["event"],
           properties: {
             event: { type: "string", enum: ["page_view", "click_reserve"] },
-            path: { type: "string" },
+            path: { type: "string", maxLength: 500 },
           },
         },
         response: {

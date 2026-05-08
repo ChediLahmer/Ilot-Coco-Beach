@@ -21,4 +21,11 @@ export const api = {
   getVouchers: (page = 1, limit = 10) =>
     request(`/vouchers?page=${page}&limit=${limit}`),
   getConfig: () => request("/config"),
+  getReviews: (cursor) =>
+    request(`/reviews?limit=20${cursor ? `&cursor=${cursor}` : ""}`),
+  postReview: (data) =>
+    request("/reviews", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

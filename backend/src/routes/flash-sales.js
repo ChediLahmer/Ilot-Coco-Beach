@@ -94,7 +94,7 @@ export async function flashSalesRoutes(app) {
           properties: {
             title: { type: "object" },
             description: { type: "object" },
-            discountPercent: { type: "integer" },
+            discountPercent: { type: "integer", minimum: 0, maximum: 100 },
             image: { type: "string" },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean", default: true },
@@ -141,7 +141,7 @@ export async function flashSalesRoutes(app) {
           properties: {
             title: { type: "object" },
             description: { type: "object" },
-            discountPercent: { type: "integer" },
+            discountPercent: { type: "integer", minimum: 0, maximum: 100 },
             image: { type: "string", nullable: true },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },

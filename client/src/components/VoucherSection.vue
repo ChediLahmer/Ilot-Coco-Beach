@@ -170,7 +170,7 @@ import "swiper/css/scrollbar";
 import { useData } from "@/composables/useData";
 
 const swiperModules = [Navigation, Autoplay, Scrollbar];
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { vouchers } = useData();
 
 const copiedCode = ref(null);
@@ -188,7 +188,7 @@ function copyCode(code) {
 
 function formatDate(dateStr) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("fr-FR", {
+  return d.toLocaleDateString(locale.value || "fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",

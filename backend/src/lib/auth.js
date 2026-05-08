@@ -1,6 +1,12 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV === "production"
+    ? (() => {
+        throw new Error("JWT_SECRET is required in production");
+      })()
+    : "dev-secret-change-in-production");
 
 export function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });

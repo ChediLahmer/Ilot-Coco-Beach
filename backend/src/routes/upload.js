@@ -5,7 +5,7 @@ export async function uploadRoutes(app) {
   app.post(
     "/",
     {
-      bodyLimit: 100 * 1024 * 1024,
+      bodyLimit: 10 * 1024 * 1024,
       preHandler: authenticate,
       schema: {
         tags: ["Upload"],
@@ -23,6 +23,18 @@ export async function uploadRoutes(app) {
     async (request, reply) => {
       const file = await request.file();
       if (!file) return reply.status(400).send({ error: "No file uploaded" });
+
+      const allowed = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+      ];
+      if (!allowed.includes(file.mimetype)) {
+        return reply.status(400).send({ error: "File type not allowed" });
+      }
 
       const buffer = await file.toBuffer();
       const url = await uploadFile(buffer, file.filename, file.mimetype);

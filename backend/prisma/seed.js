@@ -1080,6 +1080,43 @@ async function main() {
     await prisma.voucher.create({ data: v });
   }
 
+  // Reviews
+  const existingReviews = await prisma.review.count();
+  if (existingReviews === 0) {
+    await prisma.review.createMany({
+      data: [
+        {
+          userName: "Sophie M.",
+          comment:
+            "Endroit magnifique, personnel très accueillant. On y retourne cet été !",
+          rating: 5,
+        },
+        {
+          userName: "Ahmed K.",
+          comment:
+            "Belle plage, bonne cuisine. Le service pourrait être un peu plus rapide.",
+          rating: 4,
+        },
+        {
+          userName: "Marie L.",
+          comment:
+            "Parfait pour une journée en famille. Les enfants ont adoré !",
+          rating: 5,
+        },
+        {
+          userName: "Karim B.",
+          comment: "Cadre paradisiaque. Les cocktails sont excellents.",
+          rating: 4,
+        },
+        {
+          userName: "Laura T.",
+          comment: "Un vrai petit coin de paradis. Je recommande vivement.",
+          rating: 5,
+        },
+      ],
+    });
+  }
+
   console.log("Seed complete");
 }
 
