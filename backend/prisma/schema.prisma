@@ -54,6 +54,8 @@ model MenuItem {
   order         Int          @default(0)
   createdAt     DateTime     @default(now()) @map("created_at")
 
+  flashSales    FlashSale[]
+
   @@index([categoryId])
   @@map("menu_items")
 }
@@ -68,6 +70,8 @@ model Space {
   available   Boolean @default(true)
   visible     Boolean @default(true)
   order       Int     @default(0)
+
+  flashSales  FlashSale[]
 
   @@map("spaces")
 }
@@ -97,16 +101,23 @@ model GalleryImage {
 }
 
 model FlashSale {
-  id              Int      @id @default(autoincrement())
-  title           Json     // { fr, en, ar }
-  description     Json     // { fr, en, ar }
-  discountPercent Int      @map("discount_percent")
+  id              Int       @id @default(autoincrement())
+  title           Json      // { fr, en, ar }
+  description     Json      // { fr, en, ar }
+  discountPercent Int       @map("discount_percent")
   image           String?
-  endsAt          DateTime @map("ends_at")
-  isActive        Boolean  @default(true) @map("is_active")
-  visible         Boolean  @default(true)
-  createdAt       DateTime @default(now()) @map("created_at")
+  endsAt          DateTime  @map("ends_at")
+  isActive        Boolean   @default(true) @map("is_active")
+  visible         Boolean   @default(true)
+  menuItemId      Int?      @map("menu_item_id")
+  menuItem        MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  spaceId         Int?      @map("space_id")
+  space           Space?    @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now()) @map("created_at")
 
+  @@index([menuItemId])
+  @@index([spaceId])
+  @@index([isActive, endsAt])
   @@map("flash_sales")
 }
 
@@ -119,6 +130,7 @@ model Voucher {
   visible         Boolean  @default(true)
   createdAt       DateTime @default(now()) @map("created_at")
 
+  @@index([isActive, validUntil])
   @@map("vouchers")
 }
 
@@ -148,5 +160,6 @@ model Review {
   visible   Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([visible, id])
   @@map("reviews")
 }

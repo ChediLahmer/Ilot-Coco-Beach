@@ -86,7 +86,6 @@
             loading="lazy"
             decoding="async"
           />
-          />
           <div
             class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"
           />

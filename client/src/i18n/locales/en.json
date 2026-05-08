@@ -206,5 +206,10 @@
     "scrollHint": "Scroll for more",
     "previous": "Previous",
     "next": "Next"
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundDesc": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to home"
   }
 }

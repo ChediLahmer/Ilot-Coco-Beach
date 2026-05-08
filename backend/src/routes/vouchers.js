@@ -43,6 +43,8 @@ export async function vouchersRoutes(app) {
         if (active !== undefined) where.isActive = active === "true";
       } else {
         where.visible = true;
+        where.isActive = true;
+        where.validUntil = { gte: new Date() };
       }
       if (search) {
         where.code = { contains: search, mode: "insensitive" };
@@ -64,14 +66,8 @@ export async function vouchersRoutes(app) {
         prisma.voucher.findMany({ where, orderBy, take: limit, skip: offset }),
         prisma.voucher.count({ where }),
       ]);
-      const safeItems = request.admin
-        ? items
-        : items.map(({ code, ...rest }) => ({
-            ...rest,
-            code: code.slice(0, 2) + "***",
-          }));
       return {
-        items: safeItems,
+        items,
         total,
         page: Number(page) || 1,
         totalPages: Math.ceil(total / limit),

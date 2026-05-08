@@ -44,10 +44,11 @@ export async function passwordResetRoutes(app) {
       });
 
       const token = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
       await prisma.passwordReset.create({
-        data: { token, adminId: admin.id, expiresAt },
+        data: { token: tokenHash, adminId: admin.id, expiresAt },
       });
 
       const adminUrl = process.env.ADMIN_URL || "http://localhost:5174";
@@ -110,8 +111,9 @@ export async function passwordResetRoutes(app) {
           .send({ error: "Password must be at least 6 characters" });
       }
 
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
       const resetRecord = await prisma.passwordReset.findUnique({
-        where: { token },
+        where: { token: tokenHash },
       });
 
       if (

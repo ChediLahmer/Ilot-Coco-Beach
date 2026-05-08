@@ -3,9 +3,7 @@ import { router } from "../router.js";
 
 const BASE = import.meta.env.VITE_API_URL || "/api";
 const UPLOAD_BASE =
-  import.meta.env.VITE_UPLOAD_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
+  import.meta.env.VITE_UPLOAD_URL || import.meta.env.VITE_API_URL || "/api";
 
 async function request(path, options = {}) {
   const { token } = useAuth();

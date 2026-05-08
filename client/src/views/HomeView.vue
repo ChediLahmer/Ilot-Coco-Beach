@@ -9,6 +9,7 @@
       <div data-reveal><ExperienceSection /></div>
       <div data-reveal><GallerySection /></div>
       <div data-reveal><VoucherSection /></div>
+      <div v-if="config.showReviews" data-reveal><ReviewsSection /></div>
       <div data-reveal><VideoSection /></div>
       <div data-reveal><ReservationSection /></div>
       <div data-reveal><LocationSection /></div>
@@ -72,6 +73,9 @@ const VideoSection = defineAsyncComponent(
 );
 const ReservationSection = defineAsyncComponent(
   () => import("@/components/ReservationSection.vue"),
+);
+const ReviewsSection = defineAsyncComponent(
+  () => import("@/components/ReviewsSection.vue"),
 );
 const LocationSection = defineAsyncComponent(
   () => import("@/components/LocationSection.vue"),

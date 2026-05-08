@@ -55,7 +55,7 @@ export async function spacesRoutes(app) {
       let orderBy;
       switch (sort) {
         case "name":
-          orderBy = [{ name: "asc" }, { id: "asc" }];
+          orderBy = [{ order: "asc" }, { id: "asc" }];
           break;
         case "price":
           orderBy = [{ price: "asc" }, { id: "asc" }];

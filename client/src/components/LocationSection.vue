@@ -8,12 +8,14 @@
       </div>
 
       <div class="mt-8 grid gap-6 lg:grid-cols-2">
-        <div class="overflow-hidden rounded-lg border border-charcoal/8">
+        <div
+          class="overflow-hidden rounded-lg border border-charcoal/8 min-h-[16rem] sm:min-h-[20rem]"
+        >
           <iframe
             :src="mapUrl"
             width="100%"
             height="100%"
-            class="h-[16rem] sm:h-[20rem] w-full"
+            class="h-full w-full min-h-[16rem] sm:min-h-[20rem]"
             style="border: 0"
             allowfullscreen
             loading="lazy"

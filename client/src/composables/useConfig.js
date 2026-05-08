@@ -19,6 +19,9 @@ const config = reactive({
   sectionVideo: "",
   sectionPoster: "",
   aboutText: "",
+  showReviews: false,
+  aboutImage1: "",
+  aboutImage2: "",
   loaded: false,
 });
 
@@ -40,6 +43,9 @@ const KEY_MAP = {
   section_video_url: "sectionVideo",
   section_poster_url: "sectionPoster",
   about_text: "aboutText",
+  show_reviews: "showReviews",
+  about_image_1: "aboutImage1",
+  about_image_2: "aboutImage2",
 };
 
 let loaded = false;
@@ -51,7 +57,10 @@ async function loadConfig() {
     const data = await api.getConfig();
     if (data && typeof data === "object") {
       for (const [apiKey, localKey] of Object.entries(KEY_MAP)) {
-        if (data[apiKey]) config[localKey] = data[apiKey];
+        if (data[apiKey] != null) {
+          config[localKey] =
+            localKey === "showReviews" ? data[apiKey] === "true" : data[apiKey];
+        }
       }
     }
   } catch {
@@ -60,7 +69,7 @@ async function loadConfig() {
   config.loaded = true;
 }
 
-loadConfig();
+export const configReady = loadConfig();
 
 export function useConfig() {
   return config;

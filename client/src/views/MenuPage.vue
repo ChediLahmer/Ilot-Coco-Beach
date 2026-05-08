@@ -271,7 +271,15 @@ const { locale, t } = useI18n();
 const { menuCategories } = useData();
 
 const priceMode = ref("standard");
-const activeCategory = ref(menuCategories.value[0]?.id || null);
+const activeCategory = ref(menuCategories.value[0]?.id ?? null);
+watch(
+  () => menuCategories.value,
+  (cats) => {
+    if (activeCategory.value === null && cats.length) {
+      activeCategory.value = cats[0].id;
+    }
+  },
+);
 
 watch(activeCategory, () => {
   showAllItems.value = false;
@@ -372,6 +380,8 @@ const copy = computed(
 );
 
 function displayPrice(item) {
-  return priceMode.value === "extra" ? item.priceExtra : item.priceStandard;
+  const price =
+    priceMode.value === "extra" ? item.priceExtra : item.priceStandard;
+  return price ?? item.priceStandard ?? "—";
 }
 </script>

@@ -19,6 +19,9 @@ const ALLOWED_CONFIG_KEYS = new Set([
   "hero_poster",
   "section_video",
   "section_poster",
+  "show_reviews",
+  "about_image_1",
+  "about_image_2",
 ]);
 
 export async function configRoutes(app) {
@@ -83,6 +86,45 @@ export async function configRoutes(app) {
         update: { value },
         create: { key: request.params.key, value },
       });
+    },
+  );
+
+  // Batch update multiple config values in a single transaction
+  app.put(
+    "/",
+    {
+      preHandler: authenticate,
+      schema: {
+        tags: ["Config"],
+        summary: "Batch update config values",
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: "object",
+          additionalProperties: { type: "string", maxLength: 10000 },
+        },
+      },
+    },
+    async (request, reply) => {
+      const entries = Object.entries(request.body);
+      const invalid = entries.filter(([k]) => !ALLOWED_CONFIG_KEYS.has(k));
+      if (invalid.length) {
+        return reply
+          .status(400)
+          .send({
+            error: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
+          });
+      }
+      await prisma.$transaction(
+        entries.map(([key, value]) =>
+          prisma.siteConfig.upsert({
+            where: { key },
+            update: { value },
+            create: { key, value },
+          }),
+        ),
+      );
+      const configs = await prisma.siteConfig.findMany();
+      return Object.fromEntries(configs.map((c) => [c.key, c.value]));
     },
   );
 }

@@ -26,6 +26,9 @@ const removeImage = ref(false);
 const loading = ref(false);
 const saving = ref(false);
 const error = ref(null);
+const menuItems = ref([]);
+const spaces = ref([]);
+const targetType = ref("none"); // "none" | "menuItem" | "space"
 
 // Search, filter, sort, pagination
 const searchQuery = ref("");
@@ -74,7 +77,28 @@ watch(searchQuery, () => {
   }, 300);
 });
 
-onMounted(loadData);
+onMounted(() => {
+  loadData();
+  loadTargets();
+});
+
+async function loadTargets() {
+  try {
+    const [menuRes, spacesRes] = await Promise.all([
+      api.get("/menu/categories"),
+      api.get("/spaces?limit=100"),
+    ]);
+    menuItems.value = menuRes.flatMap((cat) =>
+      (cat.items || []).map((item) => ({
+        ...item,
+        categoryName: cat.name?.fr || "",
+      })),
+    );
+    spaces.value = spacesRes.items || [];
+  } catch {
+    /* non-blocking */
+  }
+}
 
 const currentImage = computed(() => {
   if (removeImage.value) return null;
@@ -108,6 +132,8 @@ function resetForm() {
     isActive: true,
     visible: true,
     imageFile: null,
+    menuItemId: null,
+    spaceId: null,
   };
 }
 
@@ -124,8 +150,11 @@ function openModal(sale = null) {
         isActive: sale.isActive,
         visible: sale.visible,
         imageFile: null,
+        menuItemId: sale.menuItemId || null,
+        spaceId: sale.spaceId || null,
       }
     : resetForm();
+  targetType.value = sale?.menuItemId ? "menuItem" : sale?.spaceId ? "space" : "none";
   showModal.value = true;
 }
 
@@ -154,6 +183,8 @@ async function save() {
       isActive: form.value.isActive,
       visible: form.value.visible,
       image: imageUrl,
+      menuItemId: targetType.value === "menuItem" ? form.value.menuItemId : null,
+      spaceId: targetType.value === "space" ? form.value.spaceId : null,
     };
     if (editing.value) {
       await api.put(`/flash-sales/${editing.value.id}`, payload);
@@ -341,6 +372,12 @@ function formatDate(d) {
             >
               <td class="px-5 py-3.5 font-medium text-text">
                 {{ sale.title.fr }}
+                <span v-if="sale.menuItem" class="block text-xs text-text-muted font-normal">
+                  Plat : {{ sale.menuItem.name?.fr }} ({{ sale.menuItem.priceStandard }} DT)
+                </span>
+                <span v-else-if="sale.space" class="block text-xs text-text-muted font-normal">
+                  Espace : {{ sale.space.name?.fr }} ({{ sale.space.price }} DT)
+                </span>
               </td>
               <td class="px-5 py-3.5">
                 <span
@@ -571,6 +608,44 @@ function formatDate(d) {
                 :class="fieldErrors.endsAt ? 'border-danger' : 'border-border'"
               />
               <FieldError :message="fieldErrors.endsAt" />
+            </div>
+          </div>
+          <div class="space-y-3">
+            <label class="block text-xs font-medium text-text-muted">Appliquer à</label>
+            <div class="flex gap-3">
+              <button type="button" @click="targetType = 'none'; form.menuItemId = null; form.spaceId = null"
+                class="px-3 py-1.5 text-xs rounded-lg border transition-colors"
+                :class="targetType === 'none' ? 'bg-primary text-white border-primary' : 'border-border text-text-muted hover:bg-surface-alt'">
+                Général
+              </button>
+              <button type="button" @click="targetType = 'menuItem'; form.spaceId = null"
+                class="px-3 py-1.5 text-xs rounded-lg border transition-colors"
+                :class="targetType === 'menuItem' ? 'bg-primary text-white border-primary' : 'border-border text-text-muted hover:bg-surface-alt'">
+                Plat du menu
+              </button>
+              <button type="button" @click="targetType = 'space'; form.menuItemId = null"
+                class="px-3 py-1.5 text-xs rounded-lg border transition-colors"
+                :class="targetType === 'space' ? 'bg-primary text-white border-primary' : 'border-border text-text-muted hover:bg-surface-alt'">
+                Espace
+              </button>
+            </div>
+            <div v-if="targetType === 'menuItem'">
+              <select v-model="form.menuItemId"
+                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface">
+                <option :value="null">-- Choisir un plat --</option>
+                <option v-for="item in menuItems" :key="item.id" :value="item.id">
+                  {{ item.categoryName }} › {{ item.name?.fr || '—' }} ({{ item.priceStandard }} DT)
+                </option>
+              </select>
+            </div>
+            <div v-if="targetType === 'space'">
+              <select v-model="form.spaceId"
+                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface">
+                <option :value="null">-- Choisir un espace --</option>
+                <option v-for="sp in spaces" :key="sp.id" :value="sp.id">
+                  {{ sp.name?.fr || '—' }} ({{ sp.price }} DT)
+                </option>
+              </select>
             </div>
           </div>
           <div class="flex items-center justify-between">

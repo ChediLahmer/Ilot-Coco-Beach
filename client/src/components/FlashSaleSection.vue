@@ -125,6 +125,18 @@
                   </p>
 
                   <div
+                    v-if="getOriginalPrice(sale)"
+                    class="mt-2 flex items-center gap-2"
+                  >
+                    <span class="text-sm text-white/50 line-through">
+                      {{ getOriginalPrice(sale) }} DT
+                    </span>
+                    <span class="text-lg font-bold text-gold">
+                      {{ getDiscountedPrice(sale) }} DT
+                    </span>
+                  </div>
+
+                  <div
                     v-if="!isSaleExpired(sale)"
                     class="mt-3 flex flex-wrap gap-1.5"
                   >
@@ -170,12 +182,12 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 
 import { useData } from "@/composables/useData";
+import { useCountdown } from "@/composables/useCountdown";
 import { trackReserveClick } from "@/composables/useAnalytics";
 
 const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
-const now = ref(Date.now());
-let countdownTimer = null;
+const now = useCountdown();
 
 const { flashSales } = useData();
 
@@ -204,13 +216,15 @@ function scrollToReservation() {
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }
 
-onMounted(() => {
-  countdownTimer = window.setInterval(() => {
-    now.value = Date.now();
-  }, 1000);
-});
+function getOriginalPrice(sale) {
+  if (sale.menuItem) return Number(sale.menuItem.priceStandard);
+  if (sale.space) return Number(sale.space.price);
+  return null;
+}
 
-onUnmounted(() => {
-  if (countdownTimer) window.clearInterval(countdownTimer);
-});
+function getDiscountedPrice(sale) {
+  const original = getOriginalPrice(sale);
+  if (!original) return null;
+  return (original * (1 - sale.discountPercent / 100)).toFixed(2);
+}
 </script>

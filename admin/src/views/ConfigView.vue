@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import AppToggle from "@/components/AppToggle.vue";
 
 const api = useApi();
 const config = ref({});
 const hours = ref({ fr: "", en: "", ar: "" });
+const showReviews = ref(false);
 const saving = ref(false);
 const saved = ref(false);
 const uploading = ref("");
@@ -55,6 +57,16 @@ const mediaFields = [
     label: "Poster section vidéo",
     accept: "image/*",
   },
+  {
+    key: "about_image_1",
+    label: "Image À propos 1 (grande, gauche)",
+    accept: "image/*",
+  },
+  {
+    key: "about_image_2",
+    label: "Image À propos 2 (petite, droite)",
+    accept: "image/*",
+  },
 ];
 
 async function uploadMedia(key, event) {
@@ -95,6 +107,7 @@ async function loadData() {
     } catch {
       hours.value = { fr: config.value.hours || "", en: "", ar: "" };
     }
+    showReviews.value = config.value.show_reviews === "true";
   } catch {
     error.value = "Erreur de chargement";
   } finally {
@@ -109,14 +122,15 @@ async function save() {
   saved.value = false;
   error.value = null;
   try {
+    const payload = {};
     for (const field of fields) {
       if (config.value[field.key] !== undefined) {
-        await api.put(`/config/${field.key}`, {
-          value: String(config.value[field.key]),
-        });
+        payload[field.key] = String(config.value[field.key]);
       }
     }
-    await api.put("/config/hours", { value: JSON.stringify(hours.value) });
+    payload.hours = JSON.stringify(hours.value);
+    payload.show_reviews = showReviews.value ? "true" : "false";
+    await api.put("/config", payload);
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
   } catch {
@@ -220,6 +234,23 @@ async function save() {
             class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
           />
         </div>
+      </div>
+    </div>
+
+    <!-- Sections visibles -->
+    <h3 class="text-lg font-bold text-text mt-8 mb-4">Sections du site</h3>
+    <div
+      class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+    >
+      <div class="px-6 py-4 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-text">Section Avis clients</p>
+          <p class="text-xs text-text-muted mt-0.5">
+            Afficher la section avis et le lien vers la page avis sur la page
+            d'accueil
+          </p>
+        </div>
+        <AppToggle v-model="showReviews" />
       </div>
     </div>
 

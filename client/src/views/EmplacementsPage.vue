@@ -27,12 +27,17 @@ function normalizeItem(item) {
 async function loadMore() {
   if (loading.value || !hasMore.value) return;
   loading.value = true;
-  const res = await api.getSpaces(currentPage.value, PAGE_SIZE);
-  const newItems = (res.items || []).map(normalizeItem);
-  emplacements.value = [...emplacements.value, ...newItems];
-  hasMore.value = currentPage.value < res.totalPages;
-  currentPage.value++;
-  loading.value = false;
+  try {
+    const res = await api.getSpaces(currentPage.value, PAGE_SIZE);
+    const newItems = (res.items || []).map(normalizeItem);
+    emplacements.value = [...emplacements.value, ...newItems];
+    hasMore.value = currentPage.value < res.totalPages;
+    currentPage.value++;
+  } catch {
+    /* keep current state */
+  } finally {
+    loading.value = false;
+  }
 
   // Animate newly added cards
   await nextTick();
@@ -124,6 +129,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   observer?.disconnect();
+  ScrollTrigger.getAll().forEach((st) => st.kill());
 });
 </script>
 

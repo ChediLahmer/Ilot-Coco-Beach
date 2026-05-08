@@ -45,6 +45,8 @@ export async function flashSalesRoutes(app) {
         if (active !== undefined) where.isActive = active === "true";
       } else {
         where.visible = true;
+        where.isActive = true;
+        where.endsAt = { gte: new Date() };
       }
       if (search) {
         where.title = { path: ["fr"], string_contains: search };
@@ -52,7 +54,7 @@ export async function flashSalesRoutes(app) {
       let orderBy;
       switch (sort) {
         case "title":
-          orderBy = [{ title: "asc" }, { id: "asc" }];
+          orderBy = [{ createdAt: "asc" }, { id: "asc" }];
           break;
         case "discount":
           orderBy = [{ discountPercent: "desc" }, { id: "asc" }];
@@ -68,6 +70,17 @@ export async function flashSalesRoutes(app) {
           orderBy,
           take: limit,
           skip: offset,
+          include: {
+            menuItem: {
+              select: {
+                id: true,
+                name: true,
+                priceStandard: true,
+                priceExtra: true,
+              },
+            },
+            space: { select: { id: true, name: true, price: true } },
+          },
         }),
         prisma.flashSale.count({ where }),
       ]);
@@ -117,6 +130,8 @@ export async function flashSalesRoutes(app) {
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean", default: true },
             visible: { type: "boolean", default: true },
+            menuItemId: { type: "integer", nullable: true },
+            spaceId: { type: "integer", nullable: true },
           },
         },
       },
@@ -130,6 +145,8 @@ export async function flashSalesRoutes(app) {
         endsAt,
         isActive,
         visible,
+        menuItemId,
+        spaceId,
       } = request.body;
       return prisma.flashSale.create({
         data: {
@@ -140,6 +157,19 @@ export async function flashSalesRoutes(app) {
           endsAt: new Date(endsAt),
           isActive: isActive ?? true,
           visible: visible ?? true,
+          menuItemId: menuItemId || null,
+          spaceId: spaceId || null,
+        },
+        include: {
+          menuItem: {
+            select: {
+              id: true,
+              name: true,
+              priceStandard: true,
+              priceExtra: true,
+            },
+          },
+          space: { select: { id: true, name: true, price: true } },
         },
       });
     },
@@ -182,6 +212,8 @@ export async function flashSalesRoutes(app) {
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },
             visible: { type: "boolean" },
+            menuItemId: { type: "integer", nullable: true },
+            spaceId: { type: "integer", nullable: true },
           },
         },
       },
@@ -195,6 +227,8 @@ export async function flashSalesRoutes(app) {
         endsAt,
         isActive,
         visible,
+        menuItemId,
+        spaceId,
       } = request.body;
       const data = {
         title,
@@ -205,9 +239,22 @@ export async function flashSalesRoutes(app) {
         visible,
       };
       if (endsAt) data.endsAt = new Date(endsAt);
+      if (menuItemId !== undefined) data.menuItemId = menuItemId || null;
+      if (spaceId !== undefined) data.spaceId = spaceId || null;
       return prisma.flashSale.update({
         where: { id: Number(request.params.id) },
         data,
+        include: {
+          menuItem: {
+            select: {
+              id: true,
+              name: true,
+              priceStandard: true,
+              priceExtra: true,
+            },
+          },
+          space: { select: { id: true, name: true, price: true } },
+        },
       });
     },
   );

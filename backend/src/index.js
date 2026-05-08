@@ -17,6 +17,7 @@ import { uploadRoutes } from "./routes/upload.js";
 import { passwordResetRoutes } from "./routes/password-reset.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { reviewRoutes } from "./routes/reviews.js";
+import { startScheduler } from "./lib/scheduler.js";
 
 const app = Fastify({
   logger: true,
@@ -131,6 +132,7 @@ const port = process.env.PORT || 3000;
 
 try {
   await app.listen({ port, host: "0.0.0.0" });
+  startScheduler(app.log);
 } catch (err) {
   app.log.error(err);
   process.exit(1);

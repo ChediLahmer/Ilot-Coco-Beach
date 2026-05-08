@@ -120,6 +120,7 @@ export async function galleryRoutes(app) {
             limit: { type: "integer", maximum: 100 },
             cursor: { type: "integer" },
             category: { type: "string" },
+            categoryId: { type: "integer" },
           },
         },
       },

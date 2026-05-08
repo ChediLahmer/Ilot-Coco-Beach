@@ -92,6 +92,18 @@
               {{ sale.description[locale] || sale.description.fr }}
             </p>
 
+            <div
+              v-if="getOriginalPrice(sale)"
+              class="flex items-center gap-2 mt-1"
+            >
+              <span class="text-sm text-white/50 line-through">
+                {{ getOriginalPrice(sale) }} DT
+              </span>
+              <span class="text-lg font-bold text-gold">
+                {{ getDiscountedPrice(sale) }} DT
+              </span>
+            </div>
+
             <!-- Countdown -->
             <div v-if="!isSaleExpired(sale)" class="flex gap-2 mt-1">
               <div
@@ -202,6 +214,7 @@ import { useRouter } from "vue-router";
 import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
 import { api } from "@/lib/supabase";
+import { useCountdown } from "@/composables/useCountdown";
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -254,8 +267,7 @@ async function loadVouchers() {
 
 let salesObserver = null;
 let vouchersObserver = null;
-const now = ref(Date.now());
-let countdownTimer = null;
+const now = useCountdown();
 
 onMounted(async () => {
   await loadSales();
@@ -275,16 +287,11 @@ onMounted(async () => {
   );
   if (salesSentinel.value) salesObserver.observe(salesSentinel.value);
   if (vouchersSentinel.value) vouchersObserver.observe(vouchersSentinel.value);
-
-  countdownTimer = setInterval(() => {
-    now.value = Date.now();
-  }, 1000);
 });
 
 onUnmounted(() => {
   salesObserver?.disconnect();
   vouchersObserver?.disconnect();
-  if (countdownTimer) clearInterval(countdownTimer);
 });
 
 function isSaleExpired(sale) {
@@ -313,5 +320,17 @@ function formatVoucherDate(dateStr) {
 
 function scrollToReservation() {
   router.push("/#reservation");
+}
+
+function getOriginalPrice(sale) {
+  if (sale.menuItem) return Number(sale.menuItem.priceStandard);
+  if (sale.space) return Number(sale.space.price);
+  return null;
+}
+
+function getDiscountedPrice(sale) {
+  const original = getOriginalPrice(sale);
+  if (!original) return null;
+  return (original * (1 - sale.discountPercent / 100)).toFixed(2);
 }
 </script>

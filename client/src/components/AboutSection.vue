@@ -38,7 +38,7 @@
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="sm:row-span-2 overflow-hidden rounded-lg">
             <img
-              :src="overwaterImg"
+              :src="config.aboutImage1 || overwaterImg"
               alt="Overwater dining"
               class="h-full min-h-[14rem] sm:min-h-[18rem] w-full object-cover"
               loading="lazy"
@@ -47,7 +47,7 @@
           </div>
           <div class="overflow-hidden rounded-lg">
             <img
-              :src="cabinHammockImg"
+              :src="config.aboutImage2 || cabinHammockImg"
               alt="Private cabin"
               class="aspect-[4/3] w-full object-cover"
               loading="lazy"
@@ -70,11 +70,13 @@
 
 <script setup>
 import { useI18n } from "vue-i18n";
+import { useConfig } from "@/composables/useConfig";
 
 import overwaterImg from "@/assets/images/overwater-cabin.jpg";
 import cabinHammockImg from "@/assets/images/cabin-hammock.jpg";
 
 const { t } = useI18n();
+const config = useConfig();
 
 function scrollTo(id) {
   const el = document.getElementById(id);

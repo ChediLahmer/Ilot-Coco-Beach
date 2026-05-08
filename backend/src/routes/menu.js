@@ -56,11 +56,11 @@ export async function menuRoutes(app) {
       const where = search
         ? { name: { path: ["fr"], string_contains: search } }
         : {};
-      const itemWhere = request.admin ? {} : { visible: true };
+      const itemWhere = request.admin ? {} : { visible: true, available: true };
       let itemOrderBy;
       switch (sort) {
         case "name":
-          itemOrderBy = { name: "asc" };
+          itemOrderBy = { order: "asc" };
           break;
         case "price":
           itemOrderBy = { priceStandard: "asc" };
@@ -188,7 +188,7 @@ export async function menuRoutes(app) {
     },
     async (request) => {
       const { categoryId, page, limit: rawLimit } = request.query;
-      const where = request.admin ? {} : { visible: true };
+      const where = request.admin ? {} : { visible: true, available: true };
       if (categoryId) where.categoryId = Number(categoryId);
 
       if (page) {
@@ -210,7 +210,11 @@ export async function menuRoutes(app) {
           totalPages: Math.ceil(total / limit),
         };
       }
-      return prisma.menuItem.findMany({ where, orderBy: { order: "asc" } });
+      return prisma.menuItem.findMany({
+        where,
+        orderBy: { order: "asc" },
+        take: 200,
+      });
     },
   );
 

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { trackPageView } from "@/composables/useAnalytics";
+import { useConfig, configReady } from "@/composables/useConfig";
 
 const routes = [
   {
@@ -31,6 +32,12 @@ const routes = [
     path: "/reviews",
     name: "reviews",
     component: () => import("@/views/ReviewsPage.vue"),
+    meta: { requiresReviews: true },
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: () => import("@/views/NotFoundView.vue"),
   },
 ];
 
@@ -46,6 +53,14 @@ const router = createRouter({
     }
     return { top: 0, behavior: "smooth" };
   },
+});
+
+router.beforeEach(async (to) => {
+  if (to.meta.requiresReviews) {
+    await configReady;
+    const config = useConfig();
+    if (!config.showReviews) return { name: "home" };
+  }
 });
 
 router.afterEach((to) => {

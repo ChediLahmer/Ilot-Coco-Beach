@@ -278,25 +278,50 @@ const copy = computed(
     },
 );
 
-function submitReview() {
+const errorCopy = computed(
+  () =>
+    ({
+      fr: {
+        name: "Veuillez saisir votre nom.",
+        comment: "Veuillez saisir un commentaire.",
+        send: "Erreur lors de l'envoi de votre avis. Réessayez.",
+      },
+      en: {
+        name: "Please enter your name.",
+        comment: "Please enter a comment.",
+        send: "Error sending your review. Please try again.",
+      },
+      ar: {
+        name: "يرجى إدخال اسمك.",
+        comment: "يرجى إدخال تعليق.",
+        send: "خطأ في إرسال رأيك. حاول مرة أخرى.",
+      },
+    })[locale.value] || {
+      name: "Veuillez saisir votre nom.",
+      comment: "Veuillez saisir un commentaire.",
+      send: "Erreur lors de l'envoi de votre avis. Réessayez.",
+    },
+);
+
+async function submitReview() {
   formError.value = "";
   if (!form.userName.trim()) {
-    formError.value = "Veuillez saisir votre nom.";
+    formError.value = errorCopy.value.name;
     return;
   }
   if (!form.comment.trim()) {
-    formError.value = "Veuillez saisir un commentaire.";
+    formError.value = errorCopy.value.comment;
     return;
   }
 
   try {
-    addReview({
+    await addReview({
       userName: form.userName,
       comment: form.comment,
       rating: form.rating,
     });
   } catch {
-    formError.value = "Erreur lors de l'envoi de votre avis. Réessayez.";
+    formError.value = errorCopy.value.send;
     return;
   }
 
