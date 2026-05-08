@@ -18,10 +18,11 @@ import { passwordResetRoutes } from "./routes/password-reset.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { reviewRoutes } from "./routes/reviews.js";
 import { startScheduler } from "./lib/scheduler.js";
+import helmet from "@fastify/helmet";
 
 const app = Fastify({
   logger: true,
-  trustProxy: true,
+  trustProxy: process.env.TRUST_PROXY || 1,
 });
 
 await app.register(swagger, {
@@ -62,6 +63,10 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
+await app.register(helmet, {
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+});
 await app.register(cors, {
   origin: (
     process.env.CORS_ORIGIN ||

@@ -7,6 +7,7 @@ export async function passwordResetRoutes(app) {
   app.post(
     "/forgot-password",
     {
+      config: { rateLimit: { max: 3, timeWindow: "15 minutes" } },
       schema: {
         tags: ["Auth"],
         summary: "Request a password reset email",
@@ -52,7 +53,7 @@ export async function passwordResetRoutes(app) {
       });
 
       const adminUrl = process.env.ADMIN_URL || "http://localhost:5174";
-      const resetUrl = `${adminUrl}/reset-password?token=${token}`;
+      const resetUrl = `${adminUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
       try {
         await sendPasswordResetEmail(email, resetUrl);
@@ -84,7 +85,7 @@ export async function passwordResetRoutes(app) {
               maxLength: 64,
               pattern: "^[a-f0-9]+$",
             },
-            password: { type: "string", minLength: 6, maxLength: 128 },
+            password: { type: "string", minLength: 8, maxLength: 128 },
           },
         },
         response: {
@@ -124,16 +125,17 @@ export async function passwordResetRoutes(app) {
         return reply.status(400).send({ error: "Invalid or expired token" });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await prisma.admin.update({
-        where: { id: resetRecord.adminId },
-        data: { password: hashedPassword },
-      });
-
-      await prisma.passwordReset.update({
-        where: { id: resetRecord.id },
-        data: { usedAt: new Date() },
-      });
+      const hashedPassword = await bcrypt.hash(password, 12);
+      await prisma.$transaction([
+        prisma.admin.update({
+          where: { id: resetRecord.adminId },
+          data: { password: hashedPassword },
+        }),
+        prisma.passwordReset.update({
+          where: { id: resetRecord.id },
+          data: { usedAt: new Date() },
+        }),
+      ]);
 
       return { message: "Password updated successfully" };
     },

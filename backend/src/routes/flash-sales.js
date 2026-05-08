@@ -148,7 +148,7 @@ export async function flashSalesRoutes(app) {
         menuItemId,
         spaceId,
       } = request.body;
-      return prisma.flashSale.create({
+      const sale = await prisma.flashSale.create({
         data: {
           title,
           description: description || {},
@@ -172,6 +172,7 @@ export async function flashSalesRoutes(app) {
           space: { select: { id: true, name: true, price: true } },
         },
       });
+      return reply.status(201).send(sale);
     },
   );
 

@@ -156,6 +156,7 @@ const config = useConfig();
 const open = ref(false);
 
 const messengerUrl = computed(() => {
+  if (!config.facebook) return "#";
   const fbId = config.facebook.split("/").filter(Boolean).pop();
   return `https://m.me/${fbId}`;
 });

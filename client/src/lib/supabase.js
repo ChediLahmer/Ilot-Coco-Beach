@@ -5,7 +5,16 @@ async function request(path, options = {}) {
     headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    let msg = `API ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body.error) msg = body.error;
+    } catch {
+      /* use status code */
+    }
+    throw new Error(msg);
+  }
   if (res.status === 204) return null;
   return res.json();
 }

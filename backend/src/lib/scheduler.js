@@ -44,7 +44,7 @@ export function startScheduler(logger) {
         );
       }
 
-      // Archive analytics events older than 90 days
+      // Purge analytics events older than 90 days
       const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
       const events = await prisma.analyticsEvent.deleteMany({
         where: { createdAt: { lt: cutoff } },

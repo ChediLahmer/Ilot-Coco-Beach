@@ -207,7 +207,7 @@ const { t, locale } = useI18n();
 const { menuCategories } = useData();
 
 const priceMode = ref("standard");
-const activeCategory = ref(menuCategories.value[0]?.id || null);
+const activeCategory = ref(menuCategories.value[0]?.id ?? null);
 
 const menuPrev = ref(null);
 const menuNext = ref(null);
@@ -215,13 +215,14 @@ const menuNext = ref(null);
 const activeCategoryData = computed(
   () =>
     menuCategories.value.find((c) => c.id === activeCategory.value) ??
-    menuCategories.value[0],
+    menuCategories.value[0] ??
+    null,
 );
 
 const activeCategoryLabel = computed(
   () =>
-    activeCategoryData.value?.name[locale.value] ||
-    activeCategoryData.value?.name.fr ||
+    activeCategoryData.value?.name?.[locale.value] ||
+    activeCategoryData.value?.name?.fr ||
     "",
 );
 

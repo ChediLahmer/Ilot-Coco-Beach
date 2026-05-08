@@ -16,7 +16,7 @@ export async function authRoutes(app) {
           additionalProperties: false,
           properties: {
             email: { type: "string", format: "email" },
-            password: { type: "string", maxLength: 128 },
+            password: { type: "string", minLength: 1, maxLength: 128 },
           },
         },
         response: {

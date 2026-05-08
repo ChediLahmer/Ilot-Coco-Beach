@@ -102,10 +102,10 @@ export async function vouchersRoutes(app) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const { code, discountPercent, validUntil, isActive, visible } =
         request.body;
-      return prisma.voucher.create({
+      const voucher = await prisma.voucher.create({
         data: {
           code,
           discountPercent,
@@ -114,6 +114,7 @@ export async function vouchersRoutes(app) {
           visible: visible ?? true,
         },
       });
+      return reply.status(201).send(voucher);
     },
   );
 

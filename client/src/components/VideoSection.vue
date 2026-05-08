@@ -16,6 +16,7 @@
           playsinline
           preload="metadata"
           @click="togglePlay"
+          @ended="isPlaying = false"
         >
           <source :src="sectionVideo" type="video/mp4" />
         </video>

@@ -18,6 +18,7 @@ const currentPage = ref(1);
 const hasMore = ref(true);
 const loading = ref(false);
 const sentinel = ref(null);
+const myScrollTriggers = [];
 
 function normalizeItem(item) {
   if (item.description && !item.desc) item.desc = item.description;
@@ -54,6 +55,7 @@ async function loadMore() {
         trigger: section,
         start: "top 80%",
         once: true,
+        onEnter: ({ self }) => myScrollTriggers.push(self),
       },
     });
   });
@@ -129,7 +131,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   observer?.disconnect();
-  ScrollTrigger.getAll().forEach((st) => st.kill());
+  myScrollTriggers.forEach((st) => st.kill());
 });
 </script>
 

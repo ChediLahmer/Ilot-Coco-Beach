@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { uploadFile, deleteFile } from "../lib/storage.js";
+import { fileTypeFromBuffer } from "file-type";
 
 export async function galleryRoutes(app) {
   // ─── Gallery Categories ───────────────────────────────────────────
@@ -198,7 +199,15 @@ export async function galleryRoutes(app) {
       }
 
       const buffer = await file.toBuffer();
-      const url = await uploadFile(buffer, file.filename, file.mimetype);
+
+      const detected = await fileTypeFromBuffer(buffer);
+      if (!detected || !allowed.includes(detected.mime)) {
+        return reply
+          .status(400)
+          .send({ error: "File content does not match an allowed type" });
+      }
+
+      const url = await uploadFile(buffer, file.filename, detected.mime);
       const category = file.fields?.category?.value || null;
       const categoryId = file.fields?.categoryId?.value
         ? Number(file.fields.categoryId.value)
@@ -266,8 +275,10 @@ export async function galleryRoutes(app) {
         where: { id: Number(request.params.id) },
       });
       if (image) {
-        await deleteFile(image.url);
         await prisma.galleryImage.delete({ where: { id: image.id } });
+        deleteFile(image.url).catch((err) =>
+          request.log.error(err, "Failed to delete S3 file"),
+        );
       }
       return reply.status(204).send();
     },

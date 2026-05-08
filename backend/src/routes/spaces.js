@@ -123,7 +123,7 @@ export async function spacesRoutes(app) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const {
         name,
         description,
@@ -134,7 +134,7 @@ export async function spacesRoutes(app) {
         available,
         visible,
       } = request.body;
-      return prisma.space.create({
+      const space = await prisma.space.create({
         data: {
           name,
           description,
@@ -146,6 +146,7 @@ export async function spacesRoutes(app) {
           visible: visible ?? true,
         },
       });
+      return reply.status(201).send(space);
     },
   );
 

@@ -13,7 +13,7 @@ export function signToken(payload) {
 }
 
 export function verifyToken(token) {
-  return jwt.verify(token, JWT_SECRET);
+  return jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] });
 }
 
 export async function authenticate(request, reply) {

@@ -104,9 +104,12 @@ export async function menuRoutes(app) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const { name, order } = request.body;
-      return prisma.menuCategory.create({ data: { name, order: order || 0 } });
+      const cat = await prisma.menuCategory.create({
+        data: { name, order: order || 0 },
+      });
+      return reply.status(201).send(cat);
     },
   );
 
@@ -261,7 +264,7 @@ export async function menuRoutes(app) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const {
         name,
         description,
@@ -273,7 +276,7 @@ export async function menuRoutes(app) {
         categoryId,
         order,
       } = request.body;
-      return prisma.menuItem.create({
+      const item = await prisma.menuItem.create({
         data: {
           name,
           description,
@@ -286,6 +289,7 @@ export async function menuRoutes(app) {
           order: order || 0,
         },
       });
+      return reply.status(201).send(item);
     },
   );
 

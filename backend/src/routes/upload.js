@@ -1,5 +1,6 @@
 import { authenticate } from "../lib/auth.js";
 import { uploadFile } from "../lib/storage.js";
+import { fileTypeFromBuffer } from "file-type";
 
 export async function uploadRoutes(app) {
   app.post(
@@ -37,7 +38,15 @@ export async function uploadRoutes(app) {
       }
 
       const buffer = await file.toBuffer();
-      const url = await uploadFile(buffer, file.filename, file.mimetype);
+
+      const detected = await fileTypeFromBuffer(buffer);
+      if (!detected || !allowed.includes(detected.mime)) {
+        return reply
+          .status(400)
+          .send({ error: "File content does not match an allowed type" });
+      }
+
+      const url = await uploadFile(buffer, file.filename, detected.mime);
       return reply.status(201).send({ url });
     },
   );

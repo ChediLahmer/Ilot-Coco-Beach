@@ -10,6 +10,7 @@ const galleryNextCursor = ref(null);
 const galleryLoading = ref(false);
 const loading = ref(false);
 const loaded = ref(false);
+const error = ref(false);
 
 function normalizeItem(item) {
   if (item.description && !item.desc) {
@@ -21,6 +22,7 @@ function normalizeItem(item) {
 async function loadAll() {
   if (loaded.value) return;
   loading.value = true;
+  error.value = false;
 
   const results = await Promise.allSettled([
     api.getMenuCategories(),
@@ -55,8 +57,13 @@ async function loadAll() {
     galleryNextCursor.value = g.value.nextCursor;
   }
 
+  const allFailed = results.every((r) => r.status === "rejected");
+  if (allFailed) {
+    error.value = true;
+  } else {
+    loaded.value = true;
+  }
   loading.value = false;
-  loaded.value = true;
 }
 
 async function loadMoreGallery() {
@@ -84,5 +91,7 @@ export function useData() {
     galleryHasMore: galleryNextCursor,
     loadMoreGallery,
     loading,
+    error,
+    retry: loadAll,
   };
 }

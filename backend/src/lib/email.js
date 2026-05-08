@@ -6,7 +6,7 @@ export async function sendPasswordResetEmail(toEmail, resetUrl) {
   await brevo.transactionalEmails.sendTransacEmail({
     sender: {
       name: "Ilot Coco Beach",
-      email: process.env.BREVO_SENDER_EMAIL || "chedi.lahmer9@gmail.com",
+      email: process.env.BREVO_SENDER_EMAIL || "noreply@ilotcocobeach.com",
     },
     to: [{ email: toEmail }],
     subject: "Réinitialisation de votre mot de passe",
