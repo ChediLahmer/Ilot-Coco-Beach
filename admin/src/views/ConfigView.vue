@@ -8,6 +8,8 @@ const hours = ref({ fr: "", en: "", ar: "" });
 const saving = ref(false);
 const saved = ref(false);
 const uploading = ref("");
+const loading = ref(false);
+const error = ref(null);
 
 const fields = [
   { key: "name", label: "Nom du site", type: "text" },
@@ -75,20 +77,28 @@ async function removeMedia(key) {
 }
 
 async function loadData() {
-  config.value = await api.get("/config");
+  loading.value = true;
+  error.value = null;
   try {
-    const parsed = JSON.parse(config.value.hours || "{}");
-    if (typeof parsed === "object" && parsed !== null) {
-      hours.value = {
-        fr: parsed.fr || "",
-        en: parsed.en || "",
-        ar: parsed.ar || "",
-      };
-    } else {
+    config.value = await api.get("/config");
+    try {
+      const parsed = JSON.parse(config.value.hours || "{}");
+      if (typeof parsed === "object" && parsed !== null) {
+        hours.value = {
+          fr: parsed.fr || "",
+          en: parsed.en || "",
+          ar: parsed.ar || "",
+        };
+      } else {
+        hours.value = { fr: config.value.hours || "", en: "", ar: "" };
+      }
+    } catch {
       hours.value = { fr: config.value.hours || "", en: "", ar: "" };
     }
   } catch {
-    hours.value = { fr: config.value.hours || "", en: "", ar: "" };
+    error.value = "Erreur de chargement";
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -97,17 +107,23 @@ onMounted(loadData);
 async function save() {
   saving.value = true;
   saved.value = false;
-  for (const field of fields) {
-    if (config.value[field.key] !== undefined) {
-      await api.put(`/config/${field.key}`, {
-        value: String(config.value[field.key]),
-      });
+  error.value = null;
+  try {
+    for (const field of fields) {
+      if (config.value[field.key] !== undefined) {
+        await api.put(`/config/${field.key}`, {
+          value: String(config.value[field.key]),
+        });
+      }
     }
+    await api.put("/config/hours", { value: JSON.stringify(hours.value) });
+    saved.value = true;
+    setTimeout(() => (saved.value = false), 2000);
+  } catch {
+    error.value = "Erreur lors de la sauvegarde";
+  } finally {
+    saving.value = false;
   }
-  await api.put("/config/hours", { value: JSON.stringify(hours.value) });
-  saving.value = false;
-  saved.value = true;
-  setTimeout(() => (saved.value = false), 2000);
 }
 </script>
 

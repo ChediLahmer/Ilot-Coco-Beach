@@ -306,10 +306,12 @@ const lightboxIndex = ref(0);
 function openLightbox(idx) {
   lightboxIndex.value = idx;
   lightboxOpen.value = true;
+  document.body.style.overflow = "hidden";
 }
 
 function closeLightbox() {
   lightboxOpen.value = false;
+  document.body.style.overflow = "";
 }
 
 function nextImage() {

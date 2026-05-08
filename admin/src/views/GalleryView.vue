@@ -8,6 +8,8 @@ const images = ref([]);
 const categories = ref([]);
 const uploading = ref(false);
 const previewUrl = ref(null);
+const loading = ref(false);
+const error = ref(null);
 
 // Filters
 const searchQuery = ref("");
@@ -77,21 +79,34 @@ watch([searchQuery, filterCategory, sortBy], () => {
 });
 
 async function loadCategories() {
-  categories.value = await api.get("/gallery/categories");
+  try {
+    categories.value = await api.get("/gallery/categories");
+  } catch {
+    error.value = "Erreur de chargement des catégories";
+  }
 }
 
 async function loadData() {
-  let all = [];
-  let cursor = undefined;
-  while (true) {
-    const res = await api.get(
-      `/gallery?limit=50${cursor ? `&cursor=${cursor}` : ""}`,
-    );
-    all = [...all, ...res.items];
-    if (!res.nextCursor) break;
-    cursor = res.nextCursor;
+  loading.value = true;
+  error.value = null;
+  try {
+    let all = [];
+    let cursor = undefined;
+    const MAX_PAGES = 50;
+    for (let i = 0; i < MAX_PAGES; i++) {
+      const res = await api.get(
+        `/gallery?limit=50${cursor ? `&cursor=${cursor}` : ""}`,
+      );
+      all = [...all, ...res.items];
+      if (!res.nextCursor) break;
+      cursor = res.nextCursor;
+    }
+    images.value = all;
+  } catch {
+    error.value = "Erreur de chargement";
+  } finally {
+    loading.value = false;
   }
-  images.value = all;
 }
 
 onMounted(async () => {
@@ -103,28 +118,45 @@ async function handleUpload(event) {
   const files = event.target.files;
   if (!files.length) return;
   uploading.value = true;
-  for (const file of files) {
-    await api.upload("/gallery", file);
+  try {
+    for (const file of files) {
+      await api.upload("/gallery", file);
+    }
+    event.target.value = "";
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de l'upload";
+  } finally {
+    uploading.value = false;
   }
-  uploading.value = false;
-  event.target.value = "";
-  await loadData();
 }
 
 async function updateImage(img, data) {
-  await api.put(`/gallery/${img.id}`, data);
-  await loadData();
+  try {
+    await api.put(`/gallery/${img.id}`, data);
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
 
 async function remove(img) {
   if (!confirm("Supprimer cette image ?")) return;
-  await api.del(`/gallery/${img.id}`);
-  await loadData();
+  try {
+    await api.del(`/gallery/${img.id}`);
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la suppression";
+  }
 }
 
 async function toggleVisible(img) {
-  await api.put(`/gallery/${img.id}`, { visible: !img.visible });
-  await loadData();
+  try {
+    await api.put(`/gallery/${img.id}`, { visible: !img.visible });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
 
 // Category CRUD
@@ -137,24 +169,42 @@ function openCatModal(cat = null) {
 }
 
 async function saveCat() {
-  if (editingCat.value) {
-    await api.put(`/gallery/categories/${editingCat.value.id}`, catForm.value);
-  } else {
-    await api.post("/gallery/categories", catForm.value);
+  try {
+    if (editingCat.value) {
+      await api.put(
+        `/gallery/categories/${editingCat.value.id}`,
+        catForm.value,
+      );
+    } else {
+      await api.post("/gallery/categories", catForm.value);
+    }
+    showCatModal.value = false;
+    await loadCategories();
+  } catch {
+    error.value = "Erreur lors de la sauvegarde";
   }
-  showCatModal.value = false;
-  await loadCategories();
 }
 
 async function deleteCat(cat) {
   if (!confirm(`Supprimer la catégorie "${cat.name.fr}" ?`)) return;
-  await api.del(`/gallery/categories/${cat.id}`);
-  await loadCategories();
+  try {
+    await api.del(`/gallery/categories/${cat.id}`);
+    await loadCategories();
+  } catch {
+    error.value = "Erreur lors de la suppression";
+  }
 }
 </script>
 
 <template>
   <div>
+    <div
+      v-if="error"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm"
+    >
+      {{ error }}
+      <button @click="error = null" class="ml-2 underline">Fermer</button>
+    </div>
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4"
     >

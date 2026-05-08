@@ -207,7 +207,7 @@ const { t, locale } = useI18n();
 const { menuCategories } = useData();
 
 const priceMode = ref("standard");
-const activeCategory = ref(menuCategories.value[0]?.id || 1);
+const activeCategory = ref(menuCategories.value[0]?.id || null);
 
 const menuPrev = ref(null);
 const menuNext = ref(null);

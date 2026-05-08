@@ -55,6 +55,7 @@ async function handleSubmit() {
               v-model="email"
               type="email"
               required
+              autocomplete="email"
               class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
               placeholder="admin@ilotcocobeach.tn"
             />
@@ -67,6 +68,7 @@ async function handleSubmit() {
               v-model="password"
               type="password"
               required
+              autocomplete="current-password"
               class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
             />
           </div>

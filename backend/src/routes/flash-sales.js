@@ -151,8 +151,24 @@ export async function flashSalesRoutes(app) {
       },
     },
     async (request) => {
-      const data = { ...request.body };
-      if (data.endsAt) data.endsAt = new Date(data.endsAt);
+      const {
+        title,
+        description,
+        discountPercent,
+        image,
+        endsAt,
+        isActive,
+        visible,
+      } = request.body;
+      const data = {
+        title,
+        description,
+        discountPercent,
+        image,
+        isActive,
+        visible,
+      };
+      if (endsAt) data.endsAt = new Date(endsAt);
       return prisma.flashSale.update({
         where: { id: Number(request.params.id) },
         data,

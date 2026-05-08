@@ -314,14 +314,4 @@ function formatVoucherDate(dateStr) {
 function scrollToReservation() {
   router.push("/#reservation");
 }
-
-onMounted(() => {
-  countdownTimer = setInterval(() => {
-    now.value = Date.now();
-  }, 1000);
-});
-
-onUnmounted(() => {
-  if (countdownTimer) clearInterval(countdownTimer);
-});
 </script>

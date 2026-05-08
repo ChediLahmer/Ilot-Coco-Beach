@@ -53,6 +53,11 @@ const routes = [
         component: () => import("@/views/VouchersView.vue"),
       },
       {
+        path: "reviews",
+        name: "reviews",
+        component: () => import("@/views/ReviewsView.vue"),
+      },
+      {
         path: "config",
         name: "config",
         component: () => import("@/views/ConfigView.vue"),
@@ -68,7 +73,17 @@ export const router = createRouter({
 
 router.beforeEach((to) => {
   const { token } = useAuth();
-  if (to.meta.requiresAuth && !token.value) {
-    return { name: "login" };
+  if (to.meta.requiresAuth) {
+    if (!token.value) return { name: "login" };
+    try {
+      const payload = JSON.parse(atob(token.value.split(".")[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        useAuth().logout();
+        return { name: "login" };
+      }
+    } catch {
+      useAuth().logout();
+      return { name: "login" };
+    }
   }
 });

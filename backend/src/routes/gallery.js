@@ -90,6 +90,7 @@ export async function galleryRoutes(app) {
   app.get(
     "/count",
     {
+      preHandler: optionalAuth,
       schema: {
         tags: ["Gallery"],
         summary: "Get total image count",
@@ -98,8 +99,9 @@ export async function galleryRoutes(app) {
         },
       },
     },
-    async () => {
-      const total = await prisma.galleryImage.count();
+    async (request) => {
+      const where = request.admin ? {} : { visible: true };
+      const total = await prisma.galleryImage.count({ where });
       return { total };
     },
   );
@@ -160,6 +162,7 @@ export async function galleryRoutes(app) {
             order: { type: "integer" },
             alt: { type: "string" },
             category: { type: "string" },
+            categoryId: { type: "integer", nullable: true },
             visible: { type: "boolean" },
           },
         },

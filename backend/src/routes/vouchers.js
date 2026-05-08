@@ -64,8 +64,14 @@ export async function vouchersRoutes(app) {
         prisma.voucher.findMany({ where, orderBy, take: limit, skip: offset }),
         prisma.voucher.count({ where }),
       ]);
+      const safeItems = request.admin
+        ? items
+        : items.map(({ code, ...rest }) => ({
+            ...rest,
+            code: code.slice(0, 2) + "***",
+          }));
       return {
-        items,
+        items: safeItems,
         total,
         page: Number(page) || 1,
         totalPages: Math.ceil(total / limit),
@@ -131,8 +137,10 @@ export async function vouchersRoutes(app) {
       },
     },
     async (request) => {
-      const data = { ...request.body };
-      if (data.validUntil) data.validUntil = new Date(data.validUntil);
+      const { code, discountPercent, validUntil, isActive, visible } =
+        request.body;
+      const data = { code, discountPercent, isActive, visible };
+      if (validUntil) data.validUntil = new Date(validUntil);
       return prisma.voucher.update({
         where: { id: Number(request.params.id) },
         data,

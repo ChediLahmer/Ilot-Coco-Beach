@@ -168,7 +168,7 @@
                   {{ review.userName }}
                 </p>
                 <p class="mt-1 text-sm text-charcoal/45">
-                  {{ formatDate(review.date) }}
+                  {{ formatDate(review.createdAt) }}
                 </p>
               </div>
             </article>

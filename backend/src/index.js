@@ -54,10 +54,12 @@ await app.register(swagger, {
   },
 });
 
-await app.register(swaggerUi, {
-  routePrefix: "/docs",
-  uiConfig: { docExpansion: "list", deepLinking: true },
-});
+if (process.env.NODE_ENV !== "production") {
+  await app.register(swaggerUi, {
+    routePrefix: "/docs",
+    uiConfig: { docExpansion: "list", deepLinking: true },
+  });
+}
 
 await app.register(cors, {
   origin: (

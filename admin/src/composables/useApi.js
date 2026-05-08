@@ -1,4 +1,5 @@
 import { useAuth } from "./useAuth.js";
+import { router } from "../router.js";
 
 const BASE = import.meta.env.VITE_API_URL || "/api";
 const UPLOAD_BASE =
@@ -19,7 +20,7 @@ async function request(path, options = {}) {
   const res = await fetch(`${base}${path}`, { ...options, headers });
   if (res.status === 401) {
     useAuth().logout();
-    window.location.href = "/login";
+    router.push("/login");
     throw new Error("Unauthorized");
   }
   if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);

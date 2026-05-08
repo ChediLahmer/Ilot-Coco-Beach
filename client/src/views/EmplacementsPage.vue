@@ -187,7 +187,7 @@ onUnmounted(() => {
             <img
               v-if="emp.image"
               :src="emp.image"
-              :alt="emp.name[locale]"
+              :alt="emp.name[locale] || emp.name.fr"
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               decoding="async"
@@ -220,12 +220,12 @@ onUnmounted(() => {
           <!-- Content -->
           <div class="p-5">
             <h3 class="font-display text-ocean text-xl leading-snug">
-              {{ emp.name[locale] }}
+              {{ emp.name[locale] || emp.name.fr }}
             </h3>
             <p
               class="text-charcoal/65 text-sm leading-relaxed mt-2 line-clamp-3"
             >
-              {{ emp.desc[locale] }}
+              {{ emp.desc[locale] || emp.desc.fr }}
             </p>
 
             <div class="flex items-center gap-3 mt-4">

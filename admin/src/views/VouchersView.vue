@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -10,6 +10,9 @@ const totalItems = ref(0);
 const showModal = ref(false);
 const editing = ref(null);
 const form = ref(resetForm());
+const loading = ref(false);
+const saving = ref(false);
+const error = ref(null);
 
 // Search, filter, sort, pagination
 const searchQuery = ref("");
@@ -36,9 +39,17 @@ function buildQuery() {
 }
 
 async function loadData() {
-  const res = await api.get(`/vouchers?${buildQuery()}`);
-  vouchers.value = res.items;
-  totalItems.value = res.total;
+  loading.value = true;
+  error.value = null;
+  try {
+    const res = await api.get(`/vouchers?${buildQuery()}`);
+    vouchers.value = res.items;
+    totalItems.value = res.total;
+  } catch {
+    error.value = "Erreur de chargement";
+  } finally {
+    loading.value = false;
+  }
 }
 
 watch([filterStatus, sortBy, page], loadData);
@@ -77,34 +88,56 @@ function openModal(v = null) {
 }
 
 async function save() {
-  const payload = {
-    ...form.value,
-    discountPercent: Number(form.value.discountPercent),
-  };
-  if (editing.value) {
-    await api.put(`/vouchers/${editing.value.id}`, payload);
-  } else {
-    await api.post("/vouchers", payload);
+  saving.value = true;
+  error.value = null;
+  try {
+    const payload = {
+      ...form.value,
+      discountPercent: Number(form.value.discountPercent),
+    };
+    if (editing.value) {
+      await api.put(`/vouchers/${editing.value.id}`, payload);
+    } else {
+      await api.post("/vouchers", payload);
+    }
+    showModal.value = false;
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la sauvegarde";
+  } finally {
+    saving.value = false;
   }
-  showModal.value = false;
-  await loadData();
 }
 
 async function remove(v) {
   if (!confirm(`Supprimer le voucher "${v.code}" ?`)) return;
-  await api.del(`/vouchers/${v.id}`);
-  await loadData();
+  try {
+    await api.del(`/vouchers/${v.id}`);
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la suppression";
+  }
 }
 
 async function toggleActive(v) {
-  await api.put(`/vouchers/${v.id}`, { isActive: !v.isActive });
-  await loadData();
+  try {
+    await api.put(`/vouchers/${v.id}`, { isActive: !v.isActive });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
 
 async function toggleVisible(v) {
-  await api.put(`/vouchers/${v.id}`, { visible: !v.visible });
-  await loadData();
+  try {
+    await api.put(`/vouchers/${v.id}`, { visible: !v.visible });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
+
+onUnmounted(() => clearTimeout(debounceTimer));
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString("fr-FR");
@@ -113,6 +146,13 @@ function formatDate(d) {
 
 <template>
   <div>
+    <div
+      v-if="error"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm"
+    >
+      {{ error }}
+      <button @click="error = null" class="ml-2 underline">Fermer</button>
+    </div>
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4"
     >

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -12,6 +12,9 @@ const editing = ref(null);
 const form = ref(resetForm());
 const imagePreview = ref(null);
 const removeImage = ref(false);
+const loading = ref(false);
+const saving = ref(false);
+const error = ref(null);
 
 // Search, filter, sort, pagination
 const searchQuery = ref("");
@@ -41,9 +44,17 @@ function buildQuery() {
 }
 
 async function loadData() {
-  const res = await api.get(`/spaces?${buildQuery()}`);
-  spaces.value = res.items;
-  totalItems.value = res.total;
+  loading.value = true;
+  error.value = null;
+  try {
+    const res = await api.get(`/spaces?${buildQuery()}`);
+    spaces.value = res.items;
+    totalItems.value = res.total;
+  } catch {
+    error.value = "Erreur de chargement";
+  } finally {
+    loading.value = false;
+  }
 }
 
 watch([filterStatus, sortBy, page], loadData);
@@ -66,6 +77,7 @@ function onFileChange(e) {
   const file = e.target.files[0];
   form.value.imageFile = file;
   if (file) {
+    if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
     imagePreview.value = URL.createObjectURL(file);
     removeImage.value = false;
   } else {
@@ -112,51 +124,83 @@ function openModal(space = null) {
 }
 
 async function save() {
-  let imageUrl = editing.value?.image || null;
-  if (removeImage.value) {
-    imageUrl = null;
-  } else if (form.value.imageFile) {
-    const res = await api.upload("/upload", form.value.imageFile);
-    imageUrl = res.url;
+  saving.value = true;
+  error.value = null;
+  try {
+    let imageUrl = editing.value?.image || null;
+    if (removeImage.value) {
+      imageUrl = null;
+    } else if (form.value.imageFile) {
+      const res = await api.upload("/upload", form.value.imageFile);
+      imageUrl = res.url;
+    }
+    const payload = {
+      name: form.value.name,
+      description: form.value.description,
+      price: Number(form.value.price),
+      capacity: Number(form.value.capacity),
+      available: form.value.available,
+      visible: form.value.visible,
+      order: form.value.order,
+      image: imageUrl,
+    };
+    if (editing.value) {
+      await api.put(`/spaces/${editing.value.id}`, payload);
+    } else {
+      await api.post("/spaces", payload);
+    }
+    showModal.value = false;
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la sauvegarde";
+  } finally {
+    saving.value = false;
   }
-  const payload = {
-    name: form.value.name,
-    description: form.value.description,
-    price: Number(form.value.price),
-    capacity: Number(form.value.capacity),
-    available: form.value.available,
-    visible: form.value.visible,
-    order: form.value.order,
-    image: imageUrl,
-  };
-  if (editing.value) {
-    await api.put(`/spaces/${editing.value.id}`, payload);
-  } else {
-    await api.post("/spaces", payload);
-  }
-  showModal.value = false;
-  await loadData();
 }
 
 async function remove(space) {
   if (!confirm(`Supprimer "${space.name.fr}" ?`)) return;
-  await api.del(`/spaces/${space.id}`);
-  await loadData();
+  try {
+    await api.del(`/spaces/${space.id}`);
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la suppression";
+  }
 }
 
 async function toggleAvailability(space) {
-  await api.put(`/spaces/${space.id}`, { available: !space.available });
-  await loadData();
+  try {
+    await api.put(`/spaces/${space.id}`, { available: !space.available });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
 
 async function toggleVisible(space) {
-  await api.put(`/spaces/${space.id}`, { visible: !space.visible });
-  await loadData();
+  try {
+    await api.put(`/spaces/${space.id}`, { visible: !space.visible });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
+
+onUnmounted(() => {
+  clearTimeout(debounceTimer);
+  if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
+});
 </script>
 
 <template>
   <div>
+    <div
+      v-if="error"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm"
+    >
+      {{ error }}
+      <button @click="error = null" class="ml-2 underline">Fermer</button>
+    </div>
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4"
     >

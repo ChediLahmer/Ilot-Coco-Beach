@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -11,6 +11,9 @@ const showCatModal = ref(false);
 const showItemModal = ref(false);
 const editingCat = ref(null);
 const editingItem = ref(null);
+const loading = ref(false);
+const saving = ref(false);
+const error = ref(null);
 
 // Search, sort & pagination
 const itemSearch = ref("");
@@ -41,6 +44,7 @@ function onItemFileChange(e) {
   const file = e.target.files[0];
   itemForm.value.image = file;
   if (file) {
+    if (itemImagePreview.value) URL.revokeObjectURL(itemImagePreview.value);
     itemImagePreview.value = URL.createObjectURL(file);
     removeItemImage.value = false;
   } else {
@@ -83,10 +87,18 @@ const paginatedItems = computed(() => {
 });
 
 async function loadData() {
-  const sort = itemSort.value !== "order" ? `?sort=${itemSort.value}` : "";
-  categories.value = await api.get(`/menu/categories${sort}`);
-  if (!activeCategory.value && categories.value.length) {
-    activeCategory.value = categories.value[0].id;
+  loading.value = true;
+  error.value = null;
+  try {
+    const sort = itemSort.value !== "order" ? `?sort=${itemSort.value}` : "";
+    categories.value = await api.get(`/menu/categories${sort}`);
+    if (!activeCategory.value && categories.value.length) {
+      activeCategory.value = categories.value[0].id;
+    }
+  } catch {
+    error.value = "Erreur de chargement";
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -102,21 +114,33 @@ function openCatModal(cat = null) {
 }
 
 async function saveCat() {
-  if (editingCat.value) {
-    await api.put(`/menu/categories/${editingCat.value.id}`, catForm.value);
-  } else {
-    await api.post("/menu/categories", catForm.value);
+  saving.value = true;
+  error.value = null;
+  try {
+    if (editingCat.value) {
+      await api.put(`/menu/categories/${editingCat.value.id}`, catForm.value);
+    } else {
+      await api.post("/menu/categories", catForm.value);
+    }
+    showCatModal.value = false;
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la sauvegarde";
+  } finally {
+    saving.value = false;
   }
-  showCatModal.value = false;
-  await loadData();
 }
 
 async function deleteCat(cat) {
   if (!confirm(`Supprimer la catégorie "${cat.name.fr}" et tous ses plats ?`))
     return;
-  await api.del(`/menu/categories/${cat.id}`);
-  if (activeCategory.value === cat.id) activeCategory.value = null;
-  await loadData();
+  try {
+    await api.del(`/menu/categories/${cat.id}`);
+    if (activeCategory.value === cat.id) activeCategory.value = null;
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la suppression";
+  }
 }
 
 function openItemModal(item = null) {
@@ -148,52 +172,83 @@ function openItemModal(item = null) {
 }
 
 async function saveItem() {
-  let imageUrl = editingItem.value?.image || null;
-  if (removeItemImage.value) {
-    imageUrl = null;
-  } else if (itemForm.value.image) {
-    const res = await api.upload("/upload", itemForm.value.image);
-    imageUrl = res.url;
+  saving.value = true;
+  error.value = null;
+  try {
+    let imageUrl = editingItem.value?.image || null;
+    if (removeItemImage.value) {
+      imageUrl = null;
+    } else if (itemForm.value.image) {
+      const res = await api.upload("/upload", itemForm.value.image);
+      imageUrl = res.url;
+    }
+    const payload = {
+      name: itemForm.value.name,
+      description: itemForm.value.description,
+      priceStandard: Number(itemForm.value.priceStandard),
+      priceExtra: Number(itemForm.value.priceExtra),
+      available: itemForm.value.available,
+      visible: itemForm.value.visible,
+      order: itemForm.value.order,
+      categoryId: activeCategory.value,
+      image: imageUrl,
+    };
+    if (editingItem.value) {
+      await api.put(`/menu/items/${editingItem.value.id}`, payload);
+    } else {
+      await api.post("/menu/items", payload);
+    }
+    showItemModal.value = false;
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la sauvegarde";
+  } finally {
+    saving.value = false;
   }
-  const payload = {
-    name: itemForm.value.name,
-    description: itemForm.value.description,
-    priceStandard: Number(itemForm.value.priceStandard),
-    priceExtra: Number(itemForm.value.priceExtra),
-    available: itemForm.value.available,
-    visible: itemForm.value.visible,
-    order: itemForm.value.order,
-    categoryId: activeCategory.value,
-    image: imageUrl,
-  };
-  if (editingItem.value) {
-    await api.put(`/menu/items/${editingItem.value.id}`, payload);
-  } else {
-    await api.post("/menu/items", payload);
-  }
-  showItemModal.value = false;
-  await loadData();
 }
 
 async function deleteItem(item) {
   if (!confirm(`Supprimer "${item.name.fr}" ?`)) return;
-  await api.del(`/menu/items/${item.id}`);
-  await loadData();
+  try {
+    await api.del(`/menu/items/${item.id}`);
+    await loadData();
+  } catch {
+    error.value = "Erreur lors de la suppression";
+  }
 }
 
 async function toggleAvailability(item) {
-  await api.put(`/menu/items/${item.id}`, { available: !item.available });
-  await loadData();
+  try {
+    await api.put(`/menu/items/${item.id}`, { available: !item.available });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
 
 async function toggleVisible(item) {
-  await api.put(`/menu/items/${item.id}`, { visible: !item.visible });
-  await loadData();
+  try {
+    await api.put(`/menu/items/${item.id}`, { visible: !item.visible });
+    await loadData();
+  } catch {
+    error.value = "Erreur de mise à jour";
+  }
 }
+
+onUnmounted(() => {
+  if (itemImagePreview.value) URL.revokeObjectURL(itemImagePreview.value);
+});
 </script>
 
 <template>
   <div>
+    <div
+      v-if="error"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm"
+    >
+      {{ error }}
+      <button @click="error = null" class="ml-2 underline">Fermer</button>
+    </div>
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4"
     >
