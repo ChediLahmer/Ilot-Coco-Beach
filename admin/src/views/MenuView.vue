@@ -294,10 +294,10 @@ async function toggleVisible(item) {
       class="rounded-2xl border border-border bg-surface shadow-sm overflow-x-auto"
     >
       <div
-        class="flex flex-wrap justify-between items-center gap-3 px-6 py-4 border-b border-border"
+        class="flex flex-col sm:flex-row sm:flex-wrap justify-between items-stretch sm:items-center gap-3 px-4 sm:px-6 py-4 border-b border-border"
       >
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-          <div class="relative flex-1 max-w-xs min-w-[160px]">
+        <div class="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
+          <div class="relative flex-1 max-w-xs min-w-[140px]">
             <svg
               class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
               fill="none"
@@ -333,7 +333,7 @@ async function toggleVisible(item) {
         <button
           @click="openItemModal()"
           :disabled="!activeCategory"
-          class="inline-flex items-center gap-2 rounded-lg bg-success px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="inline-flex items-center justify-center gap-2 rounded-lg bg-success px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
         >
           <svg
             class="h-4 w-4"
