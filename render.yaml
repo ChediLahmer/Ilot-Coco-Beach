@@ -11,7 +11,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: rm -f package-lock.json && npm install --include=dev && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate deploy
+    buildCommand: rm -f package-lock.json && npm install --include=dev && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate deploy && node prisma/seed.js
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
@@ -60,24 +60,6 @@ services:
         sync: false
       - key: NODE_VERSION
         value: "20.19.0"
-      - key: VITE_BUSINESS_NAME
-        value: Ilot Coco Beach
-      - key: VITE_BUSINESS_PHONE
-        value: "+216 99 123 456"
-      - key: VITE_BUSINESS_WHATSAPP
-        value: "21699123456"
-      - key: VITE_BUSINESS_EMAIL
-        value: contact@ilotcocobeach.com
-      - key: VITE_BUSINESS_ADDRESS
-        value: "Ghar El Melh, Bizerte, Tunisie"
-      - key: VITE_BUSINESS_LATITUDE
-        value: "37.1476125"
-      - key: VITE_BUSINESS_LONGITUDE
-        value: "10.2133906"
-      - key: VITE_INSTAGRAM_URL
-        value: https://www.instagram.com/ilotcocobeach
-      - key: VITE_FACEBOOK_URL
-        value: https://www.facebook.com/IlotCocoBeach
 
   # ─── Admin panel ────────────────────────────────────────
   - type: web
