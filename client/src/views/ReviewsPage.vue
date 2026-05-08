@@ -90,6 +90,8 @@
                   <input
                     v-model="form.userName"
                     type="text"
+                    required
+                    maxlength="100"
                     :placeholder="copy.namePlaceholder"
                     class="booking-field"
                   />
@@ -126,6 +128,8 @@
                   <textarea
                     v-model="form.comment"
                     rows="5"
+                    required
+                    maxlength="2000"
                     :placeholder="copy.commentPlaceholder"
                     class="booking-field resize-none"
                   />
@@ -141,6 +145,9 @@
 
                   <p v-if="successMessage" class="text-sm text-leaf">
                     {{ successMessage }}
+                  </p>
+                  <p v-if="formError" class="text-sm text-red-500">
+                    {{ formError }}
                   </p>
                 </div>
               </form>
@@ -199,6 +206,7 @@ const form = reactive({
 });
 
 const successMessage = ref("");
+const formError = ref("");
 
 const copy = computed(
   () =>
@@ -271,13 +279,26 @@ const copy = computed(
 );
 
 function submitReview() {
-  if (!form.userName.trim() || !form.comment.trim()) return;
+  formError.value = "";
+  if (!form.userName.trim()) {
+    formError.value = "Veuillez saisir votre nom.";
+    return;
+  }
+  if (!form.comment.trim()) {
+    formError.value = "Veuillez saisir un commentaire.";
+    return;
+  }
 
-  addReview({
-    userName: form.userName,
-    comment: form.comment,
-    rating: form.rating,
-  });
+  try {
+    addReview({
+      userName: form.userName,
+      comment: form.comment,
+      rating: form.rating,
+    });
+  } catch {
+    formError.value = "Erreur lors de l'envoi de votre avis. Réessayez.";
+    return;
+  }
 
   form.userName = "";
   form.comment = "";

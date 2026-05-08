@@ -1,8 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useFormValidation } from "@/composables/useFormValidation.js";
+import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
+
+const { fieldErrors, clearErrors, validateRequired, validateMin, hasErrors } =
+  useFormValidation();
 
 const api = useApi();
 const spaces = ref([]);
@@ -124,6 +129,11 @@ function openModal(space = null) {
 }
 
 async function save() {
+  clearErrors();
+  validateRequired(form.value.name.fr, "nameFr", "Nom (FR)");
+  validateMin(form.value.price, "price", "Prix", 0);
+  validateMin(form.value.capacity, "capacity", "Capacité", 1);
+  if (hasErrors()) return;
   saving.value = true;
   error.value = null;
   try {
@@ -446,8 +456,12 @@ onUnmounted(() => {
               >
               <input
                 v-model="form.name.fr"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                required
+                maxlength="200"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="fieldErrors.nameFr ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.nameFr" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -511,8 +525,11 @@ onUnmounted(() => {
                 v-model.number="form.price"
                 type="number"
                 step="0.01"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                min="0"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="fieldErrors.price ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.price" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -521,8 +538,13 @@ onUnmounted(() => {
               <input
                 v-model.number="form.capacity"
                 type="number"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                min="1"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="
+                  fieldErrors.capacity ? 'border-danger' : 'border-border'
+                "
               />
+              <FieldError :message="fieldErrors.capacity" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"

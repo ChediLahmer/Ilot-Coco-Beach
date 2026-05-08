@@ -71,6 +71,7 @@
       "three": "Need the full menu or a group package? The team shares it directly when you get in touch."
     },
     "viewAll": "View full menu",
+    "showMore": "Show {count} more dishes",
     "reserveCta": "Request a table",
     "standard": "Standard",
     "extra": "Extra",

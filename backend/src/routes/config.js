@@ -1,6 +1,26 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate } from "../lib/auth.js";
 
+const ALLOWED_CONFIG_KEYS = new Set([
+  "name",
+  "email",
+  "phone",
+  "whatsapp",
+  "instagram",
+  "messenger",
+  "facebook",
+  "tiktok",
+  "address",
+  "lat",
+  "lng",
+  "satisfaction_rate",
+  "hours",
+  "hero_video",
+  "hero_poster",
+  "section_video",
+  "section_poster",
+]);
+
 export async function configRoutes(app) {
   app.get(
     "/",
@@ -32,12 +52,13 @@ export async function configRoutes(app) {
         security: [{ BearerAuth: [] }],
         params: {
           type: "object",
-          properties: { key: { type: "string" } },
+          properties: { key: { type: "string", maxLength: 50 } },
         },
         body: {
           type: "object",
           required: ["value"],
-          properties: { value: { type: "string" } },
+          additionalProperties: false,
+          properties: { value: { type: "string", maxLength: 10000 } },
         },
         response: {
           200: {
@@ -51,7 +72,11 @@ export async function configRoutes(app) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
+      const { key } = request.params;
+      if (!ALLOWED_CONFIG_KEYS.has(key)) {
+        return reply.status(400).send({ error: `Invalid config key: ${key}` });
+      }
       const { value } = request.body;
       return prisma.siteConfig.upsert({
         where: { key: request.params.key },

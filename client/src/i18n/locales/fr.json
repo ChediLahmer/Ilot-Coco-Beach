@@ -50,6 +50,7 @@
       "three": "Besoin de la carte complète ou d'une formule groupe ? L'équipe la partage directement lors de votre prise de contact."
     },
     "viewAll": "Voir toute la carte",
+    "showMore": "Voir les {count} autres plats",
     "reserveCta": "Demander une table",
     "standard": "Standard",
     "extra": "Extra",

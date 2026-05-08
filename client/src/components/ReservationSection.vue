@@ -138,7 +138,7 @@ const whatsappUrl = computed(() => {
 });
 
 const messengerUrl = computed(() => {
-  const fbId = config.facebook.split("/").filter(Boolean).pop();
-  return `https://m.me/${fbId}`;
+  const fbId = (config.facebook || "").split("/").filter(Boolean).pop();
+  return `https://m.me/${fbId || ""}`;
 });
 </script>

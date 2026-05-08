@@ -75,6 +75,7 @@ export async function reviewRoutes(app) {
         params: { type: "object", properties: { id: { type: "integer" } } },
         body: {
           type: "object",
+          additionalProperties: false,
           properties: { visible: { type: "boolean" } },
         },
       },

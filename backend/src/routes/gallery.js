@@ -10,7 +10,32 @@ export async function galleryRoutes(app) {
 
   app.post(
     "/categories",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: {
+        tags: ["Gallery"],
+        summary: "Create a gallery category",
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: "object",
+          required: ["name"],
+          additionalProperties: false,
+          properties: {
+            name: {
+              type: "object",
+              required: ["fr"],
+              properties: {
+                fr: { type: "string", minLength: 1, maxLength: 200 },
+                en: { type: "string", maxLength: 200 },
+                ar: { type: "string", maxLength: 200 },
+              },
+              additionalProperties: false,
+            },
+            order: { type: "integer", minimum: 0 },
+          },
+        },
+      },
+    },
     async (request, reply) => {
       const { name, order } = request.body;
       const cat = await prisma.galleryCategory.create({
@@ -20,20 +45,58 @@ export async function galleryRoutes(app) {
     },
   );
 
-  app.put("/categories/:id", { preHandler: authenticate }, async (request) => {
-    const { name, order } = request.body;
-    const data = {};
-    if (name !== undefined) data.name = name;
-    if (order !== undefined) data.order = order;
-    return prisma.galleryCategory.update({
-      where: { id: Number(request.params.id) },
-      data,
-    });
-  });
+  app.put(
+    "/categories/:id",
+    {
+      preHandler: authenticate,
+      schema: {
+        tags: ["Gallery"],
+        summary: "Update a gallery category",
+        security: [{ BearerAuth: [] }],
+        params: { type: "object", properties: { id: { type: "integer" } } },
+        body: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            name: {
+              type: "object",
+              required: ["fr"],
+              properties: {
+                fr: { type: "string", minLength: 1, maxLength: 200 },
+                en: { type: "string", maxLength: 200 },
+                ar: { type: "string", maxLength: 200 },
+              },
+              additionalProperties: false,
+            },
+            order: { type: "integer", minimum: 0 },
+          },
+        },
+      },
+    },
+    async (request) => {
+      const { name, order } = request.body;
+      const data = {};
+      if (name !== undefined) data.name = name;
+      if (order !== undefined) data.order = order;
+      return prisma.galleryCategory.update({
+        where: { id: Number(request.params.id) },
+        data,
+      });
+    },
+  );
 
   app.delete(
     "/categories/:id",
-    { preHandler: authenticate },
+    {
+      preHandler: authenticate,
+      schema: {
+        tags: ["Gallery"],
+        summary: "Delete a gallery category",
+        security: [{ BearerAuth: [] }],
+        params: { type: "object", properties: { id: { type: "integer" } } },
+        response: { 204: { type: "null" } },
+      },
+    },
     async (request, reply) => {
       await prisma.galleryCategory.delete({
         where: { id: Number(request.params.id) },
@@ -158,10 +221,11 @@ export async function galleryRoutes(app) {
         params: { type: "object", properties: { id: { type: "integer" } } },
         body: {
           type: "object",
+          additionalProperties: false,
           properties: {
-            order: { type: "integer" },
-            alt: { type: "string" },
-            category: { type: "string" },
+            order: { type: "integer", minimum: 0 },
+            alt: { type: "string", maxLength: 500 },
+            category: { type: "string", maxLength: 200 },
             categoryId: { type: "integer", nullable: true },
             visible: { type: "boolean" },
           },

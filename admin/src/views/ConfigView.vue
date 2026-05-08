@@ -198,6 +198,13 @@ async function save() {
     </div>
 
     <div
+      v-if="error"
+      class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+    >
+      {{ error }}
+    </div>
+
+    <div
       class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
     >
       <div class="divide-y divide-border">
@@ -208,6 +215,8 @@ async function save() {
           <input
             v-model="config[field.key]"
             :type="field.type"
+            :min="field.key === 'satisfaction_rate' ? 0 : undefined"
+            :max="field.key === 'satisfaction_rate' ? 100 : undefined"
             class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
           />
         </div>

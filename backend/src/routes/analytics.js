@@ -14,6 +14,7 @@ export async function analyticsRoutes(app) {
         body: {
           type: "object",
           required: ["event"],
+          additionalProperties: false,
           properties: {
             event: { type: "string", enum: ["page_view", "click_reserve"] },
             path: { type: "string", maxLength: 500 },
@@ -42,7 +43,7 @@ export async function analyticsRoutes(app) {
         querystring: {
           type: "object",
           properties: {
-            days: { type: "integer", default: 30 },
+            days: { type: "integer", default: 30, minimum: 1, maximum: 365 },
           },
         },
       },

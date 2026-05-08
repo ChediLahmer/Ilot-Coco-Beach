@@ -1,8 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useFormValidation } from "@/composables/useFormValidation.js";
+import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 
+const { fieldErrors, clearErrors, validateRequired, hasErrors } =
+  useFormValidation();
 const api = useApi();
 const images = ref([]);
 const categories = ref([]);
@@ -169,6 +173,9 @@ function openCatModal(cat = null) {
 }
 
 async function saveCat() {
+  clearErrors();
+  validateRequired(catForm.value.name.fr, "nameFr", "Nom (FR)");
+  if (hasErrors()) return;
   try {
     if (editingCat.value) {
       await api.put(
@@ -509,8 +516,12 @@ async function deleteCat(cat) {
               >
               <input
                 v-model="catForm.name.fr"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                required
+                maxlength="200"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                :class="fieldErrors.nameFr ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.nameFr" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"

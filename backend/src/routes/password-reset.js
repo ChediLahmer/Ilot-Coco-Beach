@@ -13,7 +13,10 @@ export async function passwordResetRoutes(app) {
         body: {
           type: "object",
           required: ["email"],
-          properties: { email: { type: "string", format: "email" } },
+          additionalProperties: false,
+          properties: {
+            email: { type: "string", format: "email", maxLength: 254 },
+          },
         },
         response: {
           200: {
@@ -72,9 +75,15 @@ export async function passwordResetRoutes(app) {
         body: {
           type: "object",
           required: ["token", "password"],
+          additionalProperties: false,
           properties: {
-            token: { type: "string" },
-            password: { type: "string", minLength: 6 },
+            token: {
+              type: "string",
+              minLength: 64,
+              maxLength: 64,
+              pattern: "^[a-f0-9]+$",
+            },
+            password: { type: "string", minLength: 6, maxLength: 128 },
           },
         },
         response: {

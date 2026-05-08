@@ -91,11 +91,29 @@ export async function flashSalesRoutes(app) {
         body: {
           type: "object",
           required: ["title", "discountPercent", "endsAt"],
+          additionalProperties: false,
           properties: {
-            title: { type: "object" },
-            description: { type: "object" },
+            title: {
+              type: "object",
+              required: ["fr"],
+              properties: {
+                fr: { type: "string", minLength: 1, maxLength: 200 },
+                en: { type: "string", maxLength: 200 },
+                ar: { type: "string", maxLength: 200 },
+              },
+              additionalProperties: false,
+            },
+            description: {
+              type: "object",
+              properties: {
+                fr: { type: "string", maxLength: 2000 },
+                en: { type: "string", maxLength: 2000 },
+                ar: { type: "string", maxLength: 2000 },
+              },
+              additionalProperties: false,
+            },
             discountPercent: { type: "integer", minimum: 0, maximum: 100 },
-            image: { type: "string" },
+            image: { type: "string", maxLength: 500 },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean", default: true },
             visible: { type: "boolean", default: true },
@@ -138,11 +156,29 @@ export async function flashSalesRoutes(app) {
         params: { type: "object", properties: { id: { type: "integer" } } },
         body: {
           type: "object",
+          additionalProperties: false,
           properties: {
-            title: { type: "object" },
-            description: { type: "object" },
+            title: {
+              type: "object",
+              required: ["fr"],
+              properties: {
+                fr: { type: "string", minLength: 1, maxLength: 200 },
+                en: { type: "string", maxLength: 200 },
+                ar: { type: "string", maxLength: 200 },
+              },
+              additionalProperties: false,
+            },
+            description: {
+              type: "object",
+              properties: {
+                fr: { type: "string", maxLength: 2000 },
+                en: { type: "string", maxLength: 2000 },
+                ar: { type: "string", maxLength: 2000 },
+              },
+              additionalProperties: false,
+            },
             discountPercent: { type: "integer", minimum: 0, maximum: 100 },
-            image: { type: "string", nullable: true },
+            image: { type: "string", nullable: true, maxLength: 500 },
             endsAt: { type: "string", format: "date-time" },
             isActive: { type: "boolean" },
             visible: { type: "boolean" },

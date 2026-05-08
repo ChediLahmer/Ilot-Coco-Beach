@@ -1,8 +1,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useFormValidation } from "@/composables/useFormValidation.js";
+import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
+
+const {
+  fieldErrors,
+  clearErrors,
+  validateRequired,
+  validateMin,
+  validateMax,
+  hasErrors,
+} = useFormValidation();
 
 const api = useApi();
 const vouchers = ref([]);
@@ -88,6 +99,12 @@ function openModal(v = null) {
 }
 
 async function save() {
+  clearErrors();
+  validateRequired(form.value.code, "code", "Code");
+  validateRequired(form.value.validUntil, "validUntil", "Date de validité");
+  validateMin(form.value.discountPercent, "discountPercent", "Réduction", 0);
+  validateMax(form.value.discountPercent, "discountPercent", "Réduction", 100);
+  if (hasErrors()) return;
   saving.value = true;
   error.value = null;
   try {
@@ -415,9 +432,13 @@ function formatDate(d) {
             >
             <input
               v-model="form.code"
-              class="w-full px-3 py-2 border border-border rounded-lg uppercase font-mono tracking-wider focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+              required
+              maxlength="50"
+              class="w-full px-3 py-2 border rounded-lg uppercase font-mono tracking-wider focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+              :class="fieldErrors.code ? 'border-danger' : 'border-border'"
               placeholder="EX: SUMMER20"
             />
+            <FieldError :message="fieldErrors.code" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -427,10 +448,16 @@ function formatDate(d) {
               <input
                 v-model.number="form.discountPercent"
                 type="number"
-                min="1"
+                min="0"
                 max="100"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="
+                  fieldErrors.discountPercent
+                    ? 'border-danger'
+                    : 'border-border'
+                "
               />
+              <FieldError :message="fieldErrors.discountPercent" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -439,8 +466,13 @@ function formatDate(d) {
               <input
                 v-model="form.validUntil"
                 type="date"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                required
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="
+                  fieldErrors.validUntil ? 'border-danger' : 'border-border'
+                "
               />
+              <FieldError :message="fieldErrors.validUntil" />
             </div>
           </div>
           <div class="flex items-center justify-between">

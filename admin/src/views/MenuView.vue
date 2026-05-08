@@ -1,8 +1,13 @@
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useFormValidation } from "@/composables/useFormValidation.js";
+import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
+
+const { fieldErrors, clearErrors, validateRequired, validateMin, hasErrors } =
+  useFormValidation();
 
 const api = useApi();
 const categories = ref([]);
@@ -114,6 +119,9 @@ function openCatModal(cat = null) {
 }
 
 async function saveCat() {
+  clearErrors();
+  validateRequired(catForm.value.name.fr, "catNameFr", "Nom (FR)");
+  if (hasErrors()) return;
   saving.value = true;
   error.value = null;
   try {
@@ -172,6 +180,16 @@ function openItemModal(item = null) {
 }
 
 async function saveItem() {
+  clearErrors();
+  validateRequired(itemForm.value.name.fr, "itemNameFr", "Nom (FR)");
+  validateMin(
+    itemForm.value.priceStandard,
+    "priceStandard",
+    "Prix Standard",
+    0,
+  );
+  validateMin(itemForm.value.priceExtra, "priceExtra", "Prix Extra", 0);
+  if (hasErrors()) return;
   saving.value = true;
   error.value = null;
   try {
@@ -547,8 +565,12 @@ onUnmounted(() => {
             >
             <input
               v-model="catForm.name.fr"
-              class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              required
+              maxlength="200"
+              class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              :class="fieldErrors.catNameFr ? 'border-danger' : 'border-border'"
             />
+            <FieldError :message="fieldErrors.catNameFr" />
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1.5"
@@ -616,7 +638,12 @@ onUnmounted(() => {
               <input
                 v-model="itemForm.name.fr"
                 placeholder="Français *"
-                class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                required
+                maxlength="200"
+                class="px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                :class="
+                  fieldErrors.itemNameFr ? 'border-danger' : 'border-border'
+                "
               />
               <input
                 v-model="itemForm.name.en"
@@ -630,6 +657,7 @@ onUnmounted(() => {
                 class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
+            <FieldError :message="fieldErrors.itemNameFr" />
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1.5"
@@ -666,8 +694,13 @@ onUnmounted(() => {
                 v-model.number="itemForm.priceStandard"
                 type="number"
                 step="0.01"
-                class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                min="0"
+                class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                :class="
+                  fieldErrors.priceStandard ? 'border-danger' : 'border-border'
+                "
               />
+              <FieldError :message="fieldErrors.priceStandard" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1.5"
@@ -677,8 +710,13 @@ onUnmounted(() => {
                 v-model.number="itemForm.priceExtra"
                 type="number"
                 step="0.01"
-                class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                min="0"
+                class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                :class="
+                  fieldErrors.priceExtra ? 'border-danger' : 'border-border'
+                "
               />
+              <FieldError :message="fieldErrors.priceExtra" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

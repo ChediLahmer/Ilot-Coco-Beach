@@ -78,6 +78,20 @@ app.setErrorHandler((error, request, reply) => {
   if (error.code === "P2025") {
     return reply.status(404).send({ error: "Record not found" });
   }
+  if (error.code === "P2002") {
+    return reply
+      .status(409)
+      .send({ error: "A record with this value already exists" });
+  }
+  if (error.code === "P2003") {
+    return reply
+      .status(400)
+      .send({ error: "Referenced record does not exist" });
+  }
+  if (error.validation) {
+    const details = error.validation.map((v) => v.message).join("; ");
+    return reply.status(400).send({ error: `Validation failed: ${details}` });
+  }
   const statusCode = error.statusCode || 500;
   const message = statusCode < 500 ? error.message : "Internal Server Error";
   request.log.error(error);

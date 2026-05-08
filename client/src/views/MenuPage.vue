@@ -244,7 +244,11 @@
               @click="showAllItems = true"
               class="mt-6 w-full rounded-xl border border-charcoal/10 bg-white/60 py-3 text-sm font-heading font-semibold text-charcoal/60 hover:bg-white hover:text-charcoal transition-colors"
             >
-              Voir les {{ activeItems.length - ITEMS_PAGE_SIZE }} autres plats
+              {{
+                t("menu.showMore", {
+                  count: activeItems.length - ITEMS_PAGE_SIZE,
+                })
+              }}
             </button>
           </div>
         </div>
