@@ -289,32 +289,34 @@ onUnmounted(() => {
 
       <!-- Pagination -->
       <div
-        v-if="totalPages > 1"
         class="px-6 py-4 border-t border-border flex items-center justify-between"
       >
-        <p class="text-sm text-text-muted">
-          Page {{ page }} / {{ totalPages }} ({{ totalItems }} total)
+        <p class="text-xs text-text-muted">
+          Page {{ page }} / {{ totalPages }}
+          <span v-if="totalItems > 0" class="ml-2"
+            >{{ totalItems }} exécution(s)</span
+          >
         </p>
-        <div class="flex gap-2">
+        <div class="flex gap-1">
           <button
+            :disabled="page <= 1"
             @click="
               page--;
               loadJobHistory();
             "
-            :disabled="page === 1"
-            class="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-alt disabled:opacity-50 transition-colors"
+            class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
           >
-            Précédent
+            ← Précédent
           </button>
           <button
+            :disabled="page >= totalPages"
             @click="
               page++;
               loadJobHistory();
             "
-            :disabled="page === totalPages"
-            class="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-alt disabled:opacity-50 transition-colors"
+            class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
           >
-            Suivant
+            Suivant →
           </button>
         </div>
       </div>
