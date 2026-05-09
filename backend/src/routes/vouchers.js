@@ -185,9 +185,9 @@ export async function vouchersRoutes(app) {
           where: { code },
         });
         if (existing) {
-          return reply.status(400).send({
-            error: "Duplicate Entry",
-            message: "A voucher with this code already exists",
+          return reply.status(409).send({
+            error: "DUPLICATE_ERROR",
+            message: "Un voucher avec ce code existe déjà",
             field: "code",
           });
         }
@@ -294,8 +294,8 @@ export async function vouchersRoutes(app) {
         const voucher = await prisma.voucher.findUnique({ where: { id } });
         if (!voucher) {
           return reply.status(404).send({
-            error: "Not Found",
-            message: "Voucher not found",
+            error: "NOT_FOUND_ERROR",
+            message: "Voucher non trouvé",
           });
         }
         await prisma.voucher.delete({ where: { id } });

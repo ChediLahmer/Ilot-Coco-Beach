@@ -67,7 +67,7 @@ const loadStats = async () => {
     const response = await api.get("/jobs/stats");
     stats.value = response.jobs || [];
   } catch (err) {
-    toast.error("Failed to load job statistics");
+    toast.error("Impossible de charger les statistiques des jobs");
   }
 };
 
@@ -89,7 +89,7 @@ const loadJobHistory = async () => {
     jobHistory.value = response.runs || [];
     totalItems.value = response.total || 0;
   } catch (err) {
-    toast.error("Failed to load job history");
+    toast.error("Impossible de charger l'historique des jobs");
   } finally {
     loading.value = false;
   }

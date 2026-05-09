@@ -456,8 +456,8 @@ export async function flashSalesRoutes(app) {
         });
         if (!sale) {
           return reply.status(404).send({
-            error: "Not Found",
-            message: "Flash sale not found",
+            error: "NOT_FOUND_ERROR",
+            message: "Vente flash non trouvée",
           });
         }
         await prisma.flashSale.delete({ where: { id } });

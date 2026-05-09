@@ -568,8 +568,8 @@ export async function menuRoutes(app) {
         });
         if (!item) {
           return reply.status(404).send({
-            error: "Not Found",
-            message: "Menu item not found",
+            error: "NOT_FOUND_ERROR",
+            message: "Article du menu non trouvé",
           });
         }
         await prisma.menuItem.delete({ where: { id } });

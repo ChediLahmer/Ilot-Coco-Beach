@@ -108,8 +108,8 @@ export async function configRoutes(app) {
         // Validate key is in allowed list
         if (!ALLOWED_CONFIG_KEYS.has(key)) {
           return reply.status(400).send({
-            error: "Bad Request",
-            message: `Invalid config key: ${key}`,
+            error: "VALIDATION_ERROR",
+            message: `Clé de configuration invalide : ${key}`,
             field: "key",
           });
         }
@@ -167,8 +167,8 @@ export async function configRoutes(app) {
 
         if (invalid.length) {
           return reply.status(400).send({
-            error: "Bad Request",
-            message: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
+            error: "VALIDATION_ERROR",
+            message: `Clé(s) de configuration invalide(s) : ${invalid.map(([k]) => k).join(", ")}`,
             fields: invalid.map(([k]) => k),
           });
         }

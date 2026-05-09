@@ -61,7 +61,7 @@ export async function reviewRoutes(app) {
         if (!Number.isInteger(limitNum) || limitNum <= 0) {
           throw new ValidationError(
             "limit",
-            "limit must be a positive integer",
+            "limit doit être un entier positif",
           );
         }
         limitNum = Math.min(limitNum, 50);
@@ -73,7 +73,7 @@ export async function reviewRoutes(app) {
           if (!Number.isInteger(cursor) || cursor <= 0) {
             throw new ValidationError(
               "cursor",
-              "cursor must be a positive integer",
+              "cursor doit être un entier positif",
             );
           }
         }
@@ -236,8 +236,8 @@ export async function reviewRoutes(app) {
         const existing = await prisma.review.findUnique({ where: { id } });
         if (!existing) {
           return reply.status(404).send({
-            error: "Not Found",
-            message: "Review not found",
+            error: "NOT_FOUND_ERROR",
+            message: "Avis non trouvé",
           });
         }
         await prisma.$transaction(async (tx) => {
@@ -246,10 +246,10 @@ export async function reviewRoutes(app) {
         });
         return reply.status(204).send();
       } catch (error) {
-        request.log.error(error, "Error deleting review");
+        request.log.error(error, "Erreur lors de la suppression de l'avis");
         return reply.status(500).send({
-          error: "Internal Server Error",
-          message: "Failed to delete review",
+          error: "INTERNAL_ERROR",
+          message: "Impossible de supprimer l'avis",
         });
       }
     },

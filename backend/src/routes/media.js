@@ -59,7 +59,10 @@ export async function mediaRoutes(app) {
       const finalUrl = unwrapProxyUrl(url);
       const key = extractStorageKeyFromUrl(finalUrl);
       if (!key) {
-        return reply.status(400).send({ error: "Invalid media URL" });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "URL média invalide",
+        });
       }
 
       try {
@@ -108,7 +111,10 @@ export async function mediaRoutes(app) {
           error?.name === "NoSuchKey" ||
           error?.$metadata?.httpStatusCode === 404
         ) {
-          return reply.status(404).send({ error: "Media not found" });
+          return reply.status(404).send({
+            error: "NOT_FOUND_ERROR",
+            message: "Média non trouvé",
+          });
         }
         throw error;
       }

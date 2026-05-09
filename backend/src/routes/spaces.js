@@ -359,18 +359,18 @@ export async function spacesRoutes(app) {
         });
         if (!space) {
           return reply.status(404).send({
-            error: "Not Found",
-            message: "Space not found",
+            error: "NOT_FOUND_ERROR",
+            message: "Espace non trouvé",
           });
         }
         await prisma.space.delete({ where: { id } });
         if (space?.image) deleteFile(space.image).catch(() => {});
         return reply.status(204).send();
       } catch (error) {
-        request.log.error(error, "Error deleting space");
+        request.log.error(error, "Erreur lors de la suppression de l'espace");
         return reply.status(500).send({
-          error: "Internal Server Error",
-          message: "Failed to delete space",
+          error: "INTERNAL_ERROR",
+          message: "Impossible de supprimer l'espace",
         });
       }
     },

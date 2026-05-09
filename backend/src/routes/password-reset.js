@@ -30,13 +30,19 @@ export async function passwordResetRoutes(app) {
     async (request, reply) => {
       const { email } = request.body || {};
       if (!email) {
-        return reply.status(400).send({ error: "Email required" });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Email requis",
+        });
       }
 
       const admin = await prisma.admin.findUnique({ where: { email } });
 
       if (!admin) {
-        return { message: "If that email exists, a reset link has been sent." };
+        return {
+          message:
+            "Si cet email existe, un lien de réinitialisation a été envoyé.",
+        };
       }
 
       await prisma.passwordReset.updateMany({
@@ -59,12 +65,16 @@ export async function passwordResetRoutes(app) {
         await sendPasswordResetEmail(email, resetUrl);
       } catch (err) {
         request.log.error(err, "Failed to send reset email");
-        return reply
-          .status(500)
-          .send({ error: "Failed to send email. Try again later." });
+        return reply.status(500).send({
+          error: "INTERNAL_ERROR",
+          message: "Impossible d'envoyer l'email. Réessayez plus tard.",
+        });
       }
 
-      return { message: "If that email exists, a reset link has been sent." };
+      return {
+        message:
+          "Si cet email existe, un lien de réinitialisation a été envoyé.",
+      };
     },
   );
 
@@ -103,13 +113,17 @@ export async function passwordResetRoutes(app) {
     async (request, reply) => {
       const { token, password } = request.body || {};
       if (!token || !password) {
-        return reply.status(400).send({ error: "Token and password required" });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Token et mot de passe requis",
+        });
       }
 
       if (password.length < 6) {
-        return reply
-          .status(400)
-          .send({ error: "Password must be at least 6 characters" });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Le mot de passe doit contenir au moins 6 caractères",
+        });
       }
 
       const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
@@ -122,7 +136,10 @@ export async function passwordResetRoutes(app) {
         resetRecord.usedAt ||
         resetRecord.expiresAt < new Date()
       ) {
-        return reply.status(400).send({ error: "Invalid or expired token" });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Token invalide ou expiré",
+        });
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
@@ -137,7 +154,7 @@ export async function passwordResetRoutes(app) {
         }),
       ]);
 
-      return { message: "Password updated successfully" };
+      return { message: "Mot de passe mis à jour avec succès" };
     },
   );
 }

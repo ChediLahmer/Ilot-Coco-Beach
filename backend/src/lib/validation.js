@@ -190,7 +190,7 @@ export function validateDateTime(value, fieldName, options = {}) {
   if (!value || typeof value !== "string") {
     throw new ValidationError(
       fieldName,
-      `${fieldName} must be a valid ISO datetime string`,
+      `${fieldName} doit être une date/heure ISO valide`,
     );
   }
 
@@ -199,17 +199,23 @@ export function validateDateTime(value, fieldName, options = {}) {
   if (!isoRegex.test(value)) {
     throw new ValidationError(
       fieldName,
-      `${fieldName} must be in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)`,
+      `${fieldName} doit être au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)`,
     );
   }
 
   const dt = new Date(value);
   if (isNaN(dt.getTime())) {
-    throw new ValidationError(fieldName, `${fieldName} is not a valid date`);
+    throw new ValidationError(
+      fieldName,
+      `${fieldName} n'est pas une date valide`,
+    );
   }
 
   if (options.mustBeFuture && dt <= new Date()) {
-    throw new ValidationError(fieldName, `${fieldName} must be in the future`);
+    throw new ValidationError(
+      fieldName,
+      `${fieldName} doit être dans le futur`,
+    );
   }
 
   return dt;
@@ -223,18 +229,18 @@ export function validateDateTime(value, fieldName, options = {}) {
  */
 export function validateDiscount(value, fieldName = "discountPercent") {
   if (value === undefined || value === null) {
-    throw new ValidationError(fieldName, `${fieldName} is required`);
+    throw new ValidationError(fieldName, `${fieldName} est requis`);
   }
 
   const num = Number(value);
   if (!Number.isInteger(num)) {
-    throw new ValidationError(fieldName, `${fieldName} must be an integer`);
+    throw new ValidationError(fieldName, `${fieldName} doit être un entier`);
   }
 
   if (num < 1 || num > 100) {
     throw new ValidationError(
       fieldName,
-      `${fieldName} must be between 1 and 100`,
+      `${fieldName} doit être entre 1 et 100`,
     );
   }
 
@@ -250,11 +256,11 @@ export function validateDiscount(value, fieldName = "discountPercent") {
  */
 export function validateMultilingual(value, fieldName, options = {}) {
   if (!value || typeof value !== "object") {
-    throw new ValidationError(fieldName, `${fieldName} must be an object`);
+    throw new ValidationError(fieldName, `${fieldName} doit être un objet`);
   }
 
   if (options.required && !value.fr) {
-    throw new ValidationError(fieldName, `${fieldName}.fr is required`);
+    throw new ValidationError(fieldName, `${fieldName}.fr est requis`);
   }
 
   for (const lang of ["fr", "en", "ar"]) {
@@ -262,14 +268,14 @@ export function validateMultilingual(value, fieldName, options = {}) {
       if (typeof value[lang] !== "string") {
         throw new ValidationError(
           fieldName,
-          `${fieldName}.${lang} must be a string`,
+          `${fieldName}.${lang} doit être une chaîne`,
         );
       }
       const maxLen = options.maxLength || 2000;
       if (value[lang].length > maxLen) {
         throw new ValidationError(
           fieldName,
-          `${fieldName}.${lang} must not exceed ${maxLen} characters`,
+          `${fieldName}.${lang} ne doit pas dépasser ${maxLen} caractères`,
         );
       }
     }
@@ -287,14 +293,14 @@ export function validateMultilingual(value, fieldName, options = {}) {
  */
 export function validatePattern(value, fieldName, pattern) {
   if (!value || typeof value !== "string") {
-    throw new ValidationError(fieldName, `${fieldName} is required`);
+    throw new ValidationError(fieldName, `${fieldName} est requis`);
   }
 
   const regex = new RegExp(pattern);
   if (!regex.test(value)) {
     throw new ValidationError(
       fieldName,
-      `${fieldName} has invalid format (must match ${pattern})`,
+      `${fieldName} a un format invalide (doit respecter ${pattern})`,
     );
   }
 
@@ -314,7 +320,7 @@ export function validateIntegerId(value, fieldName) {
   if (!Number.isInteger(num) || num <= 0) {
     throw new ValidationError(
       fieldName,
-      `${fieldName} must be a positive integer`,
+      `${fieldName} doit être un entier positif`,
     );
   }
 
@@ -330,7 +336,7 @@ export function validateIntegerId(value, fieldName) {
  */
 export function validateEntityExists(entity, fieldName, entityType) {
   if (!entity) {
-    throw new ValidationError(fieldName, `${entityType} not found`);
+    throw new ValidationError(fieldName, `${entityType} non trouvé(e)`);
   }
   return entity;
 }

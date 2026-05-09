@@ -34,12 +34,18 @@ export async function authRoutes(app) {
     async (request, reply) => {
       const { email, password } = request.body || {};
       if (!email || !password) {
-        return reply.status(400).send({ error: "Email and password required" });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Email et mot de passe requis",
+        });
       }
 
       const admin = await prisma.admin.findUnique({ where: { email } });
       if (!admin || !(await bcrypt.compare(password, admin.password))) {
-        return reply.status(401).send({ error: "Invalid credentials" });
+        return reply.status(401).send({
+          error: "AUTH_ERROR",
+          message: "Identifiants invalides",
+        });
       }
 
       const token = signToken({ id: admin.id, email: admin.email });

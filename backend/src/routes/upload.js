@@ -83,17 +83,21 @@ export async function uploadRoutes(app) {
       const { filename, contentType, sizeBytes } = request.body;
       if (!contentType?.startsWith("video/")) {
         return reply.status(400).send({
-          error: "Presigned uploads are only enabled for videos.",
+          error: "VALIDATION_ERROR",
+          message:
+            "Les uploads présignés sont activés uniquement pour les vidéos.",
         });
       }
       if (!isBrowserMimeAllowed(contentType)) {
         return reply.status(400).send({
-          error: ERROR_MSG_BROWSER,
+          error: "VALIDATION_ERROR",
+          message: ERROR_MSG_BROWSER,
         });
       }
       if (sizeBytes && sizeBytes > PRESIGN_MAX_VIDEO_BYTES) {
         return reply.status(400).send({
-          error: `Video too large (max ${Math.round(PRESIGN_MAX_VIDEO_BYTES / (1024 * 1024))} MB).`,
+          error: "VALIDATION_ERROR",
+          message: `Vidéo trop volumineuse (max ${Math.round(PRESIGN_MAX_VIDEO_BYTES / (1024 * 1024))} Mo).`,
         });
       }
       const upload = await createPresignedUpload({ filename, contentType });
@@ -121,10 +125,17 @@ export async function uploadRoutes(app) {
     },
     async (request, reply) => {
       const file = await request.file();
-      if (!file) return reply.status(400).send({ error: "No file uploaded" });
+      if (!file)
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Aucun fichier fourni",
+        });
 
       if (!isBrowserMimeAllowed(file.mimetype)) {
-        return reply.status(400).send({ error: ERROR_MSG_BROWSER });
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: ERROR_MSG_BROWSER,
+        });
       }
 
       const rawBuffer = await file.toBuffer();
