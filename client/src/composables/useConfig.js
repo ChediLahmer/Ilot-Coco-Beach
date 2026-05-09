@@ -53,6 +53,11 @@ const KEY_MAP = {
 let loaded = false;
 const configError = ref(false);
 
+function toNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : value;
+}
+
 async function loadConfig() {
   if (loaded) return;
   loaded = true;
@@ -62,8 +67,13 @@ async function loadConfig() {
     if (data && typeof data === "object") {
       for (const [apiKey, localKey] of Object.entries(KEY_MAP)) {
         if (data[apiKey] != null) {
-          config[localKey] =
-            localKey === "showReviews" ? data[apiKey] === "true" : data[apiKey];
+          if (localKey === "showReviews") {
+            config[localKey] = data[apiKey] === "true" || data[apiKey] === true;
+          } else if (localKey === "lat" || localKey === "lng") {
+            config[localKey] = toNumber(data[apiKey]);
+          } else {
+            config[localKey] = data[apiKey];
+          }
         }
       }
     }

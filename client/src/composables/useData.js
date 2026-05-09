@@ -32,11 +32,92 @@ const loading = ref(false);
 const loaded = ref(false);
 const error = ref(false);
 
-function normalizeItem(item) {
-  if (item.description && !item.desc) {
-    item.desc = item.description;
+function toInt(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : null;
+}
+
+function toNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeMenuItem(item) {
+  const normalized = {
+    ...item,
+    id: toInt(item?.id),
+    categoryId: toInt(item?.categoryId),
+    priceStandard: toNumber(item?.priceStandard),
+    priceExtra: toNumber(item?.priceExtra),
+  };
+
+  if (normalized.description && !normalized.desc) {
+    normalized.desc = normalized.description;
   }
-  return item;
+
+  return normalized;
+}
+
+function normalizeMenuCategory(category) {
+  return {
+    ...category,
+    id: toInt(category?.id),
+    items: (category?.items || []).map(normalizeMenuItem),
+  };
+}
+
+function normalizeSpace(space) {
+  return {
+    ...space,
+    id: toInt(space?.id),
+    price: toNumber(space?.price),
+    capacity: toInt(space?.capacity),
+  };
+}
+
+function normalizeGalleryImage(image) {
+  return {
+    ...image,
+    id: toInt(image?.id),
+    categoryId:
+      image?.categoryId === null || image?.categoryId === undefined
+        ? null
+        : toInt(image.categoryId),
+    catRef: image?.catRef
+      ? {
+          ...image.catRef,
+          id: toInt(image.catRef.id),
+        }
+      : null,
+  };
+}
+
+function normalizeFlashSale(sale) {
+  return {
+    ...sale,
+    id: toInt(sale?.id),
+    discountPercent: toInt(sale?.discountPercent),
+    menuItemId:
+      sale?.menuItemId === null || sale?.menuItemId === undefined
+        ? null
+        : toInt(sale.menuItemId),
+    spaceId:
+      sale?.spaceId === null || sale?.spaceId === undefined
+        ? null
+        : toInt(sale.spaceId),
+  };
+}
+
+function normalizeVoucher(voucher) {
+  return {
+    ...voucher,
+    id: toInt(voucher?.id),
+    discountPercent: toInt(voucher?.discountPercent),
+  };
+}
+
+function normalizeItem(item) {
+  return normalizeMenuItem(item);
 }
 
 function resetState() {
@@ -93,15 +174,12 @@ async function loadAll() {
 
   menuError.value = cats.status === "rejected";
   if (cats.status === "fulfilled" && cats.value?.length) {
-    menuCategories.value = cats.value.map((c) => ({
-      ...c,
-      items: (c.items || []).map(normalizeItem),
-    }));
+    menuCategories.value = cats.value.map(normalizeMenuCategory);
   }
   spacesError.value = sp.status === "rejected";
   if (sp.status === "fulfilled") {
     const res = sp.value;
-    const data = (res?.items || res || []).map(normalizeItem);
+    const data = (res?.items || res || []).map(normalizeSpace);
     spaces.value = data;
     spacesPage.value = res?.page || 1;
     spacesTotalPages.value = res?.totalPages || 1;
@@ -109,7 +187,7 @@ async function loadAll() {
   flashSalesError.value = fs.status === "rejected";
   if (fs.status === "fulfilled") {
     const res = fs.value;
-    const data = res?.items || res || [];
+    const data = (res?.items || res || []).map(normalizeFlashSale);
     flashSales.value = data;
     flashSalesPage.value = res?.page || 1;
     flashSalesTotalPages.value = res?.totalPages || 1;
@@ -117,14 +195,14 @@ async function loadAll() {
   vouchersError.value = v.status === "rejected";
   if (v.status === "fulfilled") {
     const res = v.value;
-    const data = res?.items || res || [];
+    const data = (res?.items || res || []).map(normalizeVoucher);
     vouchersList.value = data;
     vouchersPage.value = res?.page || 1;
     vouchersTotalPages.value = res?.totalPages || 1;
   }
   galleryError.value = g.status === "rejected";
   if (g.status === "fulfilled") {
-    galleryImages.value = g.value?.items || [];
+    galleryImages.value = (g.value?.items || []).map(normalizeGalleryImage);
     galleryNextCursor.value = g.value.nextCursor;
   }
 
@@ -144,7 +222,7 @@ async function loadMoreSpaces() {
   try {
     const page = spacesPage.value + 1;
     const res = await api.getSpaces(page, ITEMS_PER_PAGE);
-    const data = (res?.items || []).map(normalizeItem);
+    const data = (res?.items || []).map(normalizeSpace);
     spaces.value = [...spaces.value, ...data];
     spacesPage.value = page;
     spacesTotalPages.value = res?.totalPages || page;
@@ -166,7 +244,7 @@ async function loadMoreFlashSales() {
   try {
     const page = flashSalesPage.value + 1;
     const res = await api.getFlashSales(page, ITEMS_PER_PAGE);
-    const data = res?.items || [];
+    const data = (res?.items || []).map(normalizeFlashSale);
     flashSales.value = [...flashSales.value, ...data];
     flashSalesPage.value = page;
     flashSalesTotalPages.value = res?.totalPages || page;
@@ -185,7 +263,7 @@ async function loadMoreVouchers() {
   try {
     const page = vouchersPage.value + 1;
     const res = await api.getVouchers(page, ITEMS_PER_PAGE);
-    const data = res?.items || [];
+    const data = (res?.items || []).map(normalizeVoucher);
     vouchersList.value = [...vouchersList.value, ...data];
     vouchersPage.value = page;
     vouchersTotalPages.value = res?.totalPages || page;
@@ -202,7 +280,10 @@ async function loadMoreGallery() {
   galleryError.value = false;
   try {
     const res = await api.getGallery(galleryNextCursor.value);
-    galleryImages.value = [...galleryImages.value, ...res.items];
+    galleryImages.value = [
+      ...galleryImages.value,
+      ...(res.items || []).map(normalizeGalleryImage),
+    ];
     galleryNextCursor.value = res.nextCursor;
   } catch {
     galleryError.value = true;

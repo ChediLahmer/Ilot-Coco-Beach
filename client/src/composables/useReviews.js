@@ -8,6 +8,32 @@ const reviewsError = ref(false);
 const stats = ref({ count: 0, average: 0, recommendRate: 0 });
 let initialLoaded = false;
 
+function toInt(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : null;
+}
+
+function toNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeReview(review) {
+  return {
+    ...review,
+    id: toInt(review?.id),
+    rating: toInt(review?.rating),
+  };
+}
+
+function normalizeStats(value) {
+  return {
+    count: toInt(value?.count) ?? 0,
+    average: toNumber(value?.average) ?? 0,
+    recommendRate: toInt(value?.recommendRate) ?? 0,
+  };
+}
+
 function getDeviceId() {
   const KEY = "coco_device_id";
   let id = localStorage.getItem(KEY);
@@ -27,10 +53,11 @@ async function fetchReviews(cursor) {
   while (attempts < 2) {
     try {
       const res = await api.getReviews(cursor);
+      const normalizedItems = (res?.items || []).map(normalizeReview);
       if (cursor) {
-        reviews.value = [...reviews.value, ...res.items];
+        reviews.value = [...reviews.value, ...normalizedItems];
       } else {
-        reviews.value = res.items;
+        reviews.value = normalizedItems;
       }
       nextCursor.value = res.nextCursor;
       success = true;
@@ -48,7 +75,7 @@ async function fetchStats() {
   let attempts = 0;
   while (attempts < 2) {
     try {
-      stats.value = await api.getReviewStats();
+      stats.value = normalizeStats(await api.getReviewStats());
       break;
     } catch {
       attempts++;
@@ -81,7 +108,7 @@ export function useReviews() {
     await api.postReview({
       userName,
       comment,
-      rating,
+      rating: Number(rating),
       deviceId,
     });
     fetchStats();
