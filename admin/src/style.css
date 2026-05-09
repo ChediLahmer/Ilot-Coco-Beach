@@ -19,106 +19,12 @@
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-/* ========================================
-   Mobile Viewport & Safe Areas
-   ======================================== */
-
-@supports (padding: max(0px)) {
-  body {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-}
-
-:root {
-  --vh: 1vh;
-  --device-type: desktop;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
-}
-
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: transparent;
 }
 
-/* ========================================
-   Mobile & Responsive Utilities
-   ======================================== */
-
-/* Prevent zoom on input focus (iOS) */
-input[type="text"],
-input[type="email"],
-input[type="tel"],
-input[type="number"],
-textarea,
-select {
-  font-size: 16px;
-}
-
-/* Touch target sizing */
-button,
-a,
-input[type="button"],
-input[type="submit"],
-input[type="checkbox"],
-input[type="radio"] {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Mobile-friendly transitions */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ========================================
-   Mobile Layout Utilities
-   ======================================== */
-
-/* Full viewport height handling */
-.h-screen-mobile {
-  height: 100vh;
-  height: calc(var(--vh) * 100);
-}
-
-/* Responsive grid defaults */
-.grid-responsive {
-  @apply grid gap-4 sm:gap-6 md:gap-8;
-}
-
-/* Mobile first grid columns */
-.grid-auto {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
-}
-
-/* Flexible layout for mobile */
-.flex-responsive {
-  @apply flex flex-col sm:flex-row gap-3 sm:gap-4;
-}
-
-/* Mobile menu overlay */
-.mobile-drawer {
-  @apply fixed inset-0 z-40 bg-black/50 transition-opacity;
-}
-
-.mobile-drawer.hidden {
-  @apply pointer-events-none opacity-0;
-}
-
-/* ========================================
-   Smooth Transitions
-   ======================================== */
-
+/* Smooth transitions */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -126,40 +32,6 @@ input[type="radio"] {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-/* ========================================
-   Responsive Tables (Mobile-First)
-   ======================================== */
-
-@media (max-width: 640px) {
-  /* Stack table as cards on mobile */
-  table {
-    display: block;
-    border: none;
-  }
-
-  thead {
-    display: none;
-  }
-
-  tbody,
-  tr {
-    display: block;
-    border: none;
-  }
-
-  tr {
-    @apply mb-4 border border-border rounded-lg overflow-hidden;
-  }
-
-  td {
-    @apply block px-4 py-3 text-sm before:content-[attr(data-label)] before:font-semibold before:text-text-muted before:block before:mb-1;
-  }
-
-  td:first-child {
-    @apply bg-surface-alt;
-  }
 }
 
 /* Scrollbar styling */

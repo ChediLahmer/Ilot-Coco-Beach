@@ -27,69 +27,21 @@ router.afterEach((to) => {
   }
 });
 
-// Mobile optimizations and device detection
+// Mobile optimizations
 if (typeof window !== "undefined") {
-  // Enhanced device detection
-  const detectDevice = () => {
-    const ua = navigator.userAgent.toLowerCase();
-    const screenWidth = window.innerWidth;
-
-    // Mobile detection
-    const isMobileUA =
-      /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua);
-    const isMobileSize = screenWidth < 768;
-
-    // Tablet detection
-    const isTabletUA = /ipad|android(?!.*mobile)|kindle|playbook|silk/i.test(
+  // Detect mobile device
+  const isMobile = () => {
+    const ua = navigator.userAgent;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       ua,
     );
-    const isTabletSize = screenWidth >= 768 && screenWidth < 1024;
-
-    if (isMobileUA || isMobileSize) {
-      return {
-        isMobile: true,
-        isTablet: false,
-        isDesktop: false,
-        type: "mobile",
-      };
-    }
-    if (isTabletUA || isTabletSize) {
-      return {
-        isMobile: false,
-        isTablet: true,
-        isDesktop: false,
-        type: "tablet",
-      };
-    }
-    return {
-      isMobile: false,
-      isTablet: false,
-      isDesktop: true,
-      type: "desktop",
-    };
   };
 
-  // Store device detection on window
-  const device = detectDevice();
-  window.deviceInfo = device;
-
-  // Set device type in root element
-  document.documentElement.setAttribute("data-device", device.type);
-
-  // Handle viewport height on mobile (address bar changes)
-  const handleViewportChange = () => {
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty("--vh", `${vh}px`);
-  };
-
-  handleViewportChange();
-  window.addEventListener("resize", handleViewportChange, { passive: true });
-  window.addEventListener("orientationchange", handleViewportChange, {
-    passive: true,
-  });
+  // Store mobile detection on window
+  window.isMobile = isMobile();
 
   // Prevent iOS bounce scroll (address bar interactions)
-  if (device.isMobile || device.isTablet) {
+  if (window.isMobile) {
     document.addEventListener(
       "touchmove",
       (e) => {
@@ -114,6 +66,18 @@ if (typeof window !== "undefined") {
       { passive: true },
     );
   }
+
+  // Handle viewport height on mobile (address bar changes)
+  const handleViewportChange = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty("--vh", `${vh}px`);
+  };
+
+  handleViewportChange();
+  window.addEventListener("resize", handleViewportChange, { passive: true });
+  window.addEventListener("orientationchange", handleViewportChange, {
+    passive: true,
+  });
 
   // Disable double-tap zoom on buttons/links (faster tap response)
   let lastTouchEnd = 0;
