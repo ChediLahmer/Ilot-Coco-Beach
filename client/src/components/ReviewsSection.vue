@@ -74,7 +74,7 @@
             <p
               class="mt-2 sm:mt-4 font-brand text-2xl sm:text-4xl lg:text-5xl text-deep"
             >
-              {{ recommendationRate
+              {{ displayedRate
               }}<span class="text-lg sm:text-2xl lg:text-3xl">%</span>
             </p>
             <p class="mt-1 sm:mt-2 text-[0.65rem] sm:text-sm text-charcoal/60">
@@ -178,13 +178,22 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
 
+import { useConfig } from "@/composables/useConfig";
 import { useReviews } from "@/composables/useReviews";
 
 const { t, locale } = useI18n();
+const config = useConfig();
 const { reviews, averageRating, recommendationRate, loading } = useReviews();
+
+const displayedRate = computed(() => {
+  const manual = parseInt(config.satisfactionRate, 10);
+  return !isNaN(manual) && manual >= 0 && manual <= 100
+    ? manual
+    : recommendationRate.value;
+});
 
 const marqueeRef = ref(null);
 const paused = ref(false);

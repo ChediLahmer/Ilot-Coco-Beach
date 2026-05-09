@@ -289,6 +289,16 @@ async function save() {
               :max="field.key === 'satisfaction_rate' ? 100 : undefined"
               class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
             />
+            <p
+              v-if="field.key === 'satisfaction_rate' && reviewStats"
+              class="mt-1.5 text-xs text-text-muted"
+            >
+              Valeur calculée (avis ≥ 4★) :
+              <span class="font-semibold text-text"
+                >{{ reviewStats.recommend }}%</span
+              >
+              — Laissez vide pour utiliser la valeur calculée automatiquement.
+            </p>
           </div>
         </div>
       </div>

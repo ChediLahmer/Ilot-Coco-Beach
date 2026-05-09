@@ -62,7 +62,7 @@
                   {{ t("reviews.recommendationLabel") }}
                 </p>
                 <p class="mt-4 font-brand text-5xl text-deep">
-                  {{ recommendationRate }}%
+                  {{ displayedRate }}%
                 </p>
                 <p class="mt-2 text-sm text-charcoal/60">
                   {{ t("reviews.recommendationText") }}
@@ -195,10 +195,19 @@ import { useI18n } from "vue-i18n";
 
 import FooterSection from "@/components/FooterSection.vue";
 import NavBar from "@/components/NavBar.vue";
+import { useConfig } from "@/composables/useConfig";
 import { useReviews } from "@/composables/useReviews";
 
 const { locale, t } = useI18n();
+const config = useConfig();
 const { reviews, averageRating, recommendationRate, addReview } = useReviews();
+
+const displayedRate = computed(() => {
+  const manual = parseInt(config.satisfactionRate, 10);
+  return !isNaN(manual) && manual >= 0 && manual <= 100
+    ? manual
+    : recommendationRate.value;
+});
 
 const form = reactive({
   userName: "",

@@ -19,6 +19,7 @@ const config = reactive({
   sectionVideo: "",
   sectionPoster: "",
   showReviews: false,
+  satisfactionRate: "",
   aboutImage1: "",
   aboutImage2: "",
   loaded: false,
@@ -42,6 +43,7 @@ const KEY_MAP = {
   section_video_url: "sectionVideo",
   section_poster_url: "sectionPoster",
   show_reviews: "showReviews",
+  satisfaction_rate: "satisfactionRate",
   about_image_1: "aboutImage1",
   about_image_2: "aboutImage2",
 };
