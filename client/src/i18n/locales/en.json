@@ -216,6 +216,8 @@
   "error": {
     "title": "Unable to load data",
     "description": "Check your internet connection and try again.",
+    "configTitle": "Some site information is unavailable.",
+    "configDescription": "Configuration content could not be loaded right now.",
     "retry": "Try again"
   }
 }

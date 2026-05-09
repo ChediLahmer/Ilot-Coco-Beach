@@ -2,6 +2,26 @@
   <div ref="homeRef" class="min-h-screen bg-sand">
     <NavBar />
     <main>
+      <div
+        v-if="configError"
+        class="border-b border-coral/15 bg-coral/8 px-4 py-3 text-center"
+      >
+        <div
+          class="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 text-sm text-deep sm:flex-row sm:gap-4"
+        >
+          <p>
+            <span class="font-semibold">{{ t("error.configTitle") }}</span>
+            {{ t("error.configDescription") }}
+          </p>
+          <button
+            class="rounded-full bg-ocean px-4 py-2 font-heading text-[0.68rem] font-bold uppercase tracking-[0.18em] text-white shadow-sm transition-colors hover:bg-ocean/90"
+            @click="retrySiteConfig"
+          >
+            {{ t("error.retry") }}
+          </button>
+        </div>
+      </div>
+
       <HeroSection />
 
       <!-- Global error state -->
@@ -76,7 +96,11 @@
 <script setup>
 import { ref, defineAsyncComponent, onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useConfig } from "@/composables/useConfig";
+import {
+  useConfig,
+  retryConfig,
+  useConfigStatus,
+} from "@/composables/useConfig";
 import { useData } from "@/composables/useData";
 import { useScrollReveal } from "@/composables/useScrollReveal";
 
@@ -123,6 +147,7 @@ const FloatingSocial = defineAsyncComponent(
 
 const { t, locale } = useI18n();
 const config = useConfig();
+const { error: configError } = useConfigStatus();
 const { error: dataError, retry: retryData } = useData();
 
 const homeRef = ref(null);
@@ -138,6 +163,10 @@ function onScroll() {
 function scrollToRes() {
   const el = document.getElementById("reservation");
   if (el) el.scrollIntoView({ behavior: "smooth" });
+}
+
+function retrySiteConfig() {
+  retryConfig();
 }
 
 function setMeta(name, content) {

@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { api } from "@/lib/supabase";
 
 const config = reactive({
@@ -49,12 +49,12 @@ const KEY_MAP = {
 };
 
 let loaded = false;
-let configError = false;
+const configError = ref(false);
 
 async function loadConfig() {
   if (loaded) return;
   loaded = true;
-  configError = false;
+  configError.value = false;
   try {
     const data = await api.getConfig();
     if (data && typeof data === "object") {
@@ -66,7 +66,7 @@ async function loadConfig() {
       }
     }
   } catch {
-    configError = true;
+    configError.value = true;
   }
   config.loaded = true;
 }
@@ -81,4 +81,10 @@ export function retryConfig() {
   loaded = false;
   config.loaded = false;
   return loadConfig();
+}
+
+export function useConfigStatus() {
+  return {
+    error: configError,
+  };
 }
