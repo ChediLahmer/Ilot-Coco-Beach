@@ -67,6 +67,11 @@ export async function processMedia(buffer, detectedMime, filename) {
     return { buffer, mime: detectedMime, ext: null };
   }
 
+  if (detectedMime === "video/quicktime" || detectedMime === "video/x-m4v") {
+    const baseName = filename.replace(/\.[^.]+$/, "");
+    return { buffer, mime: "video/mp4", ext: "mp4", baseName };
+  }
+
   if (CONVERTIBLE_VIDEOS.has(detectedMime)) {
     return { buffer, mime: detectedMime, ext: null };
   }
