@@ -23,7 +23,8 @@
         muted
         loop
         playsinline
-        preload="metadata"
+        preload="auto"
+        crossorigin="anonymous"
         @canplay="videoCanPlay = true"
         @error="videoError = true"
       />

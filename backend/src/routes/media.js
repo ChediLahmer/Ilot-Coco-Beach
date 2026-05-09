@@ -90,6 +90,7 @@ export async function mediaRoutes(app) {
           );
           reply.header("Content-Length", String(length));
           reply.header("Cache-Control", "public, max-age=31536000, immutable");
+          reply.header("Connection", "keep-alive");
           return reply.status(206).send(partial.Body);
         }
 
@@ -105,6 +106,7 @@ export async function mediaRoutes(app) {
         }
         reply.header("Accept-Ranges", "bytes");
         reply.header("Cache-Control", "public, max-age=31536000, immutable");
+        reply.header("Connection", "keep-alive");
         return reply.send(full.Body);
       } catch (error) {
         if (

@@ -86,7 +86,8 @@
             autoplay
             loop
             playsinline
-            preload="metadata"
+            preload="auto"
+            crossorigin="anonymous"
             @loadeddata="markVideoReady(images[0].src)"
             @error="markVideoError(images[0].src)"
           />
@@ -134,7 +135,8 @@
             autoplay
             loop
             playsinline
-            preload="metadata"
+            preload="auto"
+            crossorigin="anonymous"
             @loadeddata="markVideoReady(image.src)"
             @error="markVideoError(image.src)"
           />
