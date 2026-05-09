@@ -484,24 +484,28 @@ function formatDate(d) {
               class="w-full px-3 py-2 border rounded-lg uppercase font-mono tracking-wider focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
               :class="fieldErrors.code ? 'border-danger' : 'border-border'"
               placeholder="EX: SUMMER20"
-            />            <p class=\"text-xs text-text-muted mt-1\">Alphanumérique, tirets, underscores. Max 50</p>            <FieldError :message="fieldErrors.code" />
+            />
+            <p class="text-xs text-text-muted mt-1">
+              Alphanumérique, tirets, underscores. Max 50
+            </p>
+            <FieldError :message="fieldErrors.code" />
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1"
               >Réduction (%) *</label
             >
             <input
-              v-model.number=\"form.discountPercent\"
-              type=\"number\"
-              min=\"1\"
-              max=\"100\"
+              v-model.number="form.discountPercent"
+              type="number"
+              min="1"
+              max="100"
               required
-              class=\"w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors\"
-              :class=\"
+              class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+              :class="
                 fieldErrors.discountPercent ? 'border-danger' : 'border-border'
-              \"
+              "
             />
-            <p class=\"text-xs text-text-muted mt-1\">Entre 1 et 100%</p>
+            <p class="text-xs text-text-muted mt-1">Entre 1 et 100%</p>
             <FieldError :message="fieldErrors.discountPercent" />
           </div>
           <DateTimeInput
