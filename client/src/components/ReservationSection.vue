@@ -14,18 +14,18 @@
         {{ t("reservation.responseTime") }}
       </p>
 
-      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div class="mt-10 grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <a
           :href="whatsappUrl"
           target="_blank"
           rel="noopener"
-          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-4 py-8 sm:px-5 sm:py-6 transition-shadow hover:shadow-md active:shadow-sm"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366]/10"
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366]/10"
           >
             <svg
-              class="h-5 w-5 text-[#25D366]"
+              class="h-6 w-6 text-[#25D366]"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -41,13 +41,13 @@
           :href="config.instagram"
           target="_blank"
           rel="noopener"
-          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-4 py-8 sm:px-5 sm:py-6 transition-shadow hover:shadow-md active:shadow-sm"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-[#E1306C]/10"
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-[#E1306C]/10"
           >
             <svg
-              class="h-5 w-5 text-[#E1306C]"
+              class="h-6 w-6 text-[#E1306C]"
               viewBox="0 0 24 24"
               fill="currentColor"
             >
@@ -61,13 +61,13 @@
 
         <a
           :href="'tel:' + config.phone"
-          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-4 py-8 sm:px-5 sm:py-6 transition-shadow hover:shadow-md active:shadow-sm"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-ocean/10"
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-ocean/10"
           >
             <svg
-              class="h-5 w-5 text-ocean"
+              class="h-6 w-6 text-ocean"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -91,13 +91,13 @@
           :href="messengerUrl"
           target="_blank"
           rel="noopener"
-          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-4 py-8 sm:px-5 sm:py-6 transition-shadow hover:shadow-md active:shadow-sm"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-[#0099FF]/10"
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-[#0099FF]/10"
           >
             <svg
-              class="h-5 w-5 text-[#0099FF]"
+              class="h-6 w-6 text-[#0099FF]"
               viewBox="0 0 24 24"
               fill="currentColor"
             >
@@ -114,13 +114,13 @@
           :href="config.tiktok"
           target="_blank"
           rel="noopener"
-          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-4 py-8 sm:px-5 sm:py-6 transition-shadow hover:shadow-md active:shadow-sm"
         >
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-black/8"
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-black/8"
           >
             <svg
-              class="h-5 w-5 text-black"
+              class="h-6 w-6 text-black"
               viewBox="0 0 24 24"
               fill="currentColor"
             >
