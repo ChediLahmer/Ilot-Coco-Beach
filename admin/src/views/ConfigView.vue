@@ -254,9 +254,17 @@ async function save() {
 
     <div
       v-if="error"
-      class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+      class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center justify-between"
     >
-      {{ error }}
+      <span>{{ error }}</span>
+      <div class="flex gap-3 ml-4 shrink-0">
+        <button @click="loadData" class="underline font-medium">
+          Réessayer
+        </button>
+        <button @click="error = null" class="underline opacity-70">
+          Fermer
+        </button>
+      </div>
     </div>
 
     <!-- Loading spinner -->

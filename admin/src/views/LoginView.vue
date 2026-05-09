@@ -24,7 +24,12 @@ async function handleSubmit() {
     setToken(data.token);
     router.push("/");
   } catch (e) {
-    error.value = "Email ou mot de passe incorrect";
+    if (e?.status === 401) {
+      error.value = "Email ou mot de passe incorrect";
+    } else {
+      error.value =
+        e?.message || "Impossible de se connecter. Réessayez dans un instant.";
+    }
   } finally {
     loading.value = false;
   }

@@ -275,10 +275,17 @@ function formatDate(d) {
   <div>
     <div
       v-if="error"
-      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm flex items-center justify-between"
     >
-      {{ error }}
-      <button @click="error = null" class="ml-2 underline">Fermer</button>
+      <span>{{ error }}</span>
+      <div class="flex gap-3 ml-4 shrink-0">
+        <button @click="loadData" class="underline font-medium">
+          Réessayer
+        </button>
+        <button @click="error = null" class="underline opacity-70">
+          Fermer
+        </button>
+      </div>
     </div>
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4"

@@ -4,6 +4,7 @@ import { router } from "../router.js";
 const BASE = import.meta.env.VITE_API_URL || "/api";
 const UPLOAD_BASE =
   import.meta.env.VITE_UPLOAD_URL || import.meta.env.VITE_API_URL || "/api";
+const REQUEST_TIMEOUT_MS = 30000;
 
 async function request(path, options = {}) {
   const { token } = useAuth();
@@ -16,15 +17,28 @@ async function request(path, options = {}) {
   }
   const base = options._directUpload ? UPLOAD_BASE : BASE;
   let res;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    res = await fetch(`${base}${path}`, { ...options, headers });
-  } catch {
+    res = await fetch(`${base}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("La requête a expiré. Réessayez.");
+    }
     throw new Error("Erreur réseau — vérifiez votre connexion internet.");
+  } finally {
+    clearTimeout(timeoutId);
   }
   if (res.status === 401) {
     useAuth().logout();
     router.push("/login");
-    throw new Error("Unauthorized");
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
   }
   if (!res.ok) {
     let msg;
@@ -86,6 +100,7 @@ export function useApi() {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("POST", `${base}${path}`);
+          xhr.timeout = REQUEST_TIMEOUT_MS;
           if (token.value)
             xhr.setRequestHeader("Authorization", `Bearer ${token.value}`);
           xhr.upload.addEventListener("progress", (e) => {
@@ -102,7 +117,9 @@ export function useApi() {
             } else if (xhr.status === 401) {
               useAuth().logout();
               router.push("/login");
-              reject(new Error("Unauthorized"));
+              const err = new Error("Unauthorized");
+              err.status = 401;
+              reject(err);
             } else {
               let msg;
               try {
@@ -117,6 +134,9 @@ export function useApi() {
           });
           xhr.addEventListener("error", () =>
             reject(new Error("Erreur réseau")),
+          );
+          xhr.addEventListener("timeout", () =>
+            reject(new Error("La requête a expiré. Réessayez.")),
           );
           xhr.send(form);
         });

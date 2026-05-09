@@ -63,16 +63,36 @@
               : 'sm:min-h-[18rem]',
           ]"
         >
+          <div
+            v-if="
+              images[0].video &&
+              !isVideoReady(images[0].src) &&
+              !hasVideoError(images[0].src)
+            "
+            class="absolute inset-0 animate-pulse bg-charcoal/10"
+          />
           <video
             v-if="images[0].video"
             :src="images[0].src"
             class="absolute inset-0 h-full w-full object-cover"
+            :class="{
+              'opacity-0':
+                !isVideoReady(images[0].src) || hasVideoError(images[0].src),
+            }"
             muted
             autoplay
             loop
             playsinline
             preload="metadata"
+            @loadeddata="markVideoReady(images[0].src)"
+            @error="markVideoError(images[0].src)"
           />
+          <div
+            v-if="images[0].video && hasVideoError(images[0].src)"
+            class="absolute inset-0 flex items-center justify-center bg-charcoal/10 px-4 text-center text-sm text-charcoal/55"
+          >
+            {{ t("video.unavailable") }}
+          </div>
           <img
             v-else
             :src="images[0].src"
@@ -92,16 +112,35 @@
           to="/gallery"
           class="group relative min-h-[11rem] overflow-hidden rounded-lg"
         >
+          <div
+            v-if="
+              image.video &&
+              !isVideoReady(image.src) &&
+              !hasVideoError(image.src)
+            "
+            class="absolute inset-0 animate-pulse bg-charcoal/10"
+          />
           <video
             v-if="image.video"
             :src="image.src"
             class="absolute inset-0 h-full w-full object-cover"
+            :class="{
+              'opacity-0': !isVideoReady(image.src) || hasVideoError(image.src),
+            }"
             muted
             autoplay
             loop
             playsinline
             preload="metadata"
+            @loadeddata="markVideoReady(image.src)"
+            @error="markVideoError(image.src)"
           />
+          <div
+            v-if="image.video && hasVideoError(image.src)"
+            class="absolute inset-0 flex items-center justify-center bg-charcoal/10 px-4 text-center text-sm text-charcoal/55"
+          >
+            {{ t("video.unavailable") }}
+          </div>
           <img
             v-else
             :src="image.src"
@@ -120,12 +159,30 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useData } from "@/composables/useData";
 
 const { t } = useI18n();
 const { galleryImages, loading: dataLoading } = useData();
+const readyVideos = ref({});
+const erroredVideos = ref({});
+
+function markVideoReady(src) {
+  readyVideos.value = { ...readyVideos.value, [src]: true };
+}
+
+function markVideoError(src) {
+  erroredVideos.value = { ...erroredVideos.value, [src]: true };
+}
+
+function isVideoReady(src) {
+  return !!readyVideos.value[src];
+}
+
+function hasVideoError(src) {
+  return !!erroredVideos.value[src];
+}
 
 function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);

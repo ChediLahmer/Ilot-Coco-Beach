@@ -29,6 +29,33 @@
       </svg>
     </div>
 
+    <!-- Error state -->
+    <div
+      v-else-if="reviewsError && !reviews.length"
+      class="mx-auto max-w-6xl flex flex-col items-center justify-center py-20 text-center"
+    >
+      <svg
+        class="h-10 w-10 text-coral/50 mb-3"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+        />
+      </svg>
+      <p class="text-sm text-charcoal/60 mb-4">{{ t("error.description") }}</p>
+      <button
+        class="rounded-full bg-ocean px-5 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-ocean/90"
+        @click="retryReviews"
+      >
+        {{ t("error.retry") }}
+      </button>
+    </div>
+
     <div
       v-else
       class="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[5fr_7fr] lg:items-start"
@@ -186,8 +213,15 @@ import { useReviews } from "@/composables/useReviews";
 
 const { t, locale } = useI18n();
 const config = useConfig();
-const { reviews, averageRating, recommendationRate, reviewCount, loading } =
-  useReviews();
+const {
+  reviews,
+  averageRating,
+  recommendationRate,
+  reviewCount,
+  loading,
+  error: reviewsError,
+  retryReviews,
+} = useReviews();
 
 const displayedRate = computed(() => {
   const manual = parseInt(config.satisfactionRate, 10);

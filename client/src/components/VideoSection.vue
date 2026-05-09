@@ -10,6 +10,7 @@
         class="relative mt-8 overflow-hidden rounded-lg ring-1 ring-charcoal/8"
       >
         <video
+          v-if="!videoError"
           ref="videoEl"
           :poster="sectionPoster"
           class="w-full aspect-video object-cover"
@@ -20,6 +21,7 @@
           @canplay="videoReady = true"
           @waiting="videoBuffering = true"
           @playing="videoBuffering = false"
+          @error="videoError = true"
         >
           <source
             :src="sectionVideo"
@@ -95,6 +97,35 @@
             </svg>
           </div>
         </Transition>
+
+        <!-- Video error fallback -->
+        <div
+          v-if="videoError"
+          class="flex aspect-video items-center justify-center bg-charcoal/5"
+        >
+          <div class="text-center px-6">
+            <svg
+              class="mx-auto h-10 w-10 text-charcoal/30 mb-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
+              />
+            </svg>
+            <p class="text-sm text-charcoal/50">{{ t("video.unavailable") }}</p>
+            <button
+              @click="retryVideo"
+              class="mt-3 text-sm font-medium text-ocean hover:text-ocean-dark"
+            >
+              {{ t("error.retry") }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -115,6 +146,12 @@ const videoEl = ref(null);
 const isPlaying = ref(false);
 const videoReady = ref(false);
 const videoBuffering = ref(false);
+const videoError = ref(false);
+
+function retryVideo() {
+  videoError.value = false;
+  videoReady.value = false;
+}
 
 function togglePlay() {
   if (!videoEl.value) return;

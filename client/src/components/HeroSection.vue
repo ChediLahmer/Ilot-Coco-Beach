@@ -14,7 +14,7 @@
         fetchpriority="high"
       />
       <video
-        v-if="videoSrc"
+        v-if="videoSrc && !videoError"
         ref="videoEl"
         :src="videoSrc"
         class="absolute inset-0 h-full w-full object-cover"
@@ -23,8 +23,9 @@
         muted
         loop
         playsinline
-        preload="auto"
+        preload="metadata"
         @canplay="videoCanPlay = true"
+        @error="videoError = true"
       />
       <div
         class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"
@@ -92,6 +93,7 @@ const contentEl = ref(null);
 const videoEl = ref(null);
 const videoSrc = ref("");
 const videoCanPlay = ref(false);
+const videoError = ref(false);
 
 function scrollTo(id) {
   const el = document.getElementById(id);
@@ -100,6 +102,8 @@ function scrollTo(id) {
 
 function deferVideo() {
   if (!heroVideo.value) return;
+  videoCanPlay.value = false;
+  videoError.value = false;
   if ("requestIdleCallback" in window) {
     requestIdleCallback(() => {
       videoSrc.value = heroVideo.value;

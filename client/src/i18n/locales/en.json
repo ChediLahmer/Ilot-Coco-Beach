@@ -59,7 +59,8 @@
   "video": {
     "title": "Live the experience",
     "play": "Play video",
-    "description": "A cinematic glimpse of the waterfront experience."
+    "description": "A cinematic glimpse of the waterfront experience.",
+    "unavailable": "Video could not be loaded"
   },
   "menu": {
     "eyebrow": "Dining",

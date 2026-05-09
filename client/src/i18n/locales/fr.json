@@ -76,7 +76,8 @@
   "video": {
     "title": "Vivez l'expérience",
     "play": "Lancer la vidéo",
-    "description": "Une immersion cinématographique au bord de l'eau."
+    "description": "Une immersion cinématographique au bord de l'eau.",
+    "unavailable": "La vidéo n'a pas pu être chargée"
   },
   "experience": {
     "eyebrow": "Espaces signature",

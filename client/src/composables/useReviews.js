@@ -4,6 +4,7 @@ import { api } from "@/lib/supabase";
 const reviews = ref([]);
 const nextCursor = ref(null);
 const loading = ref(false);
+const reviewsError = ref(false);
 const stats = ref({ count: 0, average: 0, recommendRate: 0 });
 let initialLoaded = false;
 
@@ -20,7 +21,9 @@ function getDeviceId() {
 async function fetchReviews(cursor) {
   if (loading.value) return;
   loading.value = true;
+  reviewsError.value = false;
   let attempts = 0;
+  let success = false;
   while (attempts < 2) {
     try {
       const res = await api.getReviews(cursor);
@@ -30,12 +33,14 @@ async function fetchReviews(cursor) {
         reviews.value = res.items;
       }
       nextCursor.value = res.nextCursor;
+      success = true;
       break;
     } catch {
       attempts++;
       if (attempts < 2) await new Promise((r) => setTimeout(r, 1500));
     }
   }
+  if (!success && !cursor) reviewsError.value = true;
   loading.value = false;
 }
 
@@ -88,6 +93,12 @@ export function useReviews() {
     }
   }
 
+  async function retryReviews() {
+    initialLoaded = false;
+    reviews.value = [];
+    ensureLoaded();
+  }
+
   return {
     reviews,
     averageRating,
@@ -97,5 +108,7 @@ export function useReviews() {
     loadMore,
     hasMore: computed(() => !!nextCursor.value),
     loading,
+    error: reviewsError,
+    retryReviews,
   };
 }

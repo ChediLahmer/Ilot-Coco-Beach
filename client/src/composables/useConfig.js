@@ -49,10 +49,12 @@ const KEY_MAP = {
 };
 
 let loaded = false;
+let configError = false;
 
 async function loadConfig() {
   if (loaded) return;
   loaded = true;
+  configError = false;
   try {
     const data = await api.getConfig();
     if (data && typeof data === "object") {
@@ -64,7 +66,7 @@ async function loadConfig() {
       }
     }
   } catch {
-    /* keep empty until backend responds */
+    configError = true;
   }
   config.loaded = true;
 }
@@ -73,4 +75,10 @@ export const configReady = loadConfig();
 
 export function useConfig() {
   return config;
+}
+
+export function retryConfig() {
+  loaded = false;
+  config.loaded = false;
+  return loadConfig();
 }

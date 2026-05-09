@@ -13,8 +13,11 @@ const stats = ref({
 });
 const analytics = ref({ pageViews: 0, reserveClicks: 0, conversionRate: 0 });
 const loading = ref(true);
+const error = ref(null);
 
-onMounted(async () => {
+async function loadData() {
+  loading.value = true;
+  error.value = null;
   try {
     const [cats, spaces, sales, vouchers, galleryCount, analyticsData] =
       await Promise.all([
@@ -34,12 +37,14 @@ onMounted(async () => {
       gallery: galleryCount.total || 0,
     };
     if (analyticsData) analytics.value = analyticsData;
-  } catch {
-    /* ignore */
+  } catch (e) {
+    error.value = e?.message || "Impossible de charger les données";
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(loadData);
 
 const cards = [
   {
@@ -88,6 +93,21 @@ const cards = [
       <p class="mt-1 text-sm text-text-muted">
         Vue d'ensemble de votre contenu
       </p>
+    </div>
+
+    <div
+      v-if="error"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm flex items-center justify-between"
+    >
+      <span>{{ error }}</span>
+      <div class="flex gap-3 ml-4 shrink-0">
+        <button @click="loadData" class="underline font-medium">
+          Réessayer
+        </button>
+        <button @click="error = null" class="underline opacity-70">
+          Fermer
+        </button>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
