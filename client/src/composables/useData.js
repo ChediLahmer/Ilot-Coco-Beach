@@ -1,10 +1,25 @@
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { api } from "@/lib/supabase";
 
+const ITEMS_PER_PAGE = 8;
+
 const menuCategories = ref([]);
+
 const spaces = ref([]);
+const spacesPage = ref(1);
+const spacesTotalPages = ref(1);
+const spacesLoading = ref(false);
+
 const flashSales = ref([]);
+const flashSalesPage = ref(1);
+const flashSalesTotalPages = ref(1);
+const flashSalesLoading = ref(false);
+
 const vouchersList = ref([]);
+const vouchersPage = ref(1);
+const vouchersTotalPages = ref(1);
+const vouchersLoading = ref(false);
+
 const galleryImages = ref([]);
 const galleryNextCursor = ref(null);
 const galleryLoading = ref(false);
@@ -26,9 +41,9 @@ async function loadAll() {
 
   const results = await Promise.allSettled([
     api.getMenuCategories(),
-    api.getSpaces(1, 100),
-    api.getFlashSales(1, 100),
-    api.getVouchers(1, 100),
+    api.getSpaces(1, ITEMS_PER_PAGE),
+    api.getFlashSales(1, ITEMS_PER_PAGE),
+    api.getVouchers(1, ITEMS_PER_PAGE),
     api.getGallery(),
   ]);
 
@@ -41,16 +56,25 @@ async function loadAll() {
     }));
   }
   if (sp.status === "fulfilled") {
-    const data = sp.value?.items || sp.value || [];
-    if (data.length) spaces.value = data.map(normalizeItem);
+    const res = sp.value;
+    const data = (res?.items || res || []).map(normalizeItem);
+    if (data.length) spaces.value = data;
+    spacesPage.value = res?.page || 1;
+    spacesTotalPages.value = res?.totalPages || 1;
   }
   if (fs.status === "fulfilled") {
-    const data = fs.value?.items || fs.value || [];
+    const res = fs.value;
+    const data = res?.items || res || [];
     if (data.length) flashSales.value = data;
+    flashSalesPage.value = res?.page || 1;
+    flashSalesTotalPages.value = res?.totalPages || 1;
   }
   if (v.status === "fulfilled") {
-    const data = v.value?.items || v.value || [];
+    const res = v.value;
+    const data = res?.items || res || [];
     if (data.length) vouchersList.value = data;
+    vouchersPage.value = res?.page || 1;
+    vouchersTotalPages.value = res?.totalPages || 1;
   }
   if (g.status === "fulfilled" && g.value?.items?.length) {
     galleryImages.value = g.value.items;
@@ -64,6 +88,57 @@ async function loadAll() {
     loaded.value = true;
   }
   loading.value = false;
+}
+
+async function loadMoreSpaces() {
+  if (spacesPage.value >= spacesTotalPages.value || spacesLoading.value) return;
+  spacesLoading.value = true;
+  try {
+    const page = spacesPage.value + 1;
+    const res = await api.getSpaces(page, ITEMS_PER_PAGE);
+    const data = (res?.items || []).map(normalizeItem);
+    spaces.value = [...spaces.value, ...data];
+    spacesPage.value = page;
+    spacesTotalPages.value = res?.totalPages || page;
+  } catch {
+    /* ignore */
+  } finally {
+    spacesLoading.value = false;
+  }
+}
+
+async function loadMoreFlashSales() {
+  if (flashSalesPage.value >= flashSalesTotalPages.value || flashSalesLoading.value) return;
+  flashSalesLoading.value = true;
+  try {
+    const page = flashSalesPage.value + 1;
+    const res = await api.getFlashSales(page, ITEMS_PER_PAGE);
+    const data = res?.items || [];
+    flashSales.value = [...flashSales.value, ...data];
+    flashSalesPage.value = page;
+    flashSalesTotalPages.value = res?.totalPages || page;
+  } catch {
+    /* ignore */
+  } finally {
+    flashSalesLoading.value = false;
+  }
+}
+
+async function loadMoreVouchers() {
+  if (vouchersPage.value >= vouchersTotalPages.value || vouchersLoading.value) return;
+  vouchersLoading.value = true;
+  try {
+    const page = vouchersPage.value + 1;
+    const res = await api.getVouchers(page, ITEMS_PER_PAGE);
+    const data = res?.items || [];
+    vouchersList.value = [...vouchersList.value, ...data];
+    vouchersPage.value = page;
+    vouchersTotalPages.value = res?.totalPages || page;
+  } catch {
+    /* ignore */
+  } finally {
+    vouchersLoading.value = false;
+  }
 }
 
 async function loadMoreGallery() {
@@ -85,8 +160,17 @@ export function useData() {
   return {
     menuCategories,
     spaces,
+    spacesHasMore: computed(() => spacesPage.value < spacesTotalPages.value),
+    spacesLoading,
+    loadMoreSpaces,
     flashSales,
+    flashSalesHasMore: computed(() => flashSalesPage.value < flashSalesTotalPages.value),
+    flashSalesLoading,
+    loadMoreFlashSales,
     vouchers: vouchersList,
+    vouchersHasMore: computed(() => vouchersPage.value < vouchersTotalPages.value),
+    vouchersLoading,
+    loadMoreVouchers,
     galleryImages,
     galleryHasMore: galleryNextCursor,
     loadMoreGallery,
