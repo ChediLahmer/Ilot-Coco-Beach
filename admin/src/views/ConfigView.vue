@@ -9,6 +9,7 @@ const toast = useToast();
 const config = ref({});
 const hours = ref({ fr: "", en: "", ar: "" });
 const showReviews = ref(false);
+const reviewStats = ref(null);
 const saving = ref(false);
 const saved = ref(false);
 const uploading = ref("");
@@ -116,6 +117,22 @@ async function loadData() {
       hours.value = { fr: config.value.hours || "", en: "", ar: "" };
     }
     showReviews.value = config.value.show_reviews === "true";
+    try {
+      const res = await api.get("/reviews?limit=50");
+      const items = res.items || [];
+      const total = items.length;
+      const avg = total
+        ? (items.reduce((s, r) => s + r.rating, 0) / total).toFixed(1)
+        : "0.0";
+      const approved = items.filter((r) => r.visible).length;
+      const pending = items.filter((r) => !r.visible).length;
+      const recommend = total
+        ? Math.round((items.filter((r) => r.rating >= 4).length / total) * 100)
+        : 0;
+      reviewStats.value = { total, avg, approved, pending, recommend };
+    } catch {
+      reviewStats.value = null;
+    }
   } catch {
     error.value = "Erreur de chargement";
     toast.error("Erreur de chargement de la configuration");
@@ -290,6 +307,44 @@ async function save() {
             </p>
           </div>
           <AppToggle v-model="showReviews" />
+        </div>
+        <div
+          v-if="reviewStats"
+          class="px-6 py-4 border-t border-border bg-surface/50"
+        >
+          <p
+            class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3"
+          >
+            Aperçu des avis
+          </p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="text-center">
+              <p class="text-lg font-bold text-text">{{ reviewStats.total }}</p>
+              <p class="text-[0.65rem] text-text-muted">Total</p>
+            </div>
+            <div class="text-center">
+              <p class="text-lg font-bold text-text">{{ reviewStats.avg }}</p>
+              <p class="text-[0.65rem] text-text-muted">Note moy.</p>
+            </div>
+            <div class="text-center">
+              <p class="text-lg font-bold text-emerald-600">
+                {{ reviewStats.approved }}
+              </p>
+              <p class="text-[0.65rem] text-text-muted">Approuvés</p>
+            </div>
+            <div class="text-center">
+              <p
+                class="text-lg font-bold"
+                :class="reviewStats.pending ? 'text-amber-600' : 'text-text'"
+              >
+                {{ reviewStats.pending }}
+              </p>
+              <p class="text-[0.65rem] text-text-muted">En attente</p>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-text-muted text-center">
+            {{ reviewStats.recommend }}% de recommandation
+          </p>
         </div>
       </div>
 

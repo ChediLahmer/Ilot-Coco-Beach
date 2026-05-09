@@ -37,7 +37,7 @@ services:
       - key: NODE_VERSION
         value: "20.19.0"
       - key: SEED_DB
-        value: "false"
+        value: "true"
 
   # ─── Client (public website) ────────────────────────────
   - type: web

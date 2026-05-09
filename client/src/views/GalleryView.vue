@@ -12,6 +12,7 @@
         loop
         muted
         playsinline
+        preload="metadata"
       />
       <img
         v-else
