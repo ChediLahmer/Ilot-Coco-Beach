@@ -75,6 +75,7 @@
           <p
             v-if="config.phone"
             class="text-[0.7rem] text-charcoal/50 font-medium"
+            dir="ltr"
           >
             {{ config.phone }}
           </p>

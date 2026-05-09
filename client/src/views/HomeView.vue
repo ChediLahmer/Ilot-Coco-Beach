@@ -94,7 +94,14 @@
 </template>
 
 <script setup>
-import { ref, defineAsyncComponent, onMounted, onUnmounted, watch } from "vue";
+import {
+  ref,
+  defineAsyncComponent,
+  onMounted,
+  onUnmounted,
+  watch,
+  computed,
+} from "vue";
 import { useI18n } from "vue-i18n";
 import {
   useConfig,
@@ -153,6 +160,59 @@ const { error: dataError, retry: retryData } = useData();
 const homeRef = ref(null);
 const showStickyBar = ref(false);
 
+function validateConfig(cfg) {
+  try {
+    if (!cfg || typeof cfg !== "object") {
+      throw new Error("Config is not an object");
+    }
+    if (typeof cfg.name !== "string" || cfg.name.length === 0) {
+      throw new Error("Config name must be a non-empty string");
+    }
+    if (typeof cfg.phone !== "string" || !/^[0-9+\-\s()]*$/.test(cfg.phone)) {
+      throw new Error("Config phone must be a valid phone format");
+    }
+    if (
+      typeof cfg.email !== "string" ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cfg.email)
+    ) {
+      throw new Error("Config email must be a valid email format");
+    }
+    if (cfg.instagram && !cfg.instagram.startsWith("http")) {
+      console.warn("[HomeView] Instagram URL appears invalid:", cfg.instagram);
+    }
+    if (cfg.facebook && !cfg.facebook.startsWith("http")) {
+      console.warn("[HomeView] Facebook URL appears invalid:", cfg.facebook);
+    }
+    if (
+      cfg.lat !== undefined &&
+      (typeof cfg.lat !== "number" || cfg.lat < -90 || cfg.lat > 90)
+    ) {
+      console.warn("[HomeView] Latitude appears invalid:", cfg.lat);
+    }
+    if (
+      cfg.lng !== undefined &&
+      (typeof cfg.lng !== "number" || cfg.lng < -180 || cfg.lng > 180)
+    ) {
+      console.warn("[HomeView] Longitude appears invalid:", cfg.lng);
+    }
+    return true;
+  } catch (error) {
+    console.error("[HomeView] Config validation error:", error.message, {
+      config: cfg,
+    });
+    return false;
+  }
+}
+
+const isValidConfig = computed(() => {
+  try {
+    return validateConfig(config);
+  } catch (error) {
+    console.error("[HomeView] Error validating config:", error);
+    return false;
+  }
+});
+
 useScrollReveal(homeRef);
 
 function onScroll() {
@@ -190,45 +250,57 @@ function setOG(prop, content) {
 }
 
 function applyHead() {
-  document.title = `${config.name} — ${t("hero.tagline")}`;
-
-  setMeta("description", t("about.description"));
-  setMeta(
-    "keywords",
-    "ilot coco beach, ghar el melh, bizerte, waterfront dining, private cabins, beach restaurant, tunisia",
-  );
-
-  setOG("og:title", `${config.name} | ${t("hero.tagline")}`);
-  setOG("og:description", t("about.description"));
-  setOG("og:type", "website");
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Restaurant",
-    name: config.name,
-    description: t("about.description"),
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: config.address,
-    },
-    telephone: config.phone,
-    email: config.email,
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: config.lat,
-      longitude: config.lng,
-    },
-    sameAs: [config.instagram, config.facebook],
-  };
-
-  let scriptEl = document.getElementById("json-ld");
-  if (!scriptEl) {
-    scriptEl = document.createElement("script");
-    scriptEl.id = "json-ld";
-    scriptEl.type = "application/ld+json";
-    document.head.appendChild(scriptEl);
+  if (!isValidConfig.value) {
+    console.error("[HomeView] Config validation failed, skipping head updates");
+    return;
   }
-  scriptEl.textContent = JSON.stringify(jsonLd);
+
+  try {
+    document.title = `${config.name || "Ilot Coco Beach"} — ${t("hero.tagline")}`;
+
+    setMeta("description", t("about.description"));
+    setMeta(
+      "keywords",
+      "ilot coco beach, ghar el melh, bizerte, waterfront dining, private cabins, beach restaurant, tunisia",
+    );
+
+    setOG(
+      "og:title",
+      `${config.name || "Ilot Coco Beach"} | ${t("hero.tagline")}`,
+    );
+    setOG("og:description", t("about.description"));
+    setOG("og:type", "website");
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      name: config.name || "Ilot Coco Beach",
+      description: t("about.description"),
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: config.address || "",
+      },
+      telephone: config.phone || "",
+      email: config.email || "",
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: config.lat || 0,
+        longitude: config.lng || 0,
+      },
+      sameAs: [config.instagram || "", config.facebook || ""].filter(Boolean),
+    };
+
+    let scriptEl = document.getElementById("json-ld");
+    if (!scriptEl) {
+      scriptEl = document.createElement("script");
+      scriptEl.id = "json-ld";
+      scriptEl.type = "application/ld+json";
+      document.head.appendChild(scriptEl);
+    }
+    scriptEl.textContent = JSON.stringify(jsonLd);
+  } catch (error) {
+    console.error("[HomeView] Error applying head metadata:", error);
+  }
 }
 
 onMounted(() => {

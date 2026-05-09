@@ -48,9 +48,9 @@
               class="hover:text-white"
               >Facebook</a
             >
-            <a :href="'tel:' + config.phone" class="hover:text-white">{{
-              config.phone
-            }}</a>
+            <a :href="'tel:' + config.phone" class="hover:text-white"
+              ><span dir="ltr">{{ config.phone }}</span></a
+            >
             <a
               v-if="config.email"
               :href="'mailto:' + config.email"

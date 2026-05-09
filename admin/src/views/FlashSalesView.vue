@@ -598,6 +598,7 @@ function formatDate(d) {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.titleFr ? 'border-danger' : 'border-border'"
               />
+              <p class="text-xs text-text-muted mt-1">Max 200 caractères</p>
               <FieldError :message="fieldErrors.titleFr" />
             </div>
             <div>
@@ -628,8 +629,10 @@ function formatDate(d) {
               <textarea
                 v-model="form.description.fr"
                 rows="4"
+                maxlength="2000"
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
               ></textarea>
+              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -656,13 +659,14 @@ function formatDate(d) {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
-                >Réduction (%)</label
+                >Réduction (%) *</label
               >
               <input
                 v-model.number="form.discountPercent"
                 type="number"
-                min="0"
+                min="1"
                 max="100"
+                required
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="
                   fieldErrors.discountPercent
@@ -670,6 +674,7 @@ function formatDate(d) {
                     : 'border-border'
                 "
               />
+              <p class="text-xs text-text-muted mt-1">Entre 1 et 100%</p>
               <FieldError :message="fieldErrors.discountPercent" />
             </div>
             <DateTimeInput

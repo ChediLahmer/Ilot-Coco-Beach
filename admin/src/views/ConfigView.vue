@@ -1,9 +1,19 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
 import AppToggle from "@/components/AppToggle.vue";
+import FieldError from "@/components/FieldError.vue";
 
+const {
+  fieldErrors,
+  clearErrors,
+  validateMaxLength,
+  validateURL,
+  setError,
+  hasErrors,
+} = useFormValidation();
 const api = useApi();
 const toast = useToast();
 const config = ref({});
@@ -167,9 +177,41 @@ async function loadData() {
 onMounted(loadData);
 
 async function save() {
+  clearErrors();
   saving.value = true;
   saved.value = false;
   error.value = null;
+
+  // Validate text fields for max length
+  for (const field of fields) {
+    const value = config.value[field.key];
+    if (value) {
+      validateMaxLength(String(value), field.key, field.label, 10000);
+    }
+  }
+
+  // Validate media URLs
+  for (const mediaField of mediaFields) {
+    const url = config.value[mediaField.key];
+    if (url && typeof url === "string") {
+      validateMaxLength(url, mediaField.key, mediaField.label, 2000);
+      // Basic URL validation for media fields
+      if (url && !url.startsWith("http")) {
+        setError(
+          mediaField.key,
+          `${mediaField.label} doit être une URL valide`,
+        );
+      }
+    }
+  }
+
+  if (hasErrors()) {
+    saving.value = false;
+    error.value = "Veuillez corriger les erreurs de validation";
+    toast.error("Erreurs de validation détectées");
+    return;
+  }
+
   try {
     const payload = {};
     for (const field of fields) {
@@ -318,8 +360,13 @@ async function save() {
               :type="field.type"
               :min="field.key === 'satisfaction_rate' ? 0 : undefined"
               :max="field.key === 'satisfaction_rate' ? 100 : undefined"
-              class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+              :maxlength="field.type === 'text' ? 10000 : undefined"
+              class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+              :class="
+                fieldErrors[field.key] ? 'border-danger' : 'border-border'
+              "
             />
+            <FieldError :message="fieldErrors[field.key]" />
             <p
               v-if="field.key === 'satisfaction_rate' && reviewStats"
               class="mt-1.5 text-xs text-text-muted"

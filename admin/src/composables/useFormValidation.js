@@ -101,6 +101,36 @@ export function useFormValidation() {
     return true;
   }
 
+  function validateMinLength(value, field, label, min) {
+    if (typeof value === "string" && value.length < min) {
+      setError(field, `${label} doit contenir au moins ${min} caractères`);
+      return false;
+    }
+    return true;
+  }
+
+  function validateURL(value, field, label) {
+    if (!value || typeof value !== "string") {
+      setError(field, `${label} est requis`);
+      return false;
+    }
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      setError(field, `${label} doit être une URL valide`);
+      return false;
+    }
+  }
+
+  function validateGreaterThan(value, field, label, min) {
+    if (value !== undefined && value !== null && Number(value) <= min) {
+      setError(field, `${label} doit être supérieur à ${min}`);
+      return false;
+    }
+    return true;
+  }
+
   function hasErrors() {
     return Object.keys(fieldErrors.value).length > 0;
   }
@@ -113,9 +143,12 @@ export function useFormValidation() {
     validateMin,
     validateMax,
     validateMaxLength,
+    validateMinLength,
     validateDateTime,
     validateEmail,
     validatePattern,
+    validateURL,
+    validateGreaterThan,
     hasErrors,
   };
 }

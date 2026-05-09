@@ -8,8 +8,15 @@ import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
 
-const { fieldErrors, clearErrors, validateRequired, validateMin, hasErrors } =
-  useFormValidation();
+const {
+  fieldErrors,
+  clearErrors,
+  validateRequired,
+  validateMin,
+  validateMaxLength,
+  validateGreaterThan,
+  hasErrors,
+} = useFormValidation();
 
 const api = useApi();
 const toast = useToast();
@@ -136,9 +143,37 @@ function openModal(space = null) {
 
 async function save() {
   clearErrors();
+  // Validate name
   validateRequired(form.value.name.fr, "nameFr", "Nom (FR)");
-  validateMin(form.value.price, "price", "Prix", 0);
-  validateMin(form.value.capacity, "capacity", "Capacité", 1);
+  validateMaxLength(form.value.name.fr, "nameFr", "Nom (FR)", 200);
+  validateMaxLength(form.value.name.en, "nameEn", "Nom (EN)", 200);
+  validateMaxLength(form.value.name.ar, "nameAr", "Nom (AR)", 200);
+
+  // Validate description
+  validateMaxLength(
+    form.value.description.fr,
+    "descFr",
+    "Description (FR)",
+    2000,
+  );
+  validateMaxLength(
+    form.value.description.en,
+    "descEn",
+    "Description (EN)",
+    2000,
+  );
+  validateMaxLength(
+    form.value.description.ar,
+    "descAr",
+    "Description (AR)",
+    2000,
+  );
+
+  // Validate price and capacity
+  validateGreaterThan(form.value.price, "price", "Prix", 0);
+  validateGreaterThan(form.value.capacity, "capacity", "Capacité", 0);
+  validateMin(form.value.order, "order", "Ordre", 0);
+
   if (hasErrors()) return;
   saving.value = true;
   error.value = null;
@@ -518,8 +553,11 @@ onUnmounted(() => {
               >
               <input
                 v-model="form.name.en"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                maxlength="200"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="fieldErrors.nameEn ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.nameEn" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -527,9 +565,12 @@ onUnmounted(() => {
               >
               <input
                 v-model="form.name.ar"
+                maxlength="200"
                 dir="rtl"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="fieldErrors.nameAr ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.nameAr" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -539,9 +580,12 @@ onUnmounted(() => {
               >
               <textarea
                 v-model="form.description.fr"
+                maxlength="2000"
                 rows="4"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
+                :class="fieldErrors.descFr ? 'border-danger' : 'border-border'"
               ></textarea>
+              <FieldError :message="fieldErrors.descFr" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -549,9 +593,12 @@ onUnmounted(() => {
               >
               <textarea
                 v-model="form.description.en"
+                maxlength="2000"
                 rows="4"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
+                :class="fieldErrors.descEn ? 'border-danger' : 'border-border'"
               ></textarea>
+              <FieldError :message="fieldErrors.descEn" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -559,10 +606,13 @@ onUnmounted(() => {
               >
               <textarea
                 v-model="form.description.ar"
+                maxlength="2000"
                 dir="rtl"
                 rows="4"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
+                :class="fieldErrors.descAr ? 'border-danger' : 'border-border'"
               ></textarea>
+              <FieldError :message="fieldErrors.descAr" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -602,8 +652,11 @@ onUnmounted(() => {
               <input
                 v-model.number="form.order"
                 type="number"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                min="0"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                :class="fieldErrors.order ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.order" />
             </div>
           </div>
           <div class="flex items-center justify-between">

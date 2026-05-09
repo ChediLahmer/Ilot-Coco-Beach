@@ -50,43 +50,91 @@ export async function spacesRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { page, limit: rawLimit, available, search, sort } = request.query;
-      const where = {};
-      if (request.admin) {
-        if (available !== undefined) where.available = available === "true";
-      } else {
-        where.visible = true;
+    async (request, reply) => {
+      try {
+        const {
+          page,
+          limit: rawLimit,
+          available,
+          search,
+          sort,
+        } = request.query;
+
+        // Validate page
+        if (page) {
+          const pageNum = Number(page);
+          if (!Number.isInteger(pageNum) || pageNum <= 0) {
+            throw new ValidationError(
+              "page",
+              "page must be a positive integer",
+            );
+          }
+        }
+
+        // Validate limit
+        let limitNum = Number(rawLimit) || 20;
+        if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          throw new ValidationError(
+            "limit",
+            "limit must be a positive integer",
+          );
+        }
+        limitNum = Math.min(limitNum, 100);
+
+        // Validate available enum
+        if (available && !["true", "false"].includes(available)) {
+          throw new ValidationError(
+            "available",
+            'available must be "true" or "false"',
+          );
+        }
+
+        // Validate sort enum
+        if (sort && !["order", "name", "price", "capacity"].includes(sort)) {
+          throw new ValidationError(
+            "sort",
+            "sort must be one of: order, name, price, capacity",
+          );
+        }
+
+        const where = {};
+        if (request.admin) {
+          if (available !== undefined) where.available = available === "true";
+        } else {
+          where.visible = true;
+        }
+        if (search) {
+          where.name = { path: ["fr"], string_contains: search };
+        }
+        let orderBy;
+        switch (sort) {
+          case "name":
+            orderBy = [{ order: "asc" }, { id: "asc" }];
+            break;
+          case "price":
+            orderBy = [{ price: "asc" }, { id: "asc" }];
+            break;
+          case "capacity":
+            orderBy = [{ capacity: "desc" }, { id: "asc" }];
+            break;
+          default:
+            orderBy = [{ order: "asc" }, { id: "asc" }];
+        }
+        const limit = limitNum;
+        const offset = page ? (Number(page) - 1) * limit : 0;
+        const [items, total] = await Promise.all([
+          prisma.space.findMany({ where, orderBy, take: limit, skip: offset }),
+          prisma.space.count({ where }),
+        ]);
+        return {
+          items,
+          total,
+          page: Number(page) || 1,
+          totalPages: Math.ceil(total / limit),
+        };
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
       }
-      if (search) {
-        where.name = { path: ["fr"], string_contains: search };
-      }
-      let orderBy;
-      switch (sort) {
-        case "name":
-          orderBy = [{ order: "asc" }, { id: "asc" }];
-          break;
-        case "price":
-          orderBy = [{ price: "asc" }, { id: "asc" }];
-          break;
-        case "capacity":
-          orderBy = [{ capacity: "desc" }, { id: "asc" }];
-          break;
-        default:
-          orderBy = [{ order: "asc" }, { id: "asc" }];
-      }
-      const limit = Math.min(Number(rawLimit) || 20, 100);
-      const offset = page ? (Number(page) - 1) * limit : 0;
-      const [items, total] = await Promise.all([
-        prisma.space.findMany({ where, orderBy, take: limit, skip: offset }),
-        prisma.space.count({ where }),
-      ]);
-      return {
-        items,
-        total,
-        page: Number(page) || 1,
-        totalPages: Math.ceil(total / limit),
-      };
     },
   );
 

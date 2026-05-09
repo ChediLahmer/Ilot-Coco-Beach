@@ -77,6 +77,21 @@
         />
       </div>
 
+      <!-- Data validation error -->
+      <div
+        v-else-if="
+          galleryImages.length > 0 && validatedGalleryImages.length === 0
+        "
+        class="text-center py-16"
+      >
+        <p class="text-charcoal/60 text-sm">
+          {{
+            t("error.dataValidation") ||
+            "Impossible de charger les images valides"
+          }}
+        </p>
+      </div>
+
       <div v-else class="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
         <div
           v-for="(img, idx) in visibleImages"
@@ -214,18 +229,59 @@ import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
 import { useData } from "@/composables/useData";
 
-const { t, locale } = useI18n();
-const { galleryImages, galleryHasMore, galleryLoading, loadMoreGallery } =
-  useData();
-
 function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 }
 
-const heroImage = computed(() => galleryImages.value[0]?.url ?? "");
+function validateGalleryImage(img) {
+  try {
+    if (!img || typeof img !== "object") {
+      throw new Error("Image is not an object");
+    }
+    if (!img.id || typeof img.id !== "string") {
+      throw new Error("Image id is missing or invalid");
+    }
+    if (
+      !img.url ||
+      typeof img.url !== "string" ||
+      !img.url.startsWith("http")
+    ) {
+      throw new Error("Image url must be a valid HTTP(S) URL");
+    }
+    if (
+      img.alt !== null &&
+      img.alt !== undefined &&
+      typeof img.alt !== "string"
+    ) {
+      throw new Error("Image alt must be a string or null");
+    }
+    if (typeof img.categoryId !== "string" && img.categoryId !== null) {
+      throw new Error("Image categoryId must be a string or null");
+    }
+    return true;
+  } catch (error) {
+    console.error("[GalleryView] Validation error:", error.message, { img });
+    return false;
+  }
+}
+
+const { t, locale } = useI18n();
+const { galleryImages, galleryHasMore, galleryLoading, loadMoreGallery } =
+  useData();
+
+const validatedGalleryImages = computed(() => {
+  try {
+    return galleryImages.value.filter((img) => validateGalleryImage(img));
+  } catch (error) {
+    console.error("[GalleryView] Error filtering gallery images:", error);
+    return [];
+  }
+});
+
+const heroImage = computed(() => validatedGalleryImages.value[0]?.url ?? "");
 
 const allMappedImages = computed(() =>
-  galleryImages.value.map((img) => ({
+  validatedGalleryImages.value.map((img) => ({
     key: img.id,
     src: img.url,
     alt: img.alt || "Ilot Coco Beach",

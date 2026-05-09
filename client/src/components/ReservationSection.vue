@@ -80,9 +80,11 @@
               />
             </svg>
           </div>
-          <span class="whitespace-nowrap text-sm font-medium text-deep">{{
-            config.phone
-          }}</span>
+          <span
+            dir="ltr"
+            class="whitespace-nowrap text-sm font-medium text-deep"
+            >{{ config.phone }}</span
+          >
         </a>
 
         <a

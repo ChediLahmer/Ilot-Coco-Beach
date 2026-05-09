@@ -66,42 +66,56 @@ export async function menuRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { search, sort } = request.query;
+    async (request, reply) => {
+      try {
+        const { search, sort } = request.query;
 
-      // Serve cached result for public requests with no filters
-      if (!request.admin && !search && (!sort || sort === "order")) {
-        if (publicMenuCache) {
-          return publicMenuCache;
+        // Validate sort parameter
+        if (sort && !["order", "name", "price"].includes(sort)) {
+          throw new ValidationError(
+            "sort",
+            "sort must be one of: order, name, price",
+          );
         }
-      }
 
-      const where = search
-        ? { name: { path: ["fr"], string_contains: search } }
-        : {};
-      const itemWhere = request.admin ? {} : { visible: true, available: true };
-      let itemOrderBy;
-      switch (sort) {
-        case "name":
-          itemOrderBy = { order: "asc" };
-          break;
-        case "price":
-          itemOrderBy = { priceStandard: "asc" };
-          break;
-        default:
-          itemOrderBy = { order: "asc" };
-      }
-      const result = await prisma.menuCategory.findMany({
-        where,
-        include: { items: { where: itemWhere, orderBy: itemOrderBy } },
-        orderBy: { order: "asc" },
-      });
+        // Serve cached result for public requests with no filters
+        if (!request.admin && !search && (!sort || sort === "order")) {
+          if (publicMenuCache) {
+            return publicMenuCache;
+          }
+        }
 
-      if (!request.admin && !search && (!sort || sort === "order")) {
-        publicMenuCache = result;
-      }
+        const where = search
+          ? { name: { path: ["fr"], string_contains: search } }
+          : {};
+        const itemWhere = request.admin
+          ? {}
+          : { visible: true, available: true };
+        let itemOrderBy;
+        switch (sort) {
+          case "name":
+            itemOrderBy = { order: "asc" };
+            break;
+          case "price":
+            itemOrderBy = { priceStandard: "asc" };
+            break;
+          default:
+            itemOrderBy = { order: "asc" };
+        }
+        const result = await prisma.menuCategory.findMany({
+          where,
+          include: { items: { where: itemWhere, orderBy: itemOrderBy } },
+          orderBy: { order: "asc" },
+        });
 
-      return result;
+        if (!request.admin && !search && (!sort || sort === "order")) {
+          publicMenuCache = result;
+        }
+
+        return result;
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -247,35 +261,72 @@ export async function menuRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { categoryId, page, limit: rawLimit } = request.query;
-      const where = request.admin ? {} : { visible: true, available: true };
-      if (categoryId) where.categoryId = Number(categoryId);
+    async (request, reply) => {
+      try {
+        const { categoryId, page, limit: rawLimit } = request.query;
 
-      if (page) {
-        const limit = Math.min(Number(rawLimit) || 20, 100);
-        const offset = (Number(page) - 1) * limit;
-        const [items, total] = await Promise.all([
-          prisma.menuItem.findMany({
-            where,
-            orderBy: { order: "asc" },
-            take: limit,
-            skip: offset,
-          }),
-          prisma.menuItem.count({ where }),
-        ]);
-        return {
-          items,
-          total,
-          page: Number(page),
-          totalPages: Math.ceil(total / limit),
-        };
+        // Validate categoryId
+        if (categoryId) {
+          const catId = Number(categoryId);
+          if (!Number.isInteger(catId) || catId <= 0) {
+            throw new ValidationError(
+              "categoryId",
+              "categoryId must be a positive integer",
+            );
+          }
+        }
+
+        // Validate page
+        if (page) {
+          const pageNum = Number(page);
+          if (!Number.isInteger(pageNum) || pageNum <= 0) {
+            throw new ValidationError(
+              "page",
+              "page must be a positive integer",
+            );
+          }
+        }
+
+        // Validate and apply limit
+        let limitNum = Number(rawLimit) || 20;
+        if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          throw new ValidationError(
+            "limit",
+            "limit must be a positive integer",
+          );
+        }
+        limitNum = Math.min(limitNum, 100);
+
+        const where = request.admin ? {} : { visible: true, available: true };
+        if (categoryId) where.categoryId = Number(categoryId);
+
+        if (page) {
+          const limit = limitNum;
+          const offset = (Number(page) - 1) * limit;
+          const [items, total] = await Promise.all([
+            prisma.menuItem.findMany({
+              where,
+              orderBy: { order: "asc" },
+              take: limit,
+              skip: offset,
+            }),
+            prisma.menuItem.count({ where }),
+          ]);
+          return {
+            items,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / limit),
+          };
+        }
+        return prisma.menuItem.findMany({
+          where,
+          orderBy: { order: "asc" },
+          take: 200,
+        });
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
       }
-      return prisma.menuItem.findMany({
-        where,
-        orderBy: { order: "asc" },
-        take: 200,
-      });
     },
   );
 

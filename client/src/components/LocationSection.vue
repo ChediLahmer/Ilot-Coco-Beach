@@ -42,6 +42,7 @@
                 <a
                   :href="'tel:' + config.phone"
                   class="mt-1.5 block text-sm text-charcoal/75 hover:text-ocean"
+                  dir="ltr"
                   >{{ config.phone }}</a
                 >
               </div>

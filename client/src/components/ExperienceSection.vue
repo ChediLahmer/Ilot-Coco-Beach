@@ -32,7 +32,7 @@
         <div class="mx-auto section-divider" />
       </div>
 
-      <template v-if="spaces.length > 0">
+      <template v-if="validatedSpaces.length > 0">
         <div class="mt-6 flex items-center justify-between">
           <router-link
             to="/spaces"
@@ -96,7 +96,7 @@
             @slideChange="onSlideChange"
           >
             <SwiperSlide
-              v-for="space in spaces"
+              v-for="space in validatedSpaces"
               :key="space.id"
               class="!h-auto"
             >
@@ -206,6 +206,18 @@
       </div>
 
       <div
+        v-else-if="spaces.length > 0 && validatedSpaces.length === 0"
+        class="mt-10 rounded-2xl border border-charcoal/8 bg-white/70 px-6 py-10 text-center shadow-sm"
+      >
+        <p class="text-sm text-charcoal/60">
+          {{
+            t("error.dataValidation") ||
+            "Impossible de charger les espaces valides"
+          }}
+        </p>
+      </div>
+
+      <div
         v-else
         class="mt-10 rounded-2xl border border-charcoal/8 bg-white/70 px-6 py-10 text-center shadow-sm"
       >
@@ -225,6 +237,37 @@ import "swiper/css";
 import { useData } from "@/composables/useData";
 import { trackReserveClick } from "@/composables/useAnalytics";
 
+function validateSpace(space) {
+  try {
+    if (!space || typeof space !== "object") {
+      throw new Error("Space is not an object");
+    }
+    if (!space.id || typeof space.id !== "string") {
+      throw new Error("Space id is missing or invalid");
+    }
+    if (!space.name || typeof space.name !== "object") {
+      throw new Error("Space name must be an object");
+    }
+    if (typeof space.name.fr !== "string") {
+      throw new Error("Space name must have at least a French (fr) field");
+    }
+    if (typeof space.price !== "number" || space.price <= 0) {
+      throw new Error("Space price must be a number > 0");
+    }
+    if (typeof space.capacity !== "number" || space.capacity <= 0) {
+      throw new Error("Space capacity must be a number > 0");
+    }
+    return true;
+  } catch (error) {
+    console.error(
+      "[ExperienceSection] Space validation error:",
+      error.message,
+      { space },
+    );
+    return false;
+  }
+}
+
 const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
 const {
@@ -237,6 +280,15 @@ const {
   retrySpaces,
 } = useData();
 
+const validatedSpaces = computed(() => {
+  try {
+    return spaces.value.filter((space) => validateSpace(space));
+  } catch (error) {
+    console.error("[ExperienceSection] Error filtering spaces:", error);
+    return [];
+  }
+});
+
 const spacePrev = ref(null);
 const spaceNext = ref(null);
 
@@ -247,7 +299,7 @@ function onSlideChange(swiper) {
       : 1,
   );
   if (
-    swiper.activeIndex + perView + 2 >= spaces.value.length &&
+    swiper.activeIndex + perView + 2 >= validatedSpaces.value.length &&
     spacesHasMore.value
   ) {
     loadMoreSpaces();

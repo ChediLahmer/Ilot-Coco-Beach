@@ -189,7 +189,7 @@
           </div>
         </div>
 
-        <div v-if="!menuCategories.length" class="mt-12 py-16">
+        <div v-if="!validatedMenuCategories.length" class="mt-12 py-16">
           <div v-if="loading" class="animate-pulse space-y-6">
             <div class="flex gap-2 mb-6">
               <div
@@ -214,7 +214,11 @@
             </div>
           </div>
           <p v-else class="text-charcoal/50 text-sm text-center">
-            {{ copy.emptyMenu }}
+            {{
+              menuCategories.length > 0
+                ? t("error.dataValidation") || "Donn\u00e9es invalides"
+                : copy.emptyMenu
+            }}
           </p>
         </div>
 
@@ -429,6 +433,79 @@ import { useHorizontalRail } from "@/composables/useHorizontalRail";
 const { locale, t } = useI18n();
 const { menuCategories, loading } = useData();
 
+function validateMenuCategory(category) {
+  try {
+    if (!category || typeof category !== "object") {
+      throw new Error("Category is not an object");
+    }
+    if (!category.id || typeof category.id !== "string") {
+      throw new Error("Category id is missing or invalid");
+    }
+    if (!category.name || typeof category.name !== "object") {
+      throw new Error("Category name must be an object");
+    }
+    if (typeof category.name.fr !== "string") {
+      throw new Error("Category name must have at least a French (fr) field");
+    }
+    if (!Array.isArray(category.items)) {
+      throw new Error("Category items must be an array");
+    }
+    return true;
+  } catch (error) {
+    console.error("[MenuPage] Category validation error:", error.message, {
+      category,
+    });
+    return false;
+  }
+}
+
+function validateMenuItem(item) {
+  try {
+    if (!item || typeof item !== "object") {
+      throw new Error("Menu item is not an object");
+    }
+    if (!item.id || typeof item.id !== "string") {
+      throw new Error("Menu item id is missing or invalid");
+    }
+    if (!item.name || typeof item.name !== "object") {
+      throw new Error("Menu item name must be an object");
+    }
+    if (typeof item.name.fr !== "string") {
+      throw new Error("Menu item name must have at least a French (fr) field");
+    }
+    if (item.desc && typeof item.desc !== "object") {
+      throw new Error("Menu item desc must be an object or null");
+    }
+    if (typeof item.priceStandard !== "number" || item.priceStandard <= 0) {
+      throw new Error("Menu item priceStandard must be a number > 0");
+    }
+    if (typeof item.priceExtra !== "number" || item.priceExtra <= 0) {
+      throw new Error("Menu item priceExtra must be a number > 0");
+    }
+    return true;
+  } catch (error) {
+    console.error("[MenuPage] Menu item validation error:", error.message, {
+      item,
+    });
+    return false;
+  }
+}
+
+const validatedMenuCategories = computed(() => {
+  try {
+    return menuCategories.value
+      .filter((cat) => validateMenuCategory(cat))
+      .map((cat) => ({
+        ...cat,
+        items: cat.items.filter((item) => validateMenuItem(item)),
+      }))
+      .filter((cat) => cat.items.length > 0);
+  } catch (error) {
+    console.error("[MenuPage] Error validating menu categories:", error);
+    return [];
+  }
+});
+
 const {
   scrollerEl: catScrollerEl,
   canScrollLeft,
@@ -438,7 +515,7 @@ const {
   pause,
   resume,
 } = useHorizontalRail(
-  computed(() => menuCategories.value.length),
+  computed(() => validatedMenuCategories.value.length),
   {
     autoInterval: 5000,
     wrap: true,
@@ -446,9 +523,9 @@ const {
 );
 
 const priceMode = ref("standard");
-const activeCategory = ref(menuCategories.value[0]?.id ?? null);
+const activeCategory = ref(validatedMenuCategories.value[0]?.id ?? null);
 watch(
-  () => menuCategories.value,
+  () => validatedMenuCategories.value,
   (cats) => {
     if (activeCategory.value === null && cats.length) {
       activeCategory.value = cats[0].id;
@@ -463,9 +540,9 @@ watch(activeCategory, () => {
 
 const activeCategoryData = computed(
   () =>
-    menuCategories.value.find(
+    validatedMenuCategories.value.find(
       (category) => category.id === activeCategory.value,
-    ) ?? menuCategories.value[0],
+    ) ?? validatedMenuCategories.value[0],
 );
 const activeCategoryLabel = computed(
   () =>

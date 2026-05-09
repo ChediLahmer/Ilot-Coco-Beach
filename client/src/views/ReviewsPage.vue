@@ -186,7 +186,7 @@
 
           <div v-else class="grid gap-4 md:grid-cols-2">
             <article
-              v-for="review in reviews"
+              v-for="review in validatedReviews"
               :key="review.id"
               class="premium-card flex min-h-[18rem] flex-col rounded-[1.75rem] p-6"
             >
@@ -209,6 +209,15 @@
                 </p>
               </div>
             </article>
+
+            <div
+              v-if="reviews.length > 0 && validatedReviews.length === 0"
+              class="col-span-full text-center py-8"
+            >
+              <p class="text-charcoal/60 text-sm">
+                {{ t("error.dataValidation") || "Données invalides reçues" }}
+              </p>
+            </div>
           </div>
 
           <!-- Infinite scroll sentinel -->
@@ -234,6 +243,58 @@ import FooterSection from "@/components/FooterSection.vue";
 import NavBar from "@/components/NavBar.vue";
 import { useConfig } from "@/composables/useConfig";
 import { useReviews } from "@/composables/useReviews";
+
+function validateReview(review) {
+  try {
+    if (!review || typeof review !== "object") {
+      throw new Error("Review is not an object");
+    }
+    if (!review.id || typeof review.id !== "string") {
+      throw new Error("Review id is missing or invalid");
+    }
+    if (typeof review.userName !== "string" || review.userName.length < 2) {
+      throw new Error(
+        "Review userName must be a string with at least 2 characters",
+      );
+    }
+    if (typeof review.comment !== "string" || review.comment.length < 10) {
+      throw new Error(
+        "Review comment must be a string with at least 10 characters",
+      );
+    }
+    if (
+      !Number.isInteger(review.rating) ||
+      review.rating < 1 ||
+      review.rating > 5
+    ) {
+      throw new Error("Review rating must be an integer between 1 and 5");
+    }
+    if (
+      typeof review.createdAt !== "string" ||
+      !isValidISODate(review.createdAt)
+    ) {
+      throw new Error("Review createdAt must be a valid ISO date string");
+    }
+    return true;
+  } catch (error) {
+    console.error("[ReviewsPage] Validation error:", error.message, { review });
+    return false;
+  }
+}
+
+function isValidISODate(dateStr) {
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime());
+}
+
+const validatedReviews = computed(() => {
+  try {
+    return reviews.value.filter((review) => validateReview(review));
+  } catch (error) {
+    console.error("[ReviewsPage] Error filtering reviews:", error);
+    return [];
+  }
+});
 
 const { locale, t } = useI18n();
 const config = useConfig();
@@ -393,17 +454,35 @@ async function submitReview() {
 
   const name = form.userName.trim();
   const comment = form.comment.trim();
+  const rating = form.rating;
 
+  // Validate rating (1-5)
+  if (!rating || rating < 1 || rating > 5) {
+    formError.value = "Veuillez sélectionner une note entre 1 et 5.";
+    return;
+  }
+
+  // Validate name (2-100 chars)
   if (!name || name.length < 2) {
     formError.value = errorCopy.value.name;
     return;
   }
+  if (name.length > 100) {
+    formError.value = "Votre nom ne doit pas dépasser 100 caractères.";
+    return;
+  }
+
+  // Validate comment (10-2000 chars)
   if (!comment) {
     formError.value = errorCopy.value.commentEmpty;
     return;
   }
   if (comment.length < 10) {
     formError.value = errorCopy.value.commentShort;
+    return;
+  }
+  if (comment.length > 2000) {
+    formError.value = "Votre avis ne doit pas dépasser 2000 caractères.";
     return;
   }
 

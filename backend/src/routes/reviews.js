@@ -53,21 +53,46 @@ export async function reviewRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const limit = Math.min(Number(request.query.limit) || 20, 50);
-      const cursor = request.query.cursor ? Number(request.query.cursor) : null;
-      const where = request.admin ? {} : { visible: true };
-      if (cursor) where.id = { lt: cursor };
+    async (request, reply) => {
+      try {
+        // Validate limit
+        let limitNum = Number(request.query.limit) || 20;
+        if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          throw new ValidationError(
+            "limit",
+            "limit must be a positive integer",
+          );
+        }
+        limitNum = Math.min(limitNum, 50);
 
-      const items = await prisma.review.findMany({
-        where,
-        orderBy: { id: "desc" },
-        take: limit,
-      });
+        // Validate cursor
+        let cursor = null;
+        if (request.query.cursor) {
+          cursor = Number(request.query.cursor);
+          if (!Number.isInteger(cursor) || cursor <= 0) {
+            throw new ValidationError(
+              "cursor",
+              "cursor must be a positive integer",
+            );
+          }
+        }
 
-      const nextCursor =
-        items.length === limit ? items[items.length - 1].id : null;
-      return { items, nextCursor };
+        const limit = limitNum;
+        const where = request.admin ? {} : { visible: true };
+        if (cursor) where.id = { lt: cursor };
+
+        const items = await prisma.review.findMany({
+          where,
+          orderBy: { id: "desc" },
+          take: limit,
+        });
+
+        const nextCursor =
+          items.length === limit ? items[items.length - 1].id : null;
+        return { items, nextCursor };
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -92,18 +117,47 @@ export async function reviewRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { userName, comment, rating, deviceId } = request.body;
+      try {
+        const { userName, comment, rating, deviceId } = request.body;
 
-      const review = await prisma.review.create({
-        data: {
-          userName,
-          comment,
-          rating,
-          deviceId: deviceId || null,
-          visible: false,
-        },
-      });
-      return reply.status(201).send(review);
+        // Validate input
+        if (!userName || userName.trim().length < 2) {
+          return reply.status(400).send({
+            error: "Bad Request",
+            message: "User name must be at least 2 characters",
+            field: "userName",
+          });
+        }
+
+        if (!comment || comment.trim().length < 10) {
+          return reply.status(400).send({
+            error: "Bad Request",
+            message: "Comment must be at least 10 characters",
+            field: "comment",
+          });
+        }
+
+        if (!rating || rating < 1 || rating > 5) {
+          return reply.status(400).send({
+            error: "Bad Request",
+            message: "Rating must be between 1 and 5",
+            field: "rating",
+          });
+        }
+
+        const review = await prisma.review.create({
+          data: {
+            userName: userName.trim(),
+            comment: comment.trim(),
+            rating,
+            deviceId: deviceId || null,
+            visible: false,
+          },
+        });
+        return reply.status(201).send(review);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

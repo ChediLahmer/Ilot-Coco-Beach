@@ -8,8 +8,14 @@ import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
 
-const { fieldErrors, clearErrors, validateRequired, validateMin, hasErrors } =
-  useFormValidation();
+const {
+  fieldErrors,
+  clearErrors,
+  validateRequired,
+  validateMin,
+  validateMaxLength,
+  hasErrors,
+} = useFormValidation();
 
 const api = useApi();
 const toast = useToast();
@@ -126,7 +132,12 @@ function openCatModal(cat = null) {
 
 async function saveCat() {
   clearErrors();
+  // Validate all language fields
   validateRequired(catForm.value.name.fr, "catNameFr", "Nom (FR)");
+  validateMaxLength(catForm.value.name.fr, "catNameFr", "Nom (FR)", 200);
+  validateMaxLength(catForm.value.name.en, "catNameEn", "Nom (EN)", 200);
+  validateMaxLength(catForm.value.name.ar, "catNameAr", "Nom (AR)", 200);
+  validateMin(catForm.value.order, "catOrder", "Ordre", 0);
   if (hasErrors()) return;
   saving.value = true;
   error.value = null;
@@ -197,7 +208,33 @@ function openItemModal(item = null) {
 
 async function saveItem() {
   clearErrors();
+  // Validate required fields
   validateRequired(itemForm.value.name.fr, "itemNameFr", "Nom (FR)");
+  validateMaxLength(itemForm.value.name.fr, "itemNameFr", "Nom (FR)", 200);
+  validateMaxLength(itemForm.value.name.en, "itemNameEn", "Nom (EN)", 200);
+  validateMaxLength(itemForm.value.name.ar, "itemNameAr", "Nom (AR)", 200);
+
+  // Validate descriptions
+  validateMaxLength(
+    itemForm.value.description.fr,
+    "descFr",
+    "Description (FR)",
+    2000,
+  );
+  validateMaxLength(
+    itemForm.value.description.en,
+    "descEn",
+    "Description (EN)",
+    2000,
+  );
+  validateMaxLength(
+    itemForm.value.description.ar,
+    "descAr",
+    "Description (AR)",
+    2000,
+  );
+
+  // Validate prices
   validateMin(
     itemForm.value.priceStandard,
     "priceStandard",
@@ -205,6 +242,8 @@ async function saveItem() {
     0,
   );
   validateMin(itemForm.value.priceExtra, "priceExtra", "Prix Extra", 0);
+  validateMin(itemForm.value.order, "itemOrder", "Ordre", 0);
+
   if (hasErrors()) return;
   saving.value = true;
   error.value = null;
@@ -632,12 +671,17 @@ onUnmounted(() => {
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1.5"
-              >Nom EN</label
+              >Nom FR *</label
             >
             <input
-              v-model="catForm.name.en"
-              class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              v-model="catForm.name.fr"
+              required
+              maxlength="200"
+              class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              :class="fieldErrors.catNameFr ? 'border-danger' : 'border-border'"
             />
+            <p class="text-xs text-text-muted mt-1.5">Requis, max 200 caractères</p>
+            <FieldError :message="fieldErrors.catNameEn" />
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1.5"
@@ -645,9 +689,12 @@ onUnmounted(() => {
             >
             <input
               v-model="catForm.name.ar"
+              maxlength="200"
               dir="rtl"
-              class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              :class="fieldErrors.catNameAr ? 'border-danger' : 'border-border'"
             />
+            <FieldError :message="fieldErrors.catNameAr" />
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1.5"
@@ -656,8 +703,12 @@ onUnmounted(() => {
             <input
               v-model.number="catForm.order"
               type="number"
-              class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              min="0"
+              class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
+              :class="fieldErrors.catOrder ? 'border-danger' : 'border-border'"
             />
+            <p class="text-xs text-text-muted mt-1.5">0 = premier, puis croissant</p>
+            <FieldError :message="fieldErrors.catOrder" />
           </div>
         </div>
         <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
@@ -707,15 +758,18 @@ onUnmounted(() => {
               <input
                 v-model="itemForm.name.en"
                 placeholder="English"
+                maxlength="200"
                 class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
               <input
                 v-model="itemForm.name.ar"
                 placeholder="العربية"
+                maxlength="200"
                 dir="rtl"
                 class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
+            <p class="text-xs text-text-muted mt-1.5">Français requis, max 200 caractères chacun</p>
             <FieldError :message="fieldErrors.itemNameFr" />
           </div>
           <div>
@@ -727,22 +781,31 @@ onUnmounted(() => {
                 v-model="itemForm.description.fr"
                 rows="4"
                 placeholder="Français"
-                class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y min-h-[5rem]"
+                maxlength="2000"
+                class="px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y min-h-[5rem]"
+                :class="fieldErrors.descFr ? 'border-danger' : 'border-border'"
               ></textarea>
               <textarea
                 v-model="itemForm.description.en"
                 rows="4"
                 placeholder="English"
-                class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y min-h-[5rem]"
+                maxlength="2000"
+                class="px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y min-h-[5rem]"
+                :class="fieldErrors.descEn ? 'border-danger' : 'border-border'"
               ></textarea>
               <textarea
                 v-model="itemForm.description.ar"
                 rows="4"
                 placeholder="العربية"
+                maxlength="2000"
                 dir="rtl"
-                class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y min-h-[5rem]"
+                class="px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y min-h-[5rem]"
+                :class="fieldErrors.descAr ? 'border-danger' : 'border-border'"
               ></textarea>
             </div>
+            <FieldError :message="fieldErrors.descFr" />
+            <FieldError :message="fieldErrors.descEn" />
+            <FieldError :message="fieldErrors.descAr" />
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -786,8 +849,13 @@ onUnmounted(() => {
               <input
                 v-model.number="itemForm.order"
                 type="number"
-                class="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                min="0"
+                class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                :class="
+                  fieldErrors.itemOrder ? 'border-danger' : 'border-border'
+                "
               />
+              <FieldError :message="fieldErrors.itemOrder" />
             </div>
             <div class="flex items-end pb-1">
               <label

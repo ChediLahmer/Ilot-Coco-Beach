@@ -7,8 +7,13 @@ import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 
-const { fieldErrors, clearErrors, validateRequired, hasErrors } =
-  useFormValidation();
+const {
+  fieldErrors,
+  clearErrors,
+  validateRequired,
+  validateMaxLength,
+  hasErrors,
+} = useFormValidation();
 const api = useApi();
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -252,6 +257,9 @@ function openCatModal(cat = null) {
 async function saveCat() {
   clearErrors();
   validateRequired(catForm.value.name.fr, "nameFr", "Nom (FR)");
+  validateMaxLength(catForm.value.name.fr, "nameFr", "Nom (FR)", 200);
+  validateMaxLength(catForm.value.name.en, "nameEn", "Nom (EN)", 200);
+  validateMaxLength(catForm.value.name.ar, "nameAr", "Nom (AR)", 200);
   if (hasErrors()) return;
   try {
     if (editingCat.value) {
@@ -657,8 +665,11 @@ async function deleteCat(cat) {
               >
               <input
                 v-model="catForm.name.en"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                maxlength="200"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                :class="fieldErrors.nameEn ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.nameEn" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -666,9 +677,12 @@ async function deleteCat(cat) {
               >
               <input
                 v-model="catForm.name.ar"
+                maxlength="200"
                 dir="rtl"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                :class="fieldErrors.nameAr ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.nameAr" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -677,8 +691,11 @@ async function deleteCat(cat) {
               <input
                 v-model.number="catForm.order"
                 type="number"
-                class="w-20 px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                min="0"
+                class="w-20 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                :class="fieldErrors.order ? 'border-danger' : 'border-border'"
               />
+              <FieldError :message="fieldErrors.order" />
             </div>
           </div>
           <div class="flex justify-end gap-3 mt-6">

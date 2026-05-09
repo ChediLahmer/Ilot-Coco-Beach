@@ -164,29 +164,65 @@ export async function galleryRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const limit = Math.min(Number(request.query.limit) || 20, 100);
-      const cursor = Number(request.query.cursor) || undefined;
-      const category = request.query.category || undefined;
-      const categoryId = Number(request.query.categoryId) || undefined;
+    async (request, reply) => {
+      try {
+        // Validate limit
+        let limitNum = Number(request.query.limit) || 20;
+        if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          throw new ValidationError(
+            "limit",
+            "limit must be a positive integer",
+          );
+        }
+        limitNum = Math.min(limitNum, 100);
 
-      const where = {};
-      if (category) where.category = category;
-      if (categoryId) where.categoryId = categoryId;
-      if (!request.admin) where.visible = true;
+        // Validate cursor
+        let cursor = undefined;
+        if (request.query.cursor) {
+          cursor = Number(request.query.cursor);
+          if (!Number.isInteger(cursor) || cursor <= 0) {
+            throw new ValidationError(
+              "cursor",
+              "cursor must be a positive integer",
+            );
+          }
+        }
 
-      const images = await prisma.galleryImage.findMany({
-        where,
-        include: { catRef: true },
-        orderBy: { order: "asc" },
-        take: limit + 1,
-        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      });
+        // Validate categoryId
+        let categoryId = undefined;
+        if (request.query.categoryId) {
+          categoryId = Number(request.query.categoryId);
+          if (!Number.isInteger(categoryId) || categoryId <= 0) {
+            throw new ValidationError(
+              "categoryId",
+              "categoryId must be a positive integer",
+            );
+          }
+        }
 
-      const hasMore = images.length > limit;
-      const items = hasMore ? images.slice(0, limit) : images;
-      const nextCursor = hasMore ? items[items.length - 1].id : null;
-      return { items, nextCursor };
+        const category = request.query.category || undefined;
+        const limit = limitNum;
+
+        const where = {};
+        if (category) where.category = category;
+        if (categoryId) where.categoryId = categoryId;
+        if (!request.admin) where.visible = true;
+
+        const images = await prisma.galleryImage.findMany({
+          where,
+          include: { catRef: true },
+          orderBy: { order: "asc" },
+          take: limit + 1,
+          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        });
+
+        const hasMore = images.length > limit;
+        const items = hasMore ? images.slice(0, limit) : images;
+        const nextCursor = hasMore ? items[items.length - 1].id : null;
+        return { items, nextCursor };
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
