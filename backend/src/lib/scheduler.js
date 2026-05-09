@@ -3,7 +3,7 @@ import { prisma } from "./prisma.js";
 import { invalidateMenuCache } from "../routes/menu.js";
 import { processIncomingUploads } from "./upload-cleanup.js";
 
-const DEDUP_MEDIA_CRON = process.env.DEDUP_MEDIA_CRON || "0 * * * *";
+const DEDUP_MEDIA_CRON = process.env.DEDUP_MEDIA_CRON || "0 3 * * 0";
 const JOB_RUN_RETENTION_DAYS = Number(process.env.JOB_RUN_RETENTION_DAYS || 30);
 const MAX_TIMER_DELAY_MS = 2147483647;
 const RESCHEDULE_RETRY_MS = 60000;
@@ -290,15 +290,18 @@ export function startScheduler(logger) {
         );
       }
 
-      const durationMs = Date.now() - jobStart;
-      await logJobRunWithRetry(
-        jobName,
-        "success",
-        tokens.count + events.count + oldJobRuns.count,
-        null,
-        durationMs,
-        logger,
-      );
+      const itemsChanged = tokens.count + events.count + oldJobRuns.count;
+      if (itemsChanged > 0) {
+        const durationMs = Date.now() - jobStart;
+        await logJobRunWithRetry(
+          jobName,
+          "success",
+          itemsChanged,
+          null,
+          durationMs,
+          logger,
+        );
+      }
     } catch (err) {
       logger.error(err, "Scheduler: daily cleanup failed");
       const durationMs = Date.now() - jobStart;
