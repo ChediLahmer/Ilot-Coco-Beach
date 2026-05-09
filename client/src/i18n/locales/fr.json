@@ -10,7 +10,7 @@
   "hero": {
     "welcome": "Adresse marine signature",
     "tagline": "Table privée, cadre marin, arrivée en barque",
-    "description": "Réservez une cabane sur l'eau, un déjeuner fruits de mer, une table au coucher du soleil ou une sortie en groupe depuis Ghar El Melh.",
+    "description": "Réservez une cabane sur l'eau, un déjeuner fruits de mer, une balade en mer ou une sortie en groupe depuis Ghar El Melh, Bizerte. Restaurant accessible en bateau.",
     "cta": "Voir la carte",
     "panelTitle": "Planifier votre venue",
     "panelText": "Réservez rapidement votre table, votre cabane ou votre moment de groupe.",
@@ -26,7 +26,7 @@
   "about": {
     "eyebrow": "Positionnement",
     "title": "Une destination conçue pour des journées soignées face à la mer",
-    "description": "Îlot Coco Beach réunit restauration, espaces privatifs et service attentionné dans un décor côtier singulier.",
+    "description": "Le restaurant Coco Beach réunit cabanes sur sable, paillotes sur mer, parasols et service attentionné dans un décor côtier singulier à Ghar El Melh.",
     "story": "Du premier embarquement à la dernière assiette, chaque détail doit évoquer une hospitalité calme, premium et mémorable.",
     "cta": "Préparer une réservation",
     "features": {
@@ -81,7 +81,7 @@
   "experience": {
     "eyebrow": "Espaces signature",
     "title": "Choisissez le décor adapté à votre occasion",
-    "subtitle": "Des cabanes sur l'eau aux terrasses panoramiques, chaque espace a été retenu pour sa lisibilité, sa vue et sa capacité d'accueil.",
+    "subtitle": "Des cabanes sur l'eau aux paillotes sur mer et parasols sur sable, chaque espace a été retenu pour sa lisibilité, sa vue et sa capacité d'accueil.",
     "viewAll": "Voir tous les espaces",
     "capacity": "Capacité",
     "persons": "invités",
@@ -185,12 +185,12 @@
     "hoursValue": "Tous les jours · 09:00 - 19:00",
     "directions": "Voir l'itinéraire",
     "howTo": "Accès à l'îlot",
-    "howToDesc": "Depuis le parking, une courte traversée en barque vous mène directement à Îlot Coco Beach.",
+    "howToDesc": "Depuis le parking de Coco Beach, une courte traversée en bateau ou en zodiac vous mène directement à l'île.",
     "steps": {
-      "oneTitle": "Rejoindre le point d'accès",
-      "oneDesc": "Dirigez-vous vers la zone de stationnement et le point d'embarquement.",
-      "twoTitle": "Traverser en barque",
-      "twoDesc": "La traversée courte fait partie de l'expérience et structure l'arrivée.",
+      "oneTitle": "Rejoindre le parking",
+      "oneDesc": "Dirigez-vous vers le parking gratuit de Coco Beach et le point d'embarquement.",
+      "twoTitle": "Traverser par bateau",
+      "twoDesc": "La traversée en bateau vers l'île fait partie de l'expérience et structure l'arrivée.",
       "threeTitle": "S'installer",
       "threeDesc": "L'équipe vous accueille puis vous oriente vers votre table ou votre espace réservé."
     }
@@ -199,7 +199,7 @@
     "rights": "Tous droits réservés",
     "follow": "Suivez-nous",
     "madeWith": "Pensé et opéré en Tunisie",
-    "description": "Destination côtière pour tables privées, déjeuners face à la mer et expériences signature à Ghar El Melh.",
+    "description": "Restaurant Coco Beach — cabanes sur l'eau, paillotes, fruits de mer, balades en mer et traversée en bateau à Ghar El Melh, Bizerte.",
     "explore": "Explorer"
   },
   "ui": {

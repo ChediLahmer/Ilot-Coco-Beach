@@ -10,7 +10,7 @@
   "hero": {
     "welcome": "Signature waterfront address",
     "tagline": "Private dining, marine setting, boat arrival",
-    "description": "Reserve an overwater cabin, a seafood lunch, a sunset table or a group outing from Ghar El Melh.",
+    "description": "Reserve an overwater cabin, a seafood lunch, a sea trip or a group outing from Ghar El Melh, Bizerte. Restaurant accessible by boat.",
     "cta": "View menu",
     "panelTitle": "Plan your visit",
     "panelText": "Book your table, cabin or group moment quickly and clearly.",
@@ -26,7 +26,7 @@
   "about": {
     "eyebrow": "Positioning",
     "title": "A destination designed for considered days by the sea",
-    "description": "Îlot Coco Beach brings together dining, private spaces and attentive service in a distinctive coastal setting.",
+    "description": "Coco Beach restaurant brings together sand cabins, thatched sea shelters, parasols and attentive service in a distinctive coastal setting at Ghar El Melh.",
     "story": "From the first boarding moment to the last plate served, every detail should communicate calm, premium and memorable hospitality.",
     "cta": "Prepare a reservation",
     "features": {
@@ -81,7 +81,7 @@
   "experience": {
     "eyebrow": "Signature spaces",
     "title": "Choose the setting that fits your occasion",
-    "subtitle": "From overwater cabins to panoramic terraces, each setting is featured for its clarity, view and guest capacity.",
+    "subtitle": "From overwater cabins to thatched shelters and parasols on the sand, each setting is featured for its clarity, view and guest capacity.",
     "viewAll": "View all spaces",
     "capacity": "Capacity",
     "persons": "guests",
@@ -150,12 +150,12 @@
     "hoursValue": "Daily · 09:00 AM - 07:00 PM",
     "directions": "Get directions",
     "howTo": "Getting to the islet",
-    "howToDesc": "From the parking area, a short boat transfer brings you directly to Îlot Coco Beach.",
+    "howToDesc": "From the Coco Beach parking area, a short boat or zodiac transfer brings you directly to the island.",
     "steps": {
-      "oneTitle": "Reach the access point",
-      "oneDesc": "Head to the parking area and designated boarding point.",
+      "oneTitle": "Reach the parking",
+      "oneDesc": "Head to the free Coco Beach parking area and designated boarding point.",
       "twoTitle": "Cross by boat",
-      "twoDesc": "The short crossing is part of the experience and shapes the arrival.",
+      "twoDesc": "The short boat crossing to the island is part of the experience and shapes the arrival.",
       "threeTitle": "Settle in",
       "threeDesc": "The team welcomes you and guides you to your reserved table or space."
     }
@@ -199,7 +199,7 @@
     "rights": "All rights reserved",
     "follow": "Follow us",
     "madeWith": "Designed and operated in Tunisia",
-    "description": "Coastal destination for private tables, seaside lunches and signature experiences in Ghar El Melh.",
+    "description": "Coco Beach restaurant — overwater cabins, thatched shelters, seafood, sea trips and boat crossing at Ghar El Melh, Bizerte.",
     "explore": "Explore"
   },
   "ui": {
