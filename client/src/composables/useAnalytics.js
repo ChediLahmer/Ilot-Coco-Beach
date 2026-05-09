@@ -1,13 +1,25 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+let lastReserveClick = 0;
+const RESERVE_CLICK_DEBOUNCE = 500; // ms between clicks to track separately
 
 export function trackEvent(event, path) {
   try {
-    // Use navigator.sendBeacon for guaranteed delivery on mobile navigation
     const payload = JSON.stringify({ event, path });
 
-    // Try sendBeacon first (best for unload/mobile)
+    // For sendBeacon: must use Blob with proper content-type
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(`${API_BASE}/analytics/event`, payload);
+      const blob = new Blob([payload], { type: "application/json" });
+      const sent = navigator.sendBeacon(`${API_BASE}/analytics/event`, blob);
+
+      if (!sent) {
+        // sendBeacon failed, fallback to fetch
+        fetch(`${API_BASE}/analytics/event`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {});
+      }
     } else {
       // Fallback to fetch with keepalive
       fetch(`${API_BASE}/analytics/event`, {
@@ -23,15 +35,22 @@ export function trackEvent(event, path) {
 }
 
 export function trackPageView(path) {
+  // Always track page views, including initial load
   trackEvent("page_view", path);
 }
 
 export function trackReserveClick() {
-  // Ensure tracking completes before navigation on mobile
-  trackEvent("click_reserve", window.location.pathname);
+  const now = Date.now();
 
-  // Add small delay on mobile to let sendBeacon queue the request
-  if (navigator.sendBeacon) {
-    return new Promise((resolve) => setTimeout(resolve, 50));
+  // Allow multiple clicks if they're separated by debounce time
+  if (now - lastReserveClick > RESERVE_CLICK_DEBOUNCE) {
+    lastReserveClick = now;
+    trackEvent("click_reserve", window.location.pathname);
+
+    // Return promise for await compatibility
+    return Promise.resolve();
   }
+
+  // Debounced - still return promise but don't track
+  return Promise.resolve();
 }

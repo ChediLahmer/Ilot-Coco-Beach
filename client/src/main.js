@@ -9,10 +9,22 @@ const app = createApp(App);
 app.use(router);
 app.use(i18n);
 
-// Track page views on route changes
+// Track initial page load and route changes
+let isInitialLoad = true;
+
+router.isReady().then(() => {
+  if (isInitialLoad) {
+    // Track the initial page load
+    trackPageView(window.location.pathname);
+    isInitialLoad = false;
+  }
+});
+
+// Track subsequent page views on route changes
 router.afterEach((to) => {
-  // Ensure tracking completes on mobile with sendBeacon
-  trackPageView(to.path);
+  if (!isInitialLoad) {
+    trackPageView(to.path);
+  }
 });
 
 // Mobile optimizations and device detection
