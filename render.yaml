@@ -11,7 +11,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: rm -f package-lock.json && npm install --include=dev && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate reset --force --skip-seed && node prisma/seed.js
+    buildCommand: rm -f package-lock.json && npm install --include=dev && npm run validate && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate reset --force --skip-seed && node prisma/seed.js
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
@@ -48,7 +48,7 @@ services:
     name: cocobeach-client
     runtime: static
     rootDir: client
-    buildCommand: rm -f package-lock.json && npm install && npm run build
+    buildCommand: rm -f package-lock.json && npm install && npm run validate
     staticPublishPath: dist
     headers:
       - path: /*
@@ -74,7 +74,7 @@ services:
     name: cocobeach-admin
     runtime: static
     rootDir: admin
-    buildCommand: rm -f package-lock.json && npm install && npm run build
+    buildCommand: rm -f package-lock.json && npm install && npm run validate
     staticPublishPath: dist
     headers:
       - path: /*

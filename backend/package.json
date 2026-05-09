@@ -6,6 +6,9 @@
     "scripts": {
         "dev": "node --watch src/index.js",
         "start": "node src/index.js",
+        "validate:syntax": "node scripts/validate-syntax.mjs",
+        "validate:db": "prisma validate",
+        "validate": "npm run validate:syntax && npm run validate:db",
         "db:migrate": "prisma migrate dev",
         "db:push": "prisma db push",
         "db:studio": "prisma studio",
