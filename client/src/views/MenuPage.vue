@@ -475,20 +475,41 @@ const activeCategoryLabel = computed(
 );
 const activeItems = computed(() => activeCategoryData.value?.items || []);
 
-const ITEMS_PER_PAGE = 6;
+const viewportWidth = ref(1280);
+
+function updateViewportWidth() {
+  if (typeof window !== "undefined") {
+    viewportWidth.value = window.innerWidth;
+  }
+}
+
+const itemsPerPage = computed(() => {
+  if (viewportWidth.value < 640) return 3;
+  if (viewportWidth.value < 1024) return 4;
+  return 6;
+});
+
+const featureItemsPerPage = computed(() => {
+  if (viewportWidth.value < 640) return 2;
+  if (viewportWidth.value < 1024) return 3;
+  return 4;
+});
+
 const carPage = ref(1);
 const pageDir = ref(1);
 const totalCarPages = computed(() =>
-  Math.max(1, Math.ceil(activeItems.value.length / ITEMS_PER_PAGE)),
+  Math.max(1, Math.ceil(activeItems.value.length / itemsPerPage.value)),
 );
 const pagedItems = computed(() =>
   activeItems.value.slice(
-    (carPage.value - 1) * ITEMS_PER_PAGE,
-    carPage.value * ITEMS_PER_PAGE,
+    (carPage.value - 1) * itemsPerPage.value,
+    carPage.value * itemsPerPage.value,
   ),
 );
 const pagedFeatureItems = computed(() =>
-  pagedItems.value.filter((item) => item.image).slice(0, 4),
+  pagedItems.value
+    .filter((item) => item.image)
+    .slice(0, featureItemsPerPage.value),
 );
 const transitionName = computed(() =>
   pageDir.value > 0 ? "slide-ltr" : "slide-rtl",
@@ -543,10 +564,13 @@ watch(totalCarPages, () => {
 });
 
 onMounted(() => {
+  updateViewportWidth();
+  window.addEventListener("resize", updateViewportWidth, { passive: true });
   startAutoPaging();
 });
 
 onUnmounted(() => {
+  window.removeEventListener("resize", updateViewportWidth);
   stopAutoPaging();
 });
 
