@@ -680,7 +680,9 @@ onUnmounted(() => {
               class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
               :class="fieldErrors.catNameFr ? 'border-danger' : 'border-border'"
             />
-            <p class="text-xs text-text-muted mt-1.5">Requis, max 200 caractères</p>
+            <p class="text-xs text-text-muted mt-1.5">
+              Requis, max 200 caractères
+            </p>
             <FieldError :message="fieldErrors.catNameEn" />
           </div>
           <div>
@@ -707,7 +709,9 @@ onUnmounted(() => {
               class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
               :class="fieldErrors.catOrder ? 'border-danger' : 'border-border'"
             />
-            <p class="text-xs text-text-muted mt-1.5">0 = premier, puis croissant</p>
+            <p class="text-xs text-text-muted mt-1.5">
+              0 = premier, puis croissant
+            </p>
             <FieldError :message="fieldErrors.catOrder" />
           </div>
         </div>
@@ -769,7 +773,9 @@ onUnmounted(() => {
                 class="px-3 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
-            <p class="text-xs text-text-muted mt-1.5">Français requis, max 200 caractères chacun</p>
+            <p class="text-xs text-text-muted mt-1.5">
+              Français requis, max 200 caractères chacun
+            </p>
             <FieldError :message="fieldErrors.itemNameFr" />
           </div>
           <div>
@@ -803,6 +809,9 @@ onUnmounted(() => {
                 :class="fieldErrors.descAr ? 'border-danger' : 'border-border'"
               ></textarea>
             </div>
+            <p class="text-xs text-text-muted mt-1.5">
+              Français optionnel (max 2000), EN/AR optionnels
+            </p>
             <FieldError :message="fieldErrors.descFr" />
             <FieldError :message="fieldErrors.descEn" />
             <FieldError :message="fieldErrors.descAr" />

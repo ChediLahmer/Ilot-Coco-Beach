@@ -545,6 +545,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.nameFr ? 'border-danger' : 'border-border'"
               />
+              <p class="text-xs text-text-muted mt-1">Requis, max 200 caractères</p>
               <FieldError :message="fieldErrors.nameFr" />
             </div>
             <div>
@@ -557,6 +558,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.nameEn ? 'border-danger' : 'border-border'"
               />
+              <p class="text-xs text-text-muted mt-1">Optionnel, max 200 caractères</p>
               <FieldError :message="fieldErrors.nameEn" />
             </div>
             <div>
@@ -570,6 +572,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.nameAr ? 'border-danger' : 'border-border'"
               />
+              <p class="text-xs text-text-muted mt-1">Optionnel, max 200 caractères</p>
               <FieldError :message="fieldErrors.nameAr" />
             </div>
           </div>
@@ -585,6 +588,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
                 :class="fieldErrors.descFr ? 'border-danger' : 'border-border'"
               ></textarea>
+              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
               <FieldError :message="fieldErrors.descFr" />
             </div>
             <div>
@@ -598,6 +602,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
                 :class="fieldErrors.descEn ? 'border-danger' : 'border-border'"
               ></textarea>
+              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
               <FieldError :message="fieldErrors.descEn" />
             </div>
             <div>
@@ -612,42 +617,47 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
                 :class="fieldErrors.descAr ? 'border-danger' : 'border-border'"
               ></textarea>
+              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
               <FieldError :message="fieldErrors.descAr" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
-                >Prix (DT)</label
+                >Prix (DT/h) *</label
               >
               <input
                 v-model.number="form.price"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
+                required
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.price ? 'border-danger' : 'border-border'"
               />
+              <p class="text-xs text-text-muted mt-1">> 0 DT, prix par heure</p>
               <FieldError :message="fieldErrors.price" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
-                >Capacité</label
+                >Capacité (personnes) *</label
               >
               <input
                 v-model.number="form.capacity"
                 type="number"
                 min="1"
+                required
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="
                   fieldErrors.capacity ? 'border-danger' : 'border-border'
                 "
               />
+              <p class="text-xs text-text-muted mt-1">> 0 personnes</p>
               <FieldError :message="fieldErrors.capacity" />
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
-                >Ordre</label
+                >Ordre d'affichage</label
               >
               <input
                 v-model.number="form.order"
@@ -656,6 +666,7 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.order ? 'border-danger' : 'border-border'"
               />
+              <p class="text-xs text-text-muted mt-1">0 = premier, puis croissant</p>
               <FieldError :message="fieldErrors.order" />
             </div>
           </div>

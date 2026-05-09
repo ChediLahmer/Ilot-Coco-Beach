@@ -607,8 +607,12 @@ function formatDate(d) {
               >
               <input
                 v-model="form.title.en"
+                maxlength="200"
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
               />
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 200 caractères
+              </p>
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -616,9 +620,13 @@ function formatDate(d) {
               >
               <input
                 v-model="form.title.ar"
+                maxlength="200"
                 dir="rtl"
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
               />
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 200 caractères
+              </p>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -632,7 +640,9 @@ function formatDate(d) {
                 maxlength="2000"
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
               ></textarea>
-              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 2000 caractères
+              </p>
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -641,8 +651,12 @@ function formatDate(d) {
               <textarea
                 v-model="form.description.en"
                 rows="4"
+                maxlength="2000"
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
               ></textarea>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 2000 caractères
+              </p>
             </div>
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
@@ -650,10 +664,14 @@ function formatDate(d) {
               >
               <textarea
                 v-model="form.description.ar"
+                maxlength="2000"
                 dir="rtl"
                 rows="4"
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
               ></textarea>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 2000 caractères
+              </p>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -679,15 +697,20 @@ function formatDate(d) {
             </div>
             <DateTimeInput
               v-model="form.endsAt"
-              label="Expire le"
+              label="Expire le *"
+              hint="Date et heure futures requises. Format DD/MM/YYYY"
               :error="fieldErrors.endsAt"
               required
             />
           </div>
           <div class="space-y-3">
             <label class="block text-xs font-medium text-text-muted"
-              >Appliquer à</label
+              >Appliquer à (Optionnel)</label
             >
+            <p class="text-xs text-text-muted mb-2">
+              Laissez vide pour une promo générale, ou sélectionnez un
+              plat/espace
+            </p>
             <div class="flex gap-3">
               <button
                 type="button"

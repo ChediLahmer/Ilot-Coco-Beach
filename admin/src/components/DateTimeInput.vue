@@ -8,6 +8,10 @@ defineProps({
     type: String,
     default: "Date et heure",
   },
+  hint: {
+    type: String,
+    default: "Format: DD/MM/YYYY, heure future requise",
+  },
   error: {
     type: String,
     default: null,
@@ -72,6 +76,7 @@ const updateDateTime = (emit, modelValue) => (type, value) => {
         />
       </div>
     </div>
+    <p class="text-xs text-text-muted mt-1.5">{{ hint }}</p>
     <p v-if="error" class="text-xs text-danger mt-1">{{ error }}</p>
   </div>
 </template>
