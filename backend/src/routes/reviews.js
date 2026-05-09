@@ -39,26 +39,34 @@ export async function reviewRoutes(app) {
   app.post(
     "/",
     {
-      config: { rateLimit: { max: 3, timeWindow: "1 minute" } },
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
       schema: {
         tags: ["Reviews"],
-        summary: "Submit a review",
+        summary: "Submit a new review (pending moderation)",
         body: {
           type: "object",
           required: ["userName", "comment", "rating"],
           additionalProperties: false,
           properties: {
-            userName: { type: "string", minLength: 1, maxLength: 100 },
-            comment: { type: "string", minLength: 1, maxLength: 2000 },
+            userName: { type: "string", minLength: 2, maxLength: 100 },
+            comment: { type: "string", minLength: 10, maxLength: 2000 },
             rating: { type: "integer", minimum: 1, maximum: 5 },
+            deviceId: { type: "string", minLength: 36, maxLength: 36 },
           },
         },
       },
     },
     async (request, reply) => {
-      const { userName, comment, rating } = request.body;
+      const { userName, comment, rating, deviceId } = request.body;
+
       const review = await prisma.review.create({
-        data: { userName, comment, rating },
+        data: {
+          userName,
+          comment,
+          rating,
+          deviceId: deviceId || null,
+          visible: false,
+        },
       });
       return reply.status(201).send(review);
     },

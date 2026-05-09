@@ -138,9 +138,10 @@
                 <div class="flex flex-wrap items-center gap-4">
                   <button
                     type="submit"
-                    class="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-sunset),var(--color-gold))] px-6 py-3 font-heading text-[0.76rem] font-bold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(255,123,58,0.22)]"
+                    :disabled="submitting"
+                    class="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-sunset),var(--color-gold))] px-6 py-3 font-heading text-[0.76rem] font-bold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(255,123,58,0.22)] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {{ copy.submit }}
+                    {{ submitting ? "..." : copy.submit }}
                   </button>
 
                   <p v-if="successMessage" class="text-sm text-leaf">
@@ -207,6 +208,7 @@ const form = reactive({
 
 const successMessage = ref("");
 const formError = ref("");
+const submitting = ref(false);
 
 const copy = computed(
   () =>
@@ -282,47 +284,71 @@ const errorCopy = computed(
   () =>
     ({
       fr: {
-        name: "Veuillez saisir votre nom.",
-        comment: "Veuillez saisir un commentaire.",
+        name: "Veuillez saisir votre nom (au moins 2 caractères).",
+        commentEmpty: "Veuillez saisir un commentaire.",
+        commentShort: "Votre avis doit contenir au moins 10 caractères.",
+        rateLimit: "Trop de tentatives. Veuillez patienter une minute.",
         send: "Erreur lors de l'envoi de votre avis. Réessayez.",
       },
       en: {
-        name: "Please enter your name.",
-        comment: "Please enter a comment.",
+        name: "Please enter your name (at least 2 characters).",
+        commentEmpty: "Please enter a comment.",
+        commentShort: "Your review must be at least 10 characters long.",
+        rateLimit: "Too many attempts. Please wait a minute.",
         send: "Error sending your review. Please try again.",
       },
       ar: {
-        name: "يرجى إدخال اسمك.",
-        comment: "يرجى إدخال تعليق.",
+        name: "يرجى إدخال اسمك (حرفين على الأقل).",
+        commentEmpty: "يرجى إدخال تعليق.",
+        commentShort: "يجب أن يكون تعليقك 10 أحرف على الأقل.",
+        rateLimit: "محاولات كثيرة. يرجى الانتظار دقيقة.",
         send: "خطأ في إرسال رأيك. حاول مرة أخرى.",
       },
     })[locale.value] || {
-      name: "Veuillez saisir votre nom.",
-      comment: "Veuillez saisir un commentaire.",
+      name: "Veuillez saisir votre nom (au moins 2 caractères).",
+      commentEmpty: "Veuillez saisir un commentaire.",
+      commentShort: "Votre avis doit contenir au moins 10 caractères.",
+      rateLimit: "Trop de tentatives. Veuillez patienter une minute.",
       send: "Erreur lors de l'envoi de votre avis. Réessayez.",
     },
 );
 
 async function submitReview() {
   formError.value = "";
-  if (!form.userName.trim()) {
+  successMessage.value = "";
+
+  const name = form.userName.trim();
+  const comment = form.comment.trim();
+
+  if (!name || name.length < 2) {
     formError.value = errorCopy.value.name;
     return;
   }
-  if (!form.comment.trim()) {
-    formError.value = errorCopy.value.comment;
+  if (!comment) {
+    formError.value = errorCopy.value.commentEmpty;
+    return;
+  }
+  if (comment.length < 10) {
+    formError.value = errorCopy.value.commentShort;
     return;
   }
 
+  submitting.value = true;
   try {
     await addReview({
-      userName: form.userName,
-      comment: form.comment,
+      userName: name,
+      comment,
       rating: form.rating,
     });
-  } catch {
-    formError.value = errorCopy.value.send;
+  } catch (e) {
+    if (e.message && e.message.includes("429")) {
+      formError.value = errorCopy.value.rateLimit;
+    } else {
+      formError.value = errorCopy.value.send;
+    }
     return;
+  } finally {
+    submitting.value = false;
   }
 
   form.userName = "";

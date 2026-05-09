@@ -21,7 +21,22 @@ async function request(path, options = {}) {
     router.push("/login");
     throw new Error("Unauthorized");
   }
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    let msg;
+    const text = await res.text();
+    try {
+      const json = JSON.parse(text);
+      msg = json.error || json.message || text;
+    } catch {
+      msg = text;
+    }
+    if (res.status === 404) msg = msg || "Ressource introuvable";
+    else if (res.status === 409) msg = msg || "Cette entrée existe déjà";
+    else if (res.status === 413) msg = "Fichier trop volumineux (max 50 Mo)";
+    const err = new Error(msg);
+    err.status = res.status;
+    throw err;
+  }
   if (res.status === 204) return null;
   return res.json();
 }
@@ -41,6 +56,20 @@ export function useApi() {
       }),
     del: (path) => request(path, { method: "DELETE" }),
     upload: (path, file, extraFields = {}) => {
+      const MAX_SIZE = 50 * 1024 * 1024;
+      if (file.size > MAX_SIZE) {
+        throw new Error("Fichier trop volumineux (max 50 Mo)");
+      }
+      const validPrefixes = ["image/", "video/"];
+      if (
+        file.type &&
+        file.type !== "application/octet-stream" &&
+        !validPrefixes.some((p) => file.type.startsWith(p))
+      ) {
+        throw new Error(
+          "Type de fichier non supporté. Formats acceptés : images et vidéos.",
+        );
+      }
       const form = new FormData();
       form.append("file", file);
       for (const [k, v] of Object.entries(extraFields)) {

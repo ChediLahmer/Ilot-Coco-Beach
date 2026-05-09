@@ -2,12 +2,9 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate } from "../lib/auth.js";
 
 let configCache = null;
-let configCacheTime = 0;
-const CONFIG_CACHE_TTL = 60_000;
 
-function invalidateConfigCache() {
+export function invalidateConfigCache() {
   configCache = null;
-  configCacheTime = 0;
 }
 
 const ALLOWED_CONFIG_KEYS = new Set([
@@ -24,10 +21,10 @@ const ALLOWED_CONFIG_KEYS = new Set([
   "lng",
   "satisfaction_rate",
   "hours",
-  "hero_video",
-  "hero_poster",
-  "section_video",
-  "section_poster",
+  "hero_video_url",
+  "hero_poster_url",
+  "section_video_url",
+  "section_poster_url",
   "show_reviews",
   "about_image_1",
   "about_image_2",
@@ -49,13 +46,9 @@ export async function configRoutes(app) {
       },
     },
     async () => {
-      const now = Date.now();
-      if (configCache && now - configCacheTime < CONFIG_CACHE_TTL) {
-        return configCache;
-      }
+      if (configCache) return configCache;
       const configs = await prisma.siteConfig.findMany();
       configCache = Object.fromEntries(configs.map((c) => [c.key, c.value]));
-      configCacheTime = now;
       return configCache;
     },
   );
@@ -143,9 +136,7 @@ export async function configRoutes(app) {
       );
       invalidateConfigCache();
       const configs = await prisma.siteConfig.findMany();
-      configCache = Object.fromEntries(configs.map((c) => [c.key, c.value]));
-      configCacheTime = Date.now();
-      return configCache;
+      return Object.fromEntries(configs.map((c) => [c.key, c.value]));
     },
   );
 }

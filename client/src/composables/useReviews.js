@@ -6,6 +6,16 @@ const nextCursor = ref(null);
 const loading = ref(false);
 let initialLoaded = false;
 
+function getDeviceId() {
+  const KEY = "coco_device_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
 async function fetchReviews(cursor) {
   if (loading.value) return;
   loading.value = true;
@@ -49,9 +59,13 @@ export function useReviews() {
   ensureLoaded();
 
   async function addReview({ userName, comment, rating }) {
-    const review = await api.postReview({ userName, comment, rating });
-    reviews.value = [review, ...reviews.value];
-    return review;
+    const deviceId = getDeviceId();
+    await api.postReview({
+      userName,
+      comment,
+      rating,
+      deviceId,
+    });
   }
 
   async function loadMore() {

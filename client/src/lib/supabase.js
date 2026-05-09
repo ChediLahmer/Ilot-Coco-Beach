@@ -6,13 +6,15 @@ async function request(path, options = {}) {
     ...options,
   });
   if (!res.ok) {
-    let msg = `API ${res.status}`;
+    let msg = `${res.status}`;
     try {
       const body = await res.json();
       if (body.error) msg = body.error;
+      else if (body.message) msg = body.message;
     } catch {
       /* use status code */
     }
+    if (res.status === 429) msg = "429";
     throw new Error(msg);
   }
   if (res.status === 204) return null;

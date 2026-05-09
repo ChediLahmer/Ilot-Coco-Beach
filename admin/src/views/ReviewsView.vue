@@ -17,11 +17,21 @@ const hasMore = ref(true);
 
 const searchQuery = ref("");
 const filterRating = ref("all");
+const filterStatus = ref("all");
 
 let debounceTimer = null;
 
+const pendingCount = computed(
+  () => reviews.value.filter((r) => !r.visible).length,
+);
+
 const filteredReviews = computed(() => {
   let list = reviews.value;
+  if (filterStatus.value === "pending") {
+    list = list.filter((r) => !r.visible);
+  } else if (filterStatus.value === "approved") {
+    list = list.filter((r) => r.visible);
+  }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
     list = list.filter(
@@ -123,7 +133,15 @@ function stars(rating) {
           Modérer les avis et commentaires
         </p>
       </div>
-      <p class="text-sm text-text-muted">{{ reviews.length }} avis au total</p>
+      <p class="text-sm text-text-muted">
+        {{ reviews.length }} avis au total
+        <span
+          v-if="pendingCount"
+          class="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700"
+        >
+          {{ pendingCount }} en attente
+        </span>
+      </p>
     </div>
 
     <div
@@ -171,6 +189,25 @@ function stars(rating) {
           <option value="2">★★☆☆☆ (2)</option>
           <option value="1">★☆☆☆☆ (1)</option>
         </select>
+        <div class="flex rounded-lg border border-border overflow-hidden">
+          <button
+            v-for="opt in [
+              { value: 'all', label: 'Tous' },
+              { value: 'pending', label: 'En attente' },
+              { value: 'approved', label: 'Approuvés' },
+            ]"
+            :key="opt.value"
+            @click="filterStatus = opt.value"
+            :class="[
+              'px-3 py-2 text-xs font-medium transition-colors',
+              filterStatus === opt.value
+                ? 'bg-primary text-white'
+                : 'bg-surface text-text-muted hover:bg-primary/5',
+            ]"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
         <p class="text-sm text-text-muted whitespace-nowrap">
           {{ filteredReviews.length }} résultat(s)
         </p>
@@ -207,6 +244,12 @@ function stars(rating) {
               <span class="text-xs text-text-muted">{{
                 formatDate(review.createdAt)
               }}</span>
+              <span
+                v-if="!review.visible"
+                class="rounded-full bg-amber-100 px-2 py-0.5 text-[0.65rem] font-semibold text-amber-700"
+              >
+                En attente
+              </span>
             </div>
             <p class="mt-2 text-sm text-text-muted leading-relaxed">
               {{ review.comment }}

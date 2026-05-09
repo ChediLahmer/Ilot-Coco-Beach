@@ -157,7 +157,8 @@ model Review {
   userName  String   @map("user_name")
   comment   String
   rating    Int
-  visible   Boolean  @default(true)
+  visible   Boolean  @default(false)
+  deviceId  String?  @map("device_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([visible, id])

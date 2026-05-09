@@ -1102,28 +1102,33 @@ async function main() {
           comment:
             "Endroit magnifique, personnel très accueillant. On y retourne cet été !",
           rating: 5,
+          visible: true,
         },
         {
           userName: "Ahmed K.",
           comment:
             "Belle plage, bonne cuisine. Le service pourrait être un peu plus rapide.",
           rating: 4,
+          visible: true,
         },
         {
           userName: "Marie L.",
           comment:
             "Parfait pour une journée en famille. Les enfants ont adoré !",
           rating: 5,
+          visible: true,
         },
         {
           userName: "Karim B.",
           comment: "Cadre paradisiaque. Les cocktails sont excellents.",
           rating: 4,
+          visible: true,
         },
         {
           userName: "Laura T.",
           comment: "Un vrai petit coin de paradis. Je recommande vivement.",
           rating: 5,
+          visible: true,
         },
       ],
     });

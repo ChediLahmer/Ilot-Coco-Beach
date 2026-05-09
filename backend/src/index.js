@@ -104,7 +104,7 @@ app.setErrorHandler((error, request, reply) => {
   reply.status(statusCode).send({ error: message });
 });
 
-// Cache public GET responses for 60s (CDN/browser), revalidate after
+// Cache public GET responses — client revalidates each time but can use 304
 app.addHook("onSend", (request, reply, payload, done) => {
   if (
     request.method === "GET" &&
@@ -113,7 +113,7 @@ app.addHook("onSend", (request, reply, payload, done) => {
   ) {
     reply.header(
       "Cache-Control",
-      "public, max-age=60, stale-while-revalidate=120",
+      "public, no-cache, max-age=0, must-revalidate",
     );
   }
   done();

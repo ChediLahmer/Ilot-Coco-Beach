@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "./prisma.js";
+import { invalidateMenuCache } from "../routes/menu.js";
 
 export function startScheduler(logger) {
   // Every minute: deactivate expired flash sales and vouchers
@@ -14,6 +15,7 @@ export function startScheduler(logger) {
         logger.info(
           `Scheduler: deactivated ${sales.count} expired flash sale(s)`,
         );
+        invalidateMenuCache();
       }
 
       const vouchers = await prisma.voucher.updateMany({

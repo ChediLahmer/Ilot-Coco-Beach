@@ -2,12 +2,9 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 
 let publicMenuCache = null;
-let publicMenuCacheTime = 0;
-const MENU_CACHE_TTL = 60_000;
 
-function invalidateMenuCache() {
+export function invalidateMenuCache() {
   publicMenuCache = null;
-  publicMenuCacheTime = 0;
 }
 
 export async function menuRoutes(app) {
@@ -65,8 +62,7 @@ export async function menuRoutes(app) {
 
       // Serve cached result for public requests with no filters
       if (!request.admin && !search && (!sort || sort === "order")) {
-        const now = Date.now();
-        if (publicMenuCache && now - publicMenuCacheTime < MENU_CACHE_TTL) {
+        if (publicMenuCache) {
           return publicMenuCache;
         }
       }
@@ -94,7 +90,6 @@ export async function menuRoutes(app) {
 
       if (!request.admin && !search && (!sort || sort === "order")) {
         publicMenuCache = result;
-        publicMenuCacheTime = Date.now();
       }
 
       return result;
