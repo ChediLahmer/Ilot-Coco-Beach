@@ -3,33 +3,76 @@ import { prisma } from "./prisma.js";
 import { invalidateMenuCache } from "../routes/menu.js";
 import { processIncomingUploads } from "./upload-cleanup.js";
 
-async function logJobRun(
+// Simple in-memory job locks to prevent concurrent execution of the same job
+const jobLocks = new Map();
+
+/**
+ * Acquire a job lock. Returns true if lock acquired, false if already running.
+ */
+function acquireJobLock(jobName) {
+  if (jobLocks.has(jobName)) return false;
+  jobLocks.set(jobName, true);
+  return true;
+}
+
+/**
+ * Release a job lock.
+ */
+function releaseJobLock(jobName) {
+  jobLocks.delete(jobName);
+}
+
+/**
+ * Log job run with retry logic (up to 3 attempts)
+ */
+async function logJobRunWithRetry(
   jobName,
   status,
   itemsCount = 0,
   errorMessage = null,
   durationMs = 0,
+  logger,
+  maxRetries = 3,
 ) {
-  try {
-    await prisma.jobRun.create({
-      data: {
-        jobName,
-        status,
-        itemsCount,
-        errorMessage,
-        durationMs,
-        startedAt: new Date(Date.now() - durationMs),
-        completedAt: new Date(),
-      },
-    });
-  } catch (err) {
-    // Silently fail to avoid breaking the scheduler
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await prisma.jobRun.create({
+        data: {
+          jobName,
+          status,
+          itemsCount,
+          errorMessage,
+          durationMs,
+          startedAt: new Date(Date.now() - durationMs),
+          completedAt: new Date(),
+        },
+      });
+      return; // Success
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries) {
+        const backoffMs = Math.pow(2, attempt - 1) * 100; // Exponential backoff: 100ms, 200ms
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      }
+    }
   }
+  // If all retries fail, log but don't throw (don't break the scheduler)
+  logger.warn(
+    lastError,
+    `Failed to log job run ${jobName} after ${maxRetries} retries`,
+  );
 }
 
 export function startScheduler(logger) {
   // Every minute: deactivate expired flash sales and vouchers
   cron.schedule("* * * * *", async () => {
+    const jobName = "deactivate-expired-items";
+    if (!acquireJobLock(jobName)) {
+      logger.debug(`Job ${jobName} already running, skipping`);
+      return;
+    }
+
     const jobStart = Date.now();
     const now = new Date();
     try {
@@ -55,28 +98,38 @@ export function startScheduler(logger) {
       }
 
       const durationMs = Date.now() - jobStart;
-      await logJobRun(
-        "deactivate-expired-items",
+      await logJobRunWithRetry(
+        jobName,
         "success",
         sales.count + vouchers.count,
         null,
         durationMs,
+        logger,
       );
     } catch (err) {
       logger.error(err, "Scheduler: failed to deactivate expired items");
       const durationMs = Date.now() - jobStart;
-      await logJobRun(
-        "deactivate-expired-items",
+      await logJobRunWithRetry(
+        jobName,
         "error",
         0,
         err.message,
         durationMs,
+        logger,
       );
+    } finally {
+      releaseJobLock(jobName);
     }
   });
 
   // Every minute: reconcile incoming direct-uploaded media and remove duplicates
   cron.schedule("* * * * *", async () => {
+    const jobName = "dedup-media";
+    if (!acquireJobLock(jobName)) {
+      logger.debug(`Job ${jobName} already running, skipping`);
+      return;
+    }
+
     const jobStart = Date.now();
     try {
       const processed = await processIncomingUploads(logger, { limit: 10 });
@@ -84,16 +137,38 @@ export function startScheduler(logger) {
         logger.info(`Scheduler: processed ${processed} incoming upload(s)`);
       }
       const durationMs = Date.now() - jobStart;
-      await logJobRun("dedup-media", "success", processed, null, durationMs);
+      await logJobRunWithRetry(
+        jobName,
+        "success",
+        processed,
+        null,
+        durationMs,
+        logger,
+      );
     } catch (err) {
       logger.error(err, "Scheduler: incoming upload cleanup failed");
       const durationMs = Date.now() - jobStart;
-      await logJobRun("dedup-media", "error", 0, err.message, durationMs);
+      await logJobRunWithRetry(
+        jobName,
+        "error",
+        0,
+        err.message,
+        durationMs,
+        logger,
+      );
+    } finally {
+      releaseJobLock(jobName);
     }
   });
 
   // Daily at 3 AM: clean up expired password reset tokens and old analytics
   cron.schedule("0 3 * * *", async () => {
+    const jobName = "cleanup-tokens-analytics";
+    if (!acquireJobLock(jobName)) {
+      logger.debug(`Job ${jobName} already running, skipping`);
+      return;
+    }
+
     const jobStart = Date.now();
     try {
       const tokens = await prisma.passwordReset.deleteMany({
@@ -119,25 +194,71 @@ export function startScheduler(logger) {
       }
 
       const durationMs = Date.now() - jobStart;
-      await logJobRun(
-        "cleanup-tokens-analytics",
+      await logJobRunWithRetry(
+        jobName,
         "success",
         tokens.count + events.count,
         null,
         durationMs,
+        logger,
       );
     } catch (err) {
       logger.error(err, "Scheduler: daily cleanup failed");
       const durationMs = Date.now() - jobStart;
-      await logJobRun(
-        "cleanup-tokens-analytics",
+      await logJobRunWithRetry(
+        jobName,
         "error",
         0,
         err.message,
         durationMs,
+        logger,
       );
+    } finally {
+      releaseJobLock(jobName);
     }
   });
+
+  // Test job: every 2 minutes (for testing/verification)
+  // Can be disabled in production via env variable
+  const enableTestJob = process.env.ENABLE_TEST_JOB === "true";
+  if (enableTestJob) {
+    cron.schedule("*/2 * * * *", async () => {
+      const jobName = "test-job-2min";
+      if (!acquireJobLock(jobName)) {
+        logger.debug(`Job ${jobName} already running, skipping`);
+        return;
+      }
+
+      const jobStart = Date.now();
+      try {
+        const count = await prisma.jobRun.count();
+        logger.info(`Test job executed: ${count} total job runs recorded`);
+        const durationMs = Date.now() - jobStart;
+        await logJobRunWithRetry(
+          jobName,
+          "success",
+          count,
+          null,
+          durationMs,
+          logger,
+        );
+      } catch (err) {
+        logger.error(err, "Test job failed");
+        const durationMs = Date.now() - jobStart;
+        await logJobRunWithRetry(
+          jobName,
+          "error",
+          0,
+          err.message,
+          durationMs,
+          logger,
+        );
+      } finally {
+        releaseJobLock(jobName);
+      }
+    });
+    logger.info("Test job (2-min interval) enabled via ENABLE_TEST_JOB");
+  }
 
   logger.info(
     "Scheduler started: expiry checks every minute, daily cleanup at 03:00",
