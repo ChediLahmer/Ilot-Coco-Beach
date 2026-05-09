@@ -146,6 +146,16 @@ export async function uploadRoutes(app) {
         file.filename,
       );
 
+      // Fast path for videos: skip hash/dedup round-trips to reduce upload latency.
+      // With backend-only uploads, videos already incur a double hop (browser->API->S3).
+      if (mime.startsWith("video/")) {
+        const finalName = ext
+          ? `${baseName || file.filename.replace(/\.[^.]+$/, "")}.${ext}`
+          : file.filename;
+        const url = await uploadFile(buffer, finalName, mime, null);
+        return reply.status(201).send({ url });
+      }
+
       const hash = createHash("sha256").update(buffer).digest("hex");
       const existing = await findExistingByHash(hash);
       if (existing) {
