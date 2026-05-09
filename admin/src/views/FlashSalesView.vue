@@ -29,6 +29,7 @@ const imagePreview = ref(null);
 const removeImage = ref(false);
 const loading = ref(false);
 const saving = ref(false);
+const busy = ref(new Set());
 const error = ref(null);
 const menuItems = ref([]);
 const spaces = ref([]);
@@ -67,6 +68,7 @@ async function loadData() {
     totalItems.value = res.total;
   } catch {
     error.value = "Erreur de chargement";
+    toast.error("Erreur de chargement des ventes flash");
   } finally {
     loading.value = false;
   }
@@ -206,7 +208,7 @@ async function save() {
       editing.value ? "Vente flash mise à jour" : "Vente flash créée",
     );
   } catch (e) {
-    error.value = e.message || "Erreur lors de la sauvegarde";
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;
   }
@@ -218,32 +220,41 @@ async function remove(sale) {
     message: `Êtes-vous sûr de vouloir supprimer "${sale.title.fr}" ? Cette action est irréversible.`,
   });
   if (!ok) return;
+  busy.value.add(sale.id);
   try {
     await api.del(`/flash-sales/${sale.id}`);
     await loadData();
     toast.success("Vente flash supprimée");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(sale.id);
   }
 }
 
 async function toggleActive(sale) {
+  busy.value.add(sale.id);
   try {
     await api.put(`/flash-sales/${sale.id}`, { isActive: !sale.isActive });
     await loadData();
     toast.success(sale.isActive ? "Désactivée" : "Activée");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(sale.id);
   }
 }
 
 async function toggleVisible(sale) {
+  busy.value.add(sale.id);
   try {
     await api.put(`/flash-sales/${sale.id}`, { visible: !sale.visible });
     await loadData();
     toast.success(sale.visible ? "Masquée" : "Rendue visible");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(sale.id);
   }
 }
 
@@ -420,12 +431,14 @@ function formatDate(d) {
                 <AppToggle
                   :model-value="sale.isActive"
                   @update:model-value="toggleActive(sale)"
+                  :disabled="busy.has(sale.id)"
                 />
               </td>
               <td class="px-5 py-3.5">
                 <AppToggle
                   :model-value="sale.visible"
                   @update:model-value="toggleVisible(sale)"
+                  :disabled="busy.has(sale.id)"
                 />
               </td>
               <td class="px-5 py-3.5">
@@ -450,7 +463,8 @@ function formatDate(d) {
                   </button>
                   <button
                     @click="remove(sale)"
-                    class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                    :disabled="busy.has(sale.id)"
+                    class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
                   >
                     <svg
                       class="w-4 h-4"

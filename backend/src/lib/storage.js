@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
@@ -16,7 +17,26 @@ const s3 = new S3Client({
 
 const BUCKET = process.env.S3_BUCKET || "cocobeach";
 
-export async function uploadFile(buffer, filename, contentType) {
+function buildPublicUrl(key) {
+  const baseUrl = process.env.S3_PUBLIC_URL || "http://localhost:9100";
+  return `${baseUrl}/${BUCKET}/${key}`;
+}
+
+export async function findExistingByHash(hash) {
+  const key = `dedup/${hash}`;
+  try {
+    const head = await s3.send(
+      new HeadObjectCommand({ Bucket: BUCKET, Key: key }),
+    );
+    const realKey = head.Metadata?.["original-key"];
+    if (realKey) return buildPublicUrl(realKey);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function uploadFile(buffer, filename, contentType, hash) {
   const basename = filename
     .replace(/^.*[\\/]/, "")
     .replace(/[^a-zA-Z0-9._-]/g, "_")
@@ -30,8 +50,21 @@ export async function uploadFile(buffer, filename, contentType) {
       ContentType: contentType,
     }),
   );
-  const baseUrl = process.env.S3_PUBLIC_URL || "http://localhost:9100";
-  return `${baseUrl}/${BUCKET}/${key}`;
+
+  if (hash) {
+    await s3
+      .send(
+        new PutObjectCommand({
+          Bucket: BUCKET,
+          Key: `dedup/${hash}`,
+          Body: "",
+          Metadata: { "original-key": key },
+        }),
+      )
+      .catch(() => {});
+  }
+
+  return buildPublicUrl(key);
 }
 
 export async function deleteFile(url) {

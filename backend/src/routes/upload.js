@@ -1,6 +1,7 @@
 import { authenticate } from "../lib/auth.js";
-import { uploadFile } from "../lib/storage.js";
+import { uploadFile, findExistingByHash } from "../lib/storage.js";
 import { fileTypeFromBuffer } from "file-type";
+import { createHash } from "crypto";
 
 export async function uploadRoutes(app) {
   app.post(
@@ -32,8 +33,11 @@ export async function uploadRoutes(app) {
         "image/gif",
         "video/mp4",
         "video/webm",
+        "video/quicktime",
+        "video/x-m4v",
       ];
-      if (!allowed.includes(file.mimetype)) {
+      const allowedBrowser = [...allowed, "application/octet-stream"];
+      if (!allowedBrowser.includes(file.mimetype)) {
         return reply.status(400).send({ error: "File type not allowed" });
       }
 
@@ -46,7 +50,13 @@ export async function uploadRoutes(app) {
           .send({ error: "File content does not match an allowed type" });
       }
 
-      const url = await uploadFile(buffer, file.filename, detected.mime);
+      const hash = createHash("sha256").update(buffer).digest("hex");
+      const existing = await findExistingByHash(hash);
+      if (existing) {
+        return reply.status(201).send({ url: existing });
+      }
+
+      const url = await uploadFile(buffer, file.filename, detected.mime, hash);
       return reply.status(201).send({ url });
     },
   );

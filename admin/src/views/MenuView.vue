@@ -22,6 +22,7 @@ const editingCat = ref(null);
 const editingItem = ref(null);
 const loading = ref(false);
 const saving = ref(false);
+const busy = ref(new Set());
 const error = ref(null);
 
 // Search, sort & pagination
@@ -106,6 +107,7 @@ async function loadData() {
     }
   } catch {
     error.value = "Erreur de chargement";
+    toast.error("Erreur de chargement du menu");
   } finally {
     loading.value = false;
   }
@@ -140,7 +142,7 @@ async function saveCat() {
       editingCat.value ? "Catégorie mise à jour" : "Catégorie créée",
     );
   } catch (e) {
-    error.value = e.message || "Erreur lors de la sauvegarde";
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;
   }
@@ -152,6 +154,7 @@ async function deleteCat(cat) {
     message: `Êtes-vous sûr de vouloir supprimer "${cat.name.fr}" et tous ses plats ? Cette action est irréversible.`,
   });
   if (!ok) return;
+  busy.value.add(cat.id);
   try {
     await api.del(`/menu/categories/${cat.id}`);
     if (activeCategory.value === cat.id) activeCategory.value = null;
@@ -159,6 +162,8 @@ async function deleteCat(cat) {
     toast.success("Catégorie supprimée");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(cat.id);
   }
 }
 
@@ -231,7 +236,7 @@ async function saveItem() {
     await loadData();
     toast.success(editingItem.value ? "Plat mis à jour" : "Plat créé");
   } catch (e) {
-    error.value = e.message || "Erreur lors de la sauvegarde";
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;
   }
@@ -243,32 +248,41 @@ async function deleteItem(item) {
     message: `Êtes-vous sûr de vouloir supprimer "${item.name.fr}" ? Cette action est irréversible.`,
   });
   if (!ok) return;
+  busy.value.add(item.id);
   try {
     await api.del(`/menu/items/${item.id}`);
     await loadData();
     toast.success("Plat supprimé");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(item.id);
   }
 }
 
 async function toggleAvailability(item) {
+  busy.value.add(item.id);
   try {
     await api.put(`/menu/items/${item.id}`, { available: !item.available });
     await loadData();
     toast.success(item.available ? "Marqué indisponible" : "Marqué disponible");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(item.id);
   }
 }
 
 async function toggleVisible(item) {
+  busy.value.add(item.id);
   try {
     await api.put(`/menu/items/${item.id}`, { visible: !item.visible });
     await loadData();
     toast.success(item.visible ? "Masqué" : "Rendu visible");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(item.id);
   }
 }
 
@@ -361,7 +375,8 @@ onUnmounted(() => {
           </button>
           <button
             @click="deleteCat(cat)"
-            class="p-2 rounded text-text-muted hover:text-danger hover:bg-danger/5"
+            :disabled="busy.has(cat.id)"
+            class="p-2 rounded text-text-muted hover:text-danger hover:bg-danger/5 disabled:opacity-50"
           >
             <svg
               class="h-4 w-4"
@@ -477,12 +492,14 @@ onUnmounted(() => {
               <AppToggle
                 :model-value="item.available"
                 @update:model-value="toggleAvailability(item)"
+                :disabled="busy.has(item.id)"
               />
             </td>
             <td class="px-6 py-3.5">
               <AppToggle
                 :model-value="item.visible"
                 @update:model-value="toggleVisible(item)"
+                :disabled="busy.has(item.id)"
               />
             </td>
             <td class="px-6 py-3.5">
@@ -507,7 +524,8 @@ onUnmounted(() => {
                 </button>
                 <button
                   @click="deleteItem(item)"
-                  class="p-2.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                  :disabled="busy.has(item.id)"
+                  class="p-2.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
                 >
                   <svg
                     class="h-4 w-4"

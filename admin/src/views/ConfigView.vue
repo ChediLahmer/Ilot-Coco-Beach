@@ -118,6 +118,7 @@ async function loadData() {
     showReviews.value = config.value.show_reviews === "true";
   } catch {
     error.value = "Erreur de chargement";
+    toast.error("Erreur de chargement de la configuration");
   } finally {
     loading.value = false;
   }
@@ -144,6 +145,7 @@ async function save() {
     setTimeout(() => (saved.value = false), 2000);
   } catch (e) {
     error.value = e.message || "Erreur lors de la sauvegarde";
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;
   }

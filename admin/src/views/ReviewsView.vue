@@ -11,6 +11,7 @@ const { confirm } = useConfirm();
 const reviews = ref([]);
 const loading = ref(false);
 const error = ref(null);
+const busy = ref(new Set());
 const nextCursor = ref(null);
 const hasMore = ref(true);
 
@@ -58,6 +59,7 @@ async function loadData() {
     reviews.value = all;
   } catch (e) {
     error.value = "Impossible de charger les avis";
+    toast.error("Impossible de charger les avis");
   } finally {
     loading.value = false;
   }
@@ -72,22 +74,28 @@ async function remove(r) {
     message: `Êtes-vous sûr de vouloir supprimer l'avis de "${r.userName}" ? Cette action est irréversible.`,
   });
   if (!ok) return;
+  busy.value.add(r.id);
   try {
     await api.del(`/reviews/${r.id}`);
     await loadData();
     toast.success("Avis supprimé");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(r.id);
   }
 }
 
 async function toggleVisible(r) {
+  busy.value.add(r.id);
   try {
     await api.put(`/reviews/${r.id}`, { visible: !r.visible });
     await loadData();
     toast.success(r.visible ? "Avis masqué" : "Avis rendu visible");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la mise à jour");
+  } finally {
+    busy.value.delete(r.id);
   }
 }
 
@@ -208,11 +216,13 @@ function stars(rating) {
             <AppToggle
               :modelValue="review.visible"
               @update:modelValue="toggleVisible(review)"
+              :disabled="busy.has(review.id)"
               label="Visible"
             />
             <button
               @click="remove(review)"
-              class="p-2 rounded text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+              :disabled="busy.has(review.id)"
+              class="p-2 rounded text-text-muted hover:text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
               title="Supprimer"
             >
               <svg

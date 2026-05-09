@@ -27,6 +27,7 @@ const editing = ref(null);
 const form = ref(resetForm());
 const loading = ref(false);
 const saving = ref(false);
+const busy = ref(new Set());
 const error = ref(null);
 
 // Search, filter, sort, pagination
@@ -62,6 +63,7 @@ async function loadData() {
     totalItems.value = res.total;
   } catch {
     error.value = "Erreur de chargement";
+    toast.error("Erreur de chargement des vouchers");
   } finally {
     loading.value = false;
   }
@@ -125,7 +127,7 @@ async function save() {
     await loadData();
     toast.success(editing.value ? "Voucher mis à jour" : "Voucher créé");
   } catch (e) {
-    error.value = e.message || "Erreur lors de la sauvegarde";
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;
   }
@@ -137,32 +139,41 @@ async function remove(v) {
     message: `Êtes-vous sûr de vouloir supprimer le voucher "${v.code}" ? Cette action est irréversible.`,
   });
   if (!ok) return;
+  busy.value.add(v.id);
   try {
     await api.del(`/vouchers/${v.id}`);
     await loadData();
     toast.success("Voucher supprimé");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(v.id);
   }
 }
 
 async function toggleActive(v) {
+  busy.value.add(v.id);
   try {
     await api.put(`/vouchers/${v.id}`, { isActive: !v.isActive });
     await loadData();
     toast.success(v.isActive ? "Désactivé" : "Activé");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(v.id);
   }
 }
 
 async function toggleVisible(v) {
+  busy.value.add(v.id);
   try {
     await api.put(`/vouchers/${v.id}`, { visible: !v.visible });
     await loadData();
     toast.success(v.visible ? "Masqué" : "Rendu visible");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(v.id);
   }
 }
 
@@ -320,12 +331,14 @@ function formatDate(d) {
                 <AppToggle
                   :model-value="v.isActive"
                   @update:model-value="toggleActive(v)"
+                  :disabled="busy.has(v.id)"
                 />
               </td>
               <td class="px-5 py-3.5">
                 <AppToggle
                   :model-value="v.visible"
                   @update:model-value="toggleVisible(v)"
+                  :disabled="busy.has(v.id)"
                 />
               </td>
               <td class="px-5 py-3.5">
@@ -350,7 +363,8 @@ function formatDate(d) {
                   </button>
                   <button
                     @click="remove(v)"
-                    class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                    :disabled="busy.has(v.id)"
+                    class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
                   >
                     <svg
                       class="w-4 h-4"

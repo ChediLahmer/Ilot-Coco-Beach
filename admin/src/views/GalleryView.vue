@@ -18,6 +18,7 @@ const uploading = ref(false);
 const previewUrl = ref(null);
 const loading = ref(false);
 const error = ref(null);
+const busy = ref(new Set());
 
 // Filters
 const searchQuery = ref("");
@@ -91,6 +92,7 @@ async function loadCategories() {
     categories.value = await api.get("/gallery/categories");
   } catch {
     error.value = "Erreur de chargement des catégories";
+    toast.error("Erreur de chargement des catégories");
   }
 }
 
@@ -112,6 +114,7 @@ async function loadData() {
     images.value = all;
   } catch {
     error.value = "Erreur de chargement";
+    toast.error("Erreur de chargement de la galerie");
   } finally {
     loading.value = false;
   }
@@ -157,22 +160,28 @@ async function remove(img) {
       "Êtes-vous sûr de vouloir supprimer cette image ? Cette action est irréversible.",
   });
   if (!ok) return;
+  busy.value.add(img.id);
   try {
     await api.del(`/gallery/${img.id}`);
     await loadData();
     toast.success("Image supprimée");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(img.id);
   }
 }
 
 async function toggleVisible(img) {
+  busy.value.add(img.id);
   try {
     await api.put(`/gallery/${img.id}`, { visible: !img.visible });
     await loadData();
     toast.success(img.visible ? "Image masquée" : "Image rendue visible");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(img.id);
   }
 }
 
@@ -384,7 +393,8 @@ async function deleteCat(cat) {
           </div>
           <button
             @click.stop="remove(img)"
-            class="absolute top-2 right-2 p-1.5 bg-danger text-white rounded-lg shadow-lg hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            :disabled="busy.has(img.id)"
+            class="absolute top-2 right-2 p-1.5 bg-danger text-white rounded-lg shadow-lg hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity disabled:opacity-50"
           >
             <svg
               class="w-4 h-4"
@@ -405,6 +415,7 @@ async function deleteCat(cat) {
           <AppToggle
             :model-value="img.visible"
             @update:model-value="toggleVisible(img)"
+            :disabled="busy.has(img.id)"
           />
           <select
             :value="img.categoryId || ''"

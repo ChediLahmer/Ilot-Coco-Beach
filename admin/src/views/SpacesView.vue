@@ -23,6 +23,7 @@ const imagePreview = ref(null);
 const removeImage = ref(false);
 const loading = ref(false);
 const saving = ref(false);
+const busy = ref(new Set());
 const error = ref(null);
 
 // Search, filter, sort, pagination
@@ -61,6 +62,7 @@ async function loadData() {
     totalItems.value = res.total;
   } catch {
     error.value = "Erreur de chargement";
+    toast.error("Erreur de chargement des espaces");
   } finally {
     loading.value = false;
   }
@@ -167,7 +169,7 @@ async function save() {
     await loadData();
     toast.success(editing.value ? "Espace mis à jour" : "Espace créé");
   } catch (e) {
-    error.value = e.message || "Erreur lors de la sauvegarde";
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;
   }
@@ -179,16 +181,20 @@ async function remove(space) {
     message: `Êtes-vous sûr de vouloir supprimer "${space.name.fr}" ? Cette action est irréversible.`,
   });
   if (!ok) return;
+  busy.value.add(space.id);
   try {
     await api.del(`/spaces/${space.id}`);
     await loadData();
     toast.success("Espace supprimé");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
+  } finally {
+    busy.value.delete(space.id);
   }
 }
 
 async function toggleAvailability(space) {
+  busy.value.add(space.id);
   try {
     await api.put(`/spaces/${space.id}`, { available: !space.available });
     await loadData();
@@ -197,16 +203,21 @@ async function toggleAvailability(space) {
     );
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(space.id);
   }
 }
 
 async function toggleVisible(space) {
+  busy.value.add(space.id);
   try {
     await api.put(`/spaces/${space.id}`, { visible: !space.visible });
     await loadData();
     toast.success(space.visible ? "Masqué" : "Rendu visible");
   } catch (e) {
     toast.error(e.message || "Erreur de mise à jour");
+  } finally {
+    busy.value.delete(space.id);
   }
 }
 
@@ -344,6 +355,7 @@ onUnmounted(() => {
             >
               <AppToggle
                 :model-value="space.available"
+                :disabled="busy.has(space.id)"
                 @update:model-value="toggleAvailability(space)"
               />
               Disponible
@@ -353,6 +365,7 @@ onUnmounted(() => {
             >
               <AppToggle
                 :model-value="space.visible"
+                :disabled="busy.has(space.id)"
                 @update:model-value="toggleVisible(space)"
               />
               Visible
@@ -382,7 +395,8 @@ onUnmounted(() => {
               </button>
               <button
                 @click="remove(space)"
-                class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                :disabled="busy.has(space.id)"
+                class="p-2.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
               >
                 <svg
                   class="w-4 h-4"
