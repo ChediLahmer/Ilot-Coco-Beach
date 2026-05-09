@@ -11,7 +11,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: rm -f package-lock.json && npm install --include=dev && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate deploy && if [ "$SEED_DB" = "true" ]; then node prisma/seed.js; fi
+    buildCommand: rm -f package-lock.json && npm install --include=dev && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate reset --force
     startCommand: npm start
     envVars:
       - key: DATABASE_URL

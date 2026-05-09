@@ -11,6 +11,7 @@ async function main() {
   // ── Truncate all tables (dependency order) ──────────────
   await prisma.$transaction([
     prisma.analyticsEvent.deleteMany(),
+    prisma.jobRun.deleteMany(),
     prisma.reviewStats.deleteMany(),
     prisma.review.deleteMany(),
     prisma.flashSale.deleteMany(),
