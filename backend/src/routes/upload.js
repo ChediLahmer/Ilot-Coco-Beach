@@ -1,12 +1,12 @@
 import { authenticate } from "../lib/auth.js";
 import {
-  uploadFile,
-  findExistingByHash,
   createPresignedUpload,
   deleteFile,
+  uploadBufferToKey,
+  createStorageKeyWithPrefix,
+  buildPublicUrl,
 } from "../lib/storage.js";
 import { fileTypeFromBuffer } from "file-type";
-import { createHash } from "crypto";
 import {
   isBrowserMimeAllowed,
   isDetectedMimeAllowed,
@@ -146,16 +146,15 @@ export async function uploadRoutes(app) {
         file.filename,
       );
 
-      const hash = createHash("sha256").update(buffer).digest("hex");
-      const existing = await findExistingByHash(hash);
-      if (existing) {
-        return reply.status(201).send({ url: existing });
-      }
-
       const finalName = ext
         ? `${baseName || file.filename.replace(/\.[^.]+$/, "")}.${ext}`
         : file.filename;
-      const url = await uploadFile(buffer, finalName, mime, hash);
+
+      // Fast upload path: store under incoming/ and defer hash + dedup
+      // to the background cleanup scheduler.
+      const incomingKey = createStorageKeyWithPrefix(finalName, "incoming/");
+      await uploadBufferToKey(incomingKey, buffer, mime);
+      const url = buildPublicUrl(incomingKey);
       return reply.status(201).send({ url });
     },
   );
