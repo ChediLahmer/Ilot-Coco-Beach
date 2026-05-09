@@ -14,8 +14,8 @@ const IMAGE_MAX_DIMENSION = Number(
   import.meta.env.VITE_IMAGE_UPLOAD_MAX_DIMENSION || 2200,
 );
 const IMAGE_QUALITY = Number(import.meta.env.VITE_IMAGE_UPLOAD_QUALITY || 0.82);
-const MEDIA_EXT_RE =
-  /\.(?:png|jpe?g|webp|gif|svg|mp4|webm|ogg|mov|m4v|avi|mkv)(?:$|[?#])/i;
+// Only proxy images — videos must stream directly from R2 CDN
+const MEDIA_EXT_RE = /\.(?:png|jpe?g|webp|gif|svg)(?:$|[?#])/i;
 const VIDEO_EXTENSIONS = {
   mp4: "video/mp4",
   webm: "video/webm",
