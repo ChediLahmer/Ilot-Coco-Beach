@@ -200,6 +200,13 @@
           </div>
         </div>
       </div>
+
+      <div
+        v-else
+        class="rounded-xl border border-charcoal/8 bg-white/75 px-6 py-10 text-center shadow-sm"
+      >
+        <p class="text-sm text-charcoal/60">{{ t("reviews.empty") }}</p>
+      </div>
     </div>
   </section>
 </template>

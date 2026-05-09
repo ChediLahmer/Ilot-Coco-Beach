@@ -218,9 +218,15 @@
           </p>
         </div>
 
-        <div v-else class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-          <div v-if="featureItems.length">
-            <div class="grid gap-5 grid-cols-1 sm:grid-cols-2">
+        <div
+          v-else
+          class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start"
+        >
+          <div class="order-2 lg:order-1">
+            <div
+              v-if="featureItems.length"
+              class="grid grid-cols-1 gap-5 sm:grid-cols-2"
+            >
               <article
                 v-for="item in featureItems"
                 :key="item.id"
@@ -265,9 +271,27 @@
                 </div>
               </article>
             </div>
+
+            <div
+              v-else
+              class="premium-card flex min-h-[22rem] items-center justify-center rounded-[1.75rem] border border-dashed border-charcoal/12 px-6 py-10 text-center"
+            >
+              <div class="max-w-sm">
+                <p
+                  class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-ocean/70"
+                >
+                  {{ copy.selectionTitle }}
+                </p>
+                <p class="mt-4 text-sm leading-7 text-charcoal/60">
+                  {{ copy.emptyVisuals }}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div class="premium-card rounded-[1.75rem] p-6 sm:p-8">
+          <div
+            class="order-1 rounded-[1.75rem] premium-card p-6 sm:p-8 lg:order-2 lg:sticky lg:top-28"
+          >
             <div class="flex items-center justify-between gap-4">
               <div>
                 <p
@@ -434,6 +458,8 @@ const copy = computed(
         currency: "DT",
         backHome: "Retour à l’accueil",
         emptyMenu: "Aucun plat disponible pour le moment.",
+        emptyVisuals:
+          "Les photos des plats apparaîtront ici dès que l'équipe les ajoutera.",
       },
       en: {
         title: "The full menu",
@@ -450,6 +476,8 @@ const copy = computed(
         currency: "DT",
         backHome: "Back to home",
         emptyMenu: "No dishes available at the moment.",
+        emptyVisuals:
+          "Dish photos will appear here as soon as the team adds them.",
       },
       ar: {
         title: "القائمة الكاملة",
@@ -466,6 +494,7 @@ const copy = computed(
         currency: "د.ت",
         backHome: "العودة للرئيسية",
         emptyMenu: "لا توجد أطباق متاحة حالياً.",
+        emptyVisuals: "ستظهر صور الأطباق هنا بمجرد أن يضيفها الفريق.",
       },
     })[locale.value] || {
       title: "La carte complète",
@@ -482,6 +511,8 @@ const copy = computed(
       currency: "DT",
       backHome: "Retour à l’accueil",
       emptyMenu: "Aucun plat disponible pour le moment.",
+      emptyVisuals:
+        "Les photos des plats apparaîtront ici dès que l'équipe les ajoutera.",
     },
 );
 

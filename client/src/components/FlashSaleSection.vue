@@ -21,6 +21,25 @@
   </section>
 
   <section
+    v-else-if="flashSalesError && !flashSales.length"
+    id="flash-offers"
+    class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-r from-ocean-dark/5 via-lagoon/8 to-sunset/10"
+  >
+    <div class="mx-auto max-w-6xl text-center">
+      <p class="section-kicker">{{ t("vouchers.title") }}</p>
+      <h2 class="section-title mt-3">{{ t("flash.title") }}</h2>
+      <div class="mx-auto section-divider" />
+      <p class="mt-6 text-sm text-charcoal/60">{{ t("error.description") }}</p>
+      <button
+        class="mt-5 rounded-full bg-ocean px-5 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-ocean/90"
+        @click="retryFlashSales"
+      >
+        {{ t("error.retry") }}
+      </button>
+    </div>
+  </section>
+
+  <section
     v-else-if="flashSales.length > 0"
     id="flash-offers"
     class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-r from-ocean-dark/5 via-lagoon/8 to-sunset/10"
@@ -219,6 +238,19 @@
       </div>
     </div>
   </section>
+
+  <section
+    v-else
+    id="flash-offers"
+    class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-r from-ocean-dark/5 via-lagoon/8 to-sunset/10"
+  >
+    <div class="mx-auto max-w-6xl text-center">
+      <p class="section-kicker">{{ t("vouchers.title") }}</p>
+      <h2 class="section-title mt-3">{{ t("flash.title") }}</h2>
+      <div class="mx-auto section-divider" />
+      <p class="mt-6 text-sm text-charcoal/60">{{ t("flash.empty") }}</p>
+    </div>
+  </section>
 </template>
 
 <script setup>
@@ -239,9 +271,11 @@ const now = useCountdown();
 const {
   flashSales,
   flashSalesHasMore,
+  flashSalesError,
   flashSalesLoading,
   loadMoreFlashSales,
   loading: dataLoading,
+  retryFlashSales,
 } = useData();
 
 const flashPrev = ref(null);

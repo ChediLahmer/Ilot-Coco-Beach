@@ -3,10 +3,15 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
+function picsum(seed, width = 1600, height = 1000) {
+  return `https://picsum.photos/seed/${seed}/${width}/${height}`;
+}
+
 async function main() {
   // ── Truncate all tables (dependency order) ──────────────
   await prisma.$transaction([
     prisma.analyticsEvent.deleteMany(),
+    prisma.reviewStats.deleteMany(),
     prisma.review.deleteMany(),
     prisma.flashSale.deleteMany(),
     prisma.menuItem.deleteMany(),
@@ -773,6 +778,31 @@ async function main() {
     },
   ];
 
+  categories.forEach((category, categoryIndex) => {
+    for (let index = 1; index <= 6; index += 1) {
+      category.items.push({
+        name: {
+          fr: `${category.name.fr} Signature ${index}`,
+          en: `${category.name.en} Signature ${index}`,
+          ar: `${category.name.ar} ${index}`,
+        },
+        description: {
+          fr: `Variation ${index} pensée pour les services chargés et les grandes tables.`,
+          en: `Variation ${index} designed for busier service and larger tables.`,
+          ar: `نسخة ${index} مصممة لأوقات الذروة والطاولات الكبيرة.`,
+        },
+        image:
+          index % 2 === 0
+            ? picsum(`menu-${categoryIndex + 1}-${index}`, 1200, 900)
+            : null,
+        priceStandard: 8 + categoryIndex * 5 + index * 2,
+        priceExtra: 12 + categoryIndex * 7 + index * 3,
+        available: index % 5 !== 0,
+        order: category.items.length + 1,
+      });
+    }
+  });
+
   for (const cat of categories) {
     const created = await prisma.menuCategory.create({
       data: { name: cat.name, order: cat.order },
@@ -926,9 +956,62 @@ async function main() {
     },
   ];
 
+  spaces.push(
+    ...Array.from({ length: 10 }, (_, index) => ({
+      name: {
+        fr: `Salon Privé ${index + 1}`,
+        en: `Private Lounge ${index + 1}`,
+        ar: `جلسة خاصة ${index + 1}`,
+      },
+      description: {
+        fr: `Espace modulable ${index + 1} avec vue mer, pensé pour tester les longues listes et les réservations nombreuses.`,
+        en: `Flexible sea-view space ${index + 1} added to test long listings and larger bookings.`,
+        ar: `مساحة بحرية مرنة ${index + 1} لاختبار القوائم الطويلة والحجوزات الكبيرة.`,
+      },
+      image: picsum(`space-${index + 1}`, 1400, 1000),
+      price: 65 + index * 8,
+      capacity: 4 + (index % 5) * 2,
+      available: index % 4 !== 0,
+      order: spaces.length + index + 1,
+    })),
+  );
+
   for (const space of spaces) {
     await prisma.space.create({ data: space });
   }
+
+  // ── Gallery Categories + Images ────────────────────────
+  const galleryCategories = [
+    { name: { fr: "Arrivee", en: "Arrival", ar: "الوصول" }, order: 1 },
+    { name: { fr: "Cabines", en: "Cabins", ar: "الأكواخ" }, order: 2 },
+    { name: { fr: "Table", en: "Dining", ar: "الطاولة" }, order: 3 },
+    { name: { fr: "Coucher de soleil", en: "Sunset", ar: "الغروب" }, order: 4 },
+    { name: { fr: "Lounge", en: "Lounge", ar: "الاسترخاء" }, order: 5 },
+    { name: { fr: "Evenements", en: "Events", ar: "الفعاليات" }, order: 6 },
+  ];
+
+  const createdGalleryCategories = [];
+  for (const category of galleryCategories) {
+    createdGalleryCategories.push(
+      await prisma.galleryCategory.create({ data: category }),
+    );
+  }
+
+  await prisma.galleryImage.createMany({
+    data: createdGalleryCategories.flatMap((category, categoryIndex) =>
+      Array.from({ length: 8 }, (_, index) => ({
+        url: picsum(`gallery-${category.id}-${index + 1}`, 1600, 1100),
+        alt: `${category.name.fr} ${index + 1}`,
+        category:
+          ["arrival", "overwater", "dining", "terrace", "lounge", "events"][
+            categoryIndex
+          ] || "overwater",
+        categoryId: category.id,
+        order: index + 1,
+        visible: index % 7 !== 0,
+      })),
+    ),
+  });
 
   // ── Flash Sales ─────────────────────────────────────────
   const now = Date.now();
@@ -1047,6 +1130,26 @@ async function main() {
     },
   ];
 
+  flashSales.push(
+    ...Array.from({ length: 12 }, (_, index) => ({
+      title: {
+        fr: `Offre Instantanee ${index + 1}`,
+        en: `Instant Deal ${index + 1}`,
+        ar: `عرض سريع ${index + 1}`,
+      },
+      description: {
+        fr: `Promotion ${index + 1} pour tester le comportement du site avec beaucoup d'offres en meme temps.`,
+        en: `Promotion ${index + 1} to test the site with many simultaneous offers.`,
+        ar: `عرض ${index + 1} لاختبار الموقع مع عدد كبير من العروض في الوقت نفسه.`,
+      },
+      discountPercent: 10 + (index % 6) * 5,
+      image: picsum(`flash-${index + 1}`, 1200, 900),
+      endsAt: new Date(now + (index + 2) * 86400000 + (index % 6) * 3600000),
+      isActive: index % 5 !== 0,
+      visible: index % 4 !== 0,
+    })),
+  );
+
   for (const sale of flashSales) {
     await prisma.flashSale.create({ data: sale });
   }
@@ -1096,96 +1199,120 @@ async function main() {
     },
   ];
 
+  vouchers.push(
+    ...Array.from({ length: 18 }, (_, index) => ({
+      code: `LOADTEST${String(index + 1).padStart(2, "0")}`,
+      discountPercent: 5 + (index % 6) * 5,
+      validUntil: new Date(2026, 5 + (index % 6), 10 + (index % 18)),
+      isActive: index % 7 !== 0,
+      visible: index % 6 !== 0,
+    })),
+  );
+
   for (const v of vouchers) {
     await prisma.voucher.create({ data: v });
   }
 
   // ── Reviews ─────────────────────────────────────────────
-  await prisma.review.createMany({
-    data: [
-      {
-        userName: "Sophie M.",
-        comment:
-          "Endroit magnifique, personnel très accueillant. On y retourne cet été !",
-        rating: 5,
-        visible: true,
-      },
-      {
-        userName: "Ahmed K.",
-        comment:
-          "Belle plage, bonne cuisine. Le service pourrait être un peu plus rapide.",
-        rating: 4,
-        visible: true,
-      },
-      {
-        userName: "Marie L.",
-        comment: "Parfait pour une journée en famille. Les enfants ont adoré !",
-        rating: 5,
-        visible: true,
-      },
-      {
-        userName: "Karim B.",
-        comment:
-          "Cadre paradisiaque. Les cocktails sont excellents et le personnel est aux petits soins.",
-        rating: 4,
-        visible: true,
-      },
-      {
-        userName: "Laura T.",
-        comment:
-          "Un vrai petit coin de paradis. Je recommande vivement à tous les amoureux de la mer.",
-        rating: 5,
-        visible: true,
-      },
-      {
-        userName: "Yassine R.",
-        comment:
-          "La cabane sur l'eau est incroyable ! Vue imprenable et service impeccable.",
-        rating: 5,
-        visible: true,
-      },
-      {
-        userName: "Emma D.",
-        comment:
-          "Le couscous au poisson est le meilleur que j'ai goûté en Tunisie. Bravo au chef !",
-        rating: 5,
-        visible: true,
-      },
-      {
-        userName: "Mohamed A.",
-        comment:
-          "Très bon rapport qualité-prix. L'accès en bateau rend l'expérience unique.",
-        rating: 4,
-        visible: true,
-      },
-      {
-        userName: "Nadia F.",
-        comment:
-          "Ambiance calme et reposante. On se sent vraiment loin de tout.",
-        rating: 5,
-        visible: true,
-      },
-      {
-        userName: "Thomas P.",
-        comment:
-          "Super endroit mais un peu cher pour les boissons. La vue compense tout.",
-        rating: 3,
-        visible: true,
-      },
-      {
-        userName: "Ines M.",
-        comment: "J'attends un meilleur traitement des clients.",
-        rating: 2,
-        visible: false,
-      },
-      {
-        userName: "Guest_anon",
-        comment: "pas terrible",
-        rating: 1,
-        visible: false,
-      },
-    ],
-  });
+  const reviews = [
+    {
+      userName: "Sophie M.",
+      comment:
+        "Endroit magnifique, personnel très accueillant. On y retourne cet été !",
+      rating: 5,
+      visible: true,
+    },
+    {
+      userName: "Ahmed K.",
+      comment:
+        "Belle plage, bonne cuisine. Le service pourrait être un peu plus rapide.",
+      rating: 4,
+      visible: true,
+    },
+    {
+      userName: "Marie L.",
+      comment: "Parfait pour une journée en famille. Les enfants ont adoré !",
+      rating: 5,
+      visible: true,
+    },
+    {
+      userName: "Karim B.",
+      comment:
+        "Cadre paradisiaque. Les cocktails sont excellents et le personnel est aux petits soins.",
+      rating: 4,
+      visible: true,
+    },
+    {
+      userName: "Laura T.",
+      comment:
+        "Un vrai petit coin de paradis. Je recommande vivement à tous les amoureux de la mer.",
+      rating: 5,
+      visible: true,
+    },
+    {
+      userName: "Yassine R.",
+      comment:
+        "La cabane sur l'eau est incroyable ! Vue imprenable et service impeccable.",
+      rating: 5,
+      visible: true,
+    },
+    {
+      userName: "Emma D.",
+      comment:
+        "Le couscous au poisson est le meilleur que j'ai goûté en Tunisie. Bravo au chef !",
+      rating: 5,
+      visible: true,
+    },
+    {
+      userName: "Mohamed A.",
+      comment:
+        "Très bon rapport qualité-prix. L'accès en bateau rend l'expérience unique.",
+      rating: 4,
+      visible: true,
+    },
+    {
+      userName: "Nadia F.",
+      comment: "Ambiance calme et reposante. On se sent vraiment loin de tout.",
+      rating: 5,
+      visible: true,
+    },
+    {
+      userName: "Thomas P.",
+      comment:
+        "Super endroit mais un peu cher pour les boissons. La vue compense tout.",
+      rating: 3,
+      visible: true,
+    },
+    {
+      userName: "Ines M.",
+      comment: "J'attends un meilleur traitement des clients.",
+      rating: 2,
+      visible: false,
+    },
+    {
+      userName: "Guest_anon",
+      comment: "pas terrible",
+      rating: 1,
+      visible: false,
+    },
+  ];
+
+  reviews.push(
+    ...Array.from({ length: 48 }, (_, index) => ({
+      userName: `Guest ${index + 1}`,
+      comment: `Retour ${index + 1} pour verifier le rendu du site avec beaucoup d'avis, plusieurs longueurs de texte et des notes variees selon les periodes d'affluence.`,
+      rating: 3 + (index % 3),
+      visible: index % 6 !== 0,
+    })),
+    ...Array.from({ length: 12 }, (_, index) => ({
+      userName: `Pending ${index + 1}`,
+      comment: `Avis en attente ${index + 1} pour tester la moderation et les statistiques persistees.`,
+      rating: (index % 5) + 1,
+      visible: false,
+    })),
+  );
+
+  await prisma.review.createMany({ data: reviews });
 
   console.log("Seed complete");
 }

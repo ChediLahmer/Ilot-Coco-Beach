@@ -20,9 +20,16 @@ import { reviewRoutes } from "./routes/reviews.js";
 import { startScheduler } from "./lib/scheduler.js";
 import helmet from "@fastify/helmet";
 
+const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 600000);
+const CONNECTION_TIMEOUT_MS = Number(
+  process.env.CONNECTION_TIMEOUT_MS || 600000,
+);
+
 const app = Fastify({
   logger: true,
   trustProxy: process.env.TRUST_PROXY || 1,
+  requestTimeout: REQUEST_TIMEOUT_MS,
+  connectionTimeout: CONNECTION_TIMEOUT_MS,
 });
 
 await app.register(swagger, {

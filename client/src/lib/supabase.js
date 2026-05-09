@@ -1,9 +1,19 @@
 const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const REQUEST_TIMEOUT_MS = 60000;
+const REQUEST_TIMEOUT_MS = Number(
+  import.meta.env.VITE_REQUEST_TIMEOUT_MS || 180000,
+);
+
+function getTimeoutMs(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 async function request(path, options = {}) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    getTimeoutMs(options.timeoutMs, REQUEST_TIMEOUT_MS),
+  );
   let res;
   try {
     res = await fetch(`${API}${path}`, {

@@ -199,8 +199,21 @@
         </Swiper>
       </div>
 
+      <div
+        v-if="vouchersError && !vouchers.length && !dataLoading"
+        class="mt-8 rounded-2xl border border-charcoal/8 bg-white/72 px-6 py-8 text-center shadow-sm"
+      >
+        <p class="text-sm text-charcoal/60">{{ t("error.description") }}</p>
+        <button
+          class="mt-5 rounded-full bg-ocean px-5 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-ocean/90"
+          @click="retryVouchers"
+        >
+          {{ t("error.retry") }}
+        </button>
+      </div>
+
       <p
-        v-if="!dataLoading && vouchers.length === 0"
+        v-else-if="!dataLoading && vouchers.length === 0"
         class="mt-8 text-center text-sm text-charcoal/40"
       >
         {{ t("vouchers.subtitle") }}
@@ -223,10 +236,12 @@ const swiperModules = [Navigation, Autoplay, Scrollbar];
 const { t, locale } = useI18n();
 const {
   vouchers,
+  vouchersError,
   vouchersHasMore,
   vouchersLoading,
   loadMoreVouchers,
   loading: dataLoading,
+  retryVouchers,
 } = useData();
 
 const copiedCode = ref(null);

@@ -24,7 +24,7 @@
   </section>
 
   <section
-    v-else-if="images.length > 0"
+    v-else
     id="gallery"
     class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-b from-mist via-white to-sand-dark/30"
   >
@@ -53,7 +53,10 @@
         </router-link>
       </div>
 
-      <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        v-if="images.length > 0"
+        class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      >
         <router-link
           to="/gallery"
           :class="[
@@ -154,6 +157,26 @@
           />
         </router-link>
       </div>
+
+      <div
+        v-else-if="galleryError"
+        class="mt-10 rounded-2xl border border-charcoal/8 bg-white/72 px-6 py-10 text-center shadow-sm"
+      >
+        <p class="text-sm text-charcoal/60">{{ t("error.description") }}</p>
+        <button
+          class="mt-5 rounded-full bg-ocean px-5 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-ocean/90"
+          @click="retryGallery"
+        >
+          {{ t("error.retry") }}
+        </button>
+      </div>
+
+      <div
+        v-else
+        class="mt-10 rounded-2xl border border-charcoal/8 bg-white/72 px-6 py-10 text-center shadow-sm"
+      >
+        <p class="text-sm text-charcoal/60">{{ t("gallery.empty") }}</p>
+      </div>
     </div>
   </section>
 </template>
@@ -164,7 +187,12 @@ import { useI18n } from "vue-i18n";
 import { useData } from "@/composables/useData";
 
 const { t } = useI18n();
-const { galleryImages, loading: dataLoading } = useData();
+const {
+  galleryError,
+  galleryImages,
+  loading: dataLoading,
+  retryGallery,
+} = useData();
 const readyVideos = ref({});
 const erroredVideos = ref({});
 
