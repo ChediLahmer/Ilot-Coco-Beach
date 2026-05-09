@@ -6,7 +6,7 @@ export async function uploadRoutes(app) {
   app.post(
     "/",
     {
-      bodyLimit: 10 * 1024 * 1024,
+      bodyLimit: 50 * 1024 * 1024,
       preHandler: authenticate,
       schema: {
         tags: ["Upload"],
