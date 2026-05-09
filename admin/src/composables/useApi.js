@@ -77,16 +77,21 @@ async function uploadVideoViaPresign(path, file, extraFields = {}, onProgress) {
   });
 
   if (path === "/gallery") {
-    return request(path, {
-      method: "POST",
-      body: JSON.stringify({
-        url: presign.publicUrl,
-        alt: extraFields.alt || file.name,
-        category: extraFields.category ?? null,
-        categoryId: extraFields.categoryId ?? null,
-        order: extraFields.order ?? 0,
-      }),
-    });
+    try {
+      return await request(path, {
+        method: "POST",
+        body: JSON.stringify({
+          url: presign.publicUrl,
+          alt: extraFields.alt || file.name,
+          category: extraFields.category ?? null,
+          categoryId: extraFields.categoryId ?? null,
+          order: extraFields.order ?? 0,
+        }),
+      });
+    } catch (error) {
+      error.noFallback = true;
+      throw error;
+    }
   }
 
   return { url: presign.publicUrl };
@@ -184,12 +189,14 @@ export function useApi() {
       const isVideo = file.type?.startsWith("video/");
       if (isVideo) {
         return uploadVideoViaPresign(path, file, extraFields, onProgress).catch(
-          () =>
-            request(path, {
+          (error) => {
+            if (error?.noFallback) throw error;
+            return request(path, {
               method: "POST",
               body: form,
               _directUpload: true,
-            }),
+            });
+          },
         );
       }
       if (onProgress) {

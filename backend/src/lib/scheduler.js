@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "./prisma.js";
 import { invalidateMenuCache } from "../routes/menu.js";
+import { processIncomingUploads } from "./upload-cleanup.js";
 
 export function startScheduler(logger) {
   // Every minute: deactivate expired flash sales and vouchers
@@ -29,6 +30,18 @@ export function startScheduler(logger) {
       }
     } catch (err) {
       logger.error(err, "Scheduler: failed to deactivate expired items");
+    }
+  });
+
+  // Every minute: reconcile incoming direct-uploaded media and remove duplicates
+  cron.schedule("* * * * *", async () => {
+    try {
+      const processed = await processIncomingUploads(logger, { limit: 10 });
+      if (processed > 0) {
+        logger.info(`Scheduler: processed ${processed} incoming upload(s)`);
+      }
+    } catch (err) {
+      logger.error(err, "Scheduler: incoming upload cleanup failed");
     }
   });
 

@@ -3,6 +3,8 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -31,11 +33,15 @@ export function buildPublicUrl(key) {
 }
 
 export function createStorageKey(filename) {
-  return `${Date.now()}-${sanitizeFilename(filename)}`;
+  return createStorageKeyWithPrefix(filename, "");
+}
+
+export function createStorageKeyWithPrefix(filename, prefix = "") {
+  return `${prefix}${Date.now()}-${sanitizeFilename(filename)}`;
 }
 
 export async function createPresignedUpload({ filename, contentType }) {
-  const key = createStorageKey(filename);
+  const key = createStorageKeyWithPrefix(filename, "incoming/");
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
@@ -84,6 +90,62 @@ export async function uploadFile(buffer, filename, contentType, hash) {
   }
 
   return buildPublicUrl(key);
+}
+
+export async function writeDedupMarker(hash, key) {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: `dedup/${hash}`,
+      Body: "",
+      Metadata: { "original-key": key },
+    }),
+  );
+}
+
+export async function uploadBufferToKey(key, buffer, contentType) {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }),
+  );
+}
+
+export async function headObject(key) {
+  return s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+export async function listObjects(prefix) {
+  const objects = [];
+  let ContinuationToken;
+  do {
+    const res = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: prefix,
+        ContinuationToken,
+      }),
+    );
+    objects.push(...(res.Contents || []));
+    ContinuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (ContinuationToken);
+  return objects;
+}
+
+export async function getObjectBuffer(key) {
+  const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+  const chunks = [];
+  for await (const chunk of res.Body) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
+export async function deleteObjectKey(key) {
+  await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
 }
 
 export async function deleteFile(url) {
