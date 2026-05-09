@@ -265,6 +265,7 @@ export function useData() {
     retryVouchers,
     galleryImages,
     galleryHasMore: galleryNextCursor,
+    galleryLoading,
     galleryError,
     loadMoreGallery,
     retryGallery,

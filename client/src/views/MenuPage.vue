@@ -587,29 +587,30 @@ function displayPrice(item) {
 </script>
 
 <style scoped>
-/* Slide left-to-right (forward page) */
+/* Page-change animation for Carte — direction-aware fade+scale
+   (translateX avoided: parent premium-card uses overflow:hidden) */
 .slide-ltr-enter-active,
 .slide-ltr-leave-active,
 .slide-rtl-enter-active,
 .slide-rtl-leave-active {
   transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .slide-ltr-enter-from {
   opacity: 0;
-  transform: translateX(40px);
+  transform: scale(0.97) translateX(18px);
 }
 .slide-ltr-leave-to {
   opacity: 0;
-  transform: translateX(-40px);
+  transform: scale(0.97) translateX(-18px);
 }
 .slide-rtl-enter-from {
   opacity: 0;
-  transform: translateX(-40px);
+  transform: scale(0.97) translateX(-18px);
 }
 .slide-rtl-leave-to {
   opacity: 0;
-  transform: translateX(40px);
+  transform: scale(0.97) translateX(18px);
 }
 </style>

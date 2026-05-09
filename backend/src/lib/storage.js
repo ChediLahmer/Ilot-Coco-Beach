@@ -47,7 +47,21 @@ export async function createPresignedUpload({ filename, contentType }) {
     Key: key,
     ContentType: contentType,
   });
-  const url = await getSignedUrl(s3, command, { expiresIn: 900 });
+  let url = await getSignedUrl(s3, command, { expiresIn: 900 });
+
+  // Rewrite the internal S3 endpoint to the public URL so browsers can PUT directly,
+  // bypassing the app-server (and its HTTP proxy timeout).
+  const internalBase = (
+    process.env.S3_ENDPOINT || "http://localhost:9100"
+  ).replace(/\/$/, "");
+  const publicBase = (process.env.S3_PUBLIC_URL || internalBase).replace(
+    /\/$/,
+    "",
+  );
+  if (internalBase !== publicBase && url.startsWith(internalBase)) {
+    url = publicBase + url.slice(internalBase.length);
+  }
+
   return { key, url, publicUrl: buildPublicUrl(key) };
 }
 

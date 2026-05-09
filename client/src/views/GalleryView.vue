@@ -112,7 +112,8 @@
       </div>
 
       <!-- Loading indicator -->
-      <div v-if="hasMore" ref="sentinelEl" class="flex justify-center py-12">
+      <div ref="sentinelEl" class="h-1" />
+      <div v-if="galleryLoading" class="flex justify-center py-10">
         <div
           class="w-8 h-8 border-2 border-charcoal/10 border-t-ocean rounded-full animate-spin"
         />
@@ -213,7 +214,8 @@ import FooterSection from "@/components/FooterSection.vue";
 import { useData } from "@/composables/useData";
 
 const { t, locale } = useI18n();
-const { galleryImages, galleryHasMore, loadMoreGallery } = useData();
+const { galleryImages, galleryHasMore, galleryLoading, loadMoreGallery } =
+  useData();
 
 function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
@@ -303,15 +305,6 @@ function setupObserver() {
   );
   observer.observe(sentinelEl.value);
 }
-
-watch(hasMore, async (val) => {
-  if (val) {
-    await nextTick();
-    setupObserver();
-  } else if (observer) {
-    observer.disconnect();
-  }
-});
 
 // --- Lightbox ---
 const lightboxOpen = ref(false);

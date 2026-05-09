@@ -8,60 +8,75 @@ import AppToggle from "@/components/AppToggle.vue";
 const api = useApi();
 const toast = useToast();
 const { confirm } = useConfirm();
+
+// ── Server-side data (cursor-based) ───────────────────────────────────────────
 const reviews = ref([]);
 const loading = ref(false);
 const loadingMore = ref(false);
 const error = ref(null);
 const busy = ref(new Set());
 const nextCursor = ref(null);
-const hasMore = ref(false);
+const hasServerMore = ref(false);
+const FETCH_LIMIT = 25;
 
-const REVIEWS_LIMIT = 25;
-const sentinel = ref(null);
-let observer = null;
-
+// ── Filters ────────────────────────────────────────────────────────────────────
 const searchQuery = ref("");
 const filterRating = ref("all");
 const filterStatus = ref("all");
-
 let debounceTimer = null;
 
-const pendingCount = computed(
-  () => reviews.value.filter((r) => !r.visible).length,
-);
+// ── Display pagination ─────────────────────────────────────────────────────────
+const displayPage = ref(1);
+const DISPLAY_PAGE_SIZE = 10;
+
+const pendingCount = computed(() => reviews.value.filter((r) => !r.visible).length);
 
 const filteredReviews = computed(() => {
   let list = reviews.value;
-  if (filterStatus.value === "pending") {
-    list = list.filter((r) => !r.visible);
-  } else if (filterStatus.value === "approved") {
-    list = list.filter((r) => r.visible);
-  }
+  if (filterStatus.value === "pending") list = list.filter((r) => !r.visible);
+  else if (filterStatus.value === "approved") list = list.filter((r) => r.visible);
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
     list = list.filter(
-      (r) =>
-        r.userName.toLowerCase().includes(q) ||
-        r.comment.toLowerCase().includes(q),
+      (r) => r.userName.toLowerCase().includes(q) || r.comment.toLowerCase().includes(q),
     );
   }
-  if (filterRating.value !== "all") {
+  if (filterRating.value !== "all")
     list = list.filter((r) => r.rating === Number(filterRating.value));
-  }
   return list;
 });
 
+const totalDisplayPages = computed(() =>
+  Math.max(1, Math.ceil(filteredReviews.value.length / DISPLAY_PAGE_SIZE)),
+);
+const pagedReviews = computed(() => {
+  const start = (displayPage.value - 1) * DISPLAY_PAGE_SIZE;
+  return filteredReviews.value.slice(start, start + DISPLAY_PAGE_SIZE);
+});
+
+watch([searchQuery, filterRating, filterStatus], () => { displayPage.value = 1; });
+
+async function goToPage(n) {
+  displayPage.value = n;
+  const needed = n * DISPLAY_PAGE_SIZE;
+  if (needed >= filteredReviews.value.length && hasServerMore.value) {
+    await loadMore();
+  }
+}
+
+// ── Data fetching ──────────────────────────────────────────────────────────────
 async function loadData() {
   loading.value = true;
   error.value = null;
   reviews.value = [];
   nextCursor.value = null;
-  hasMore.value = false;
+  hasServerMore.value = false;
+  displayPage.value = 1;
   try {
-    const res = await api.get(`/reviews?limit=${REVIEWS_LIMIT}`);
+    const res = await api.get(`/reviews?limit=${FETCH_LIMIT}`);
     reviews.value = res.items;
     nextCursor.value = res.nextCursor;
-    hasMore.value = !!res.nextCursor;
+    hasServerMore.value = !!res.nextCursor;
   } catch (e) {
     error.value = "Impossible de charger les avis";
     toast.error("Impossible de charger les avis");
@@ -71,15 +86,15 @@ async function loadData() {
 }
 
 async function loadMore() {
-  if (!hasMore.value || loadingMore.value || loading.value) return;
+  if (!hasServerMore.value || loadingMore.value || loading.value) return;
   loadingMore.value = true;
   try {
     const res = await api.get(
-      `/reviews?limit=${REVIEWS_LIMIT}&cursor=${nextCursor.value}`,
+      `/reviews?limit=${FETCH_LIMIT}&cursor=${nextCursor.value}`,
     );
     reviews.value = [...reviews.value, ...res.items];
     nextCursor.value = res.nextCursor;
-    hasMore.value = !!res.nextCursor;
+    hasServerMore.value = !!res.nextCursor;
   } catch (e) {
     toast.error(e.message || "Erreur de chargement");
   } finally {
@@ -87,20 +102,8 @@ async function loadMore() {
   }
 }
 
-onMounted(async () => {
-  await loadData();
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) loadMore();
-    },
-    { rootMargin: "200px" },
-  );
-  if (sentinel.value) observer.observe(sentinel.value);
-});
-onUnmounted(() => {
-  clearTimeout(debounceTimer);
-  observer?.disconnect();
-});
+onMounted(loadData);
+onUnmounted(() => clearTimeout(debounceTimer));
 
 async function remove(r) {
   const ok = await confirm({
@@ -124,7 +127,8 @@ async function toggleVisible(r) {
   busy.value.add(r.id);
   try {
     await api.put(`/reviews/${r.id}`, { visible: !r.visible });
-    await loadData();
+    const idx = reviews.value.findIndex((x) => x.id === r.id);
+    if (idx !== -1) reviews.value[idx] = { ...reviews.value[idx], visible: !r.visible };
     toast.success(r.visible ? "Avis masqué" : "Avis rendu visible");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la mise à jour");
@@ -148,6 +152,7 @@ function stars(rating) {
 
 <template>
   <div>
+    <!-- Header -->
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4"
     >
@@ -157,30 +162,36 @@ function stars(rating) {
           Modérer les avis et commentaires
         </p>
       </div>
-      <p class="text-sm text-text-muted">
-        {{ reviews.length }} avis au total
+      <div class="flex items-center gap-3">
         <span
           v-if="pendingCount"
-          class="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700"
+          class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700"
         >
           {{ pendingCount }} en attente
         </span>
-      </p>
+        <p class="text-sm text-text-muted whitespace-nowrap">
+          {{ reviews.length }} avis chargés
+        </p>
+      </div>
     </div>
 
+    <!-- Error banner -->
     <div
       v-if="error"
-      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm"
+      class="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm flex items-center justify-between"
     >
-      {{ error }}
-      <button @click="loadData" class="ml-2 underline">Réessayer</button>
+      <span>{{ error }}</span>
+      <button @click="loadData" class="ml-2 underline font-medium">
+        Réessayer
+      </button>
     </div>
 
     <div
       class="bg-surface rounded-xl border border-border overflow-hidden shadow-sm"
     >
+      <!-- Toolbar -->
       <div
-        class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 px-4 sm:px-5 py-4 border-b border-border"
+        class="flex flex-wrap items-center gap-3 px-4 sm:px-5 py-4 border-b border-border"
       >
         <div class="relative flex-1 max-w-xs min-w-[140px]">
           <svg
@@ -207,52 +218,46 @@ function stars(rating) {
           class="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
         >
           <option value="all">Toutes les notes</option>
-          <option value="5">★★★★★ (5)</option>
-          <option value="4">★★★★☆ (4)</option>
-          <option value="3">★★★☆☆ (3)</option>
-          <option value="2">★★☆☆☆ (2)</option>
-          <option value="1">★☆☆☆☆ (1)</option>
+          <option value="5">★★★★★</option>
+          <option value="4">★★★★☆</option>
+          <option value="3">★★★☆☆</option>
+          <option value="2">★★☆☆☆</option>
+          <option value="1">★☆☆☆☆</option>
         </select>
-        <div class="flex rounded-lg border border-border overflow-hidden">
-          <button
-            v-for="opt in [
-              { value: 'all', label: 'Tous' },
-              { value: 'pending', label: 'En attente' },
-              { value: 'approved', label: 'Approuvés' },
-            ]"
-            :key="opt.value"
-            @click="filterStatus = opt.value"
-            :class="[
-              'px-3 py-2 text-xs font-medium transition-colors',
-              filterStatus === opt.value
-                ? 'bg-primary text-white'
-                : 'bg-surface text-text-muted hover:bg-primary/5',
-            ]"
-          >
-            {{ opt.label }}
-          </button>
+        <select
+          v-model="filterStatus"
+          class="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+        >
+          <option value="all">Tous</option>
+          <option value="pending">En attente</option>
+          <option value="approved">Approuvés</option>
+        </select>
+        <div class="flex items-center gap-2 ml-auto">
+          <p class="text-sm text-text-muted whitespace-nowrap">
+            {{ filteredReviews.length }} résultat(s)
+          </p>
         </div>
-        <p class="text-sm text-text-muted whitespace-nowrap">
-          {{ filteredReviews.length }} résultat(s)
-        </p>
       </div>
 
+      <!-- Loading -->
       <div v-if="loading" class="flex justify-center py-12">
         <div
           class="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
         />
       </div>
 
+      <!-- Empty -->
       <div
-        v-else-if="filteredReviews.length === 0"
+        v-else-if="pagedReviews.length === 0"
         class="py-12 text-center text-text-muted text-sm"
       >
         Aucun avis trouvé
       </div>
 
+      <!-- Review rows -->
       <div v-else class="divide-y divide-border">
         <div
-          v-for="review in filteredReviews"
+          v-for="review in pagedReviews"
           :key="review.id"
           class="px-5 py-4 flex flex-col sm:flex-row sm:items-start gap-4"
           :class="{ 'opacity-50': !review.visible }"
@@ -309,13 +314,42 @@ function stars(rating) {
           </div>
         </div>
       </div>
-    </div>
-    <!-- Progressive load sentinel -->
-    <div ref="sentinel" class="h-2 mt-2" />
-    <div v-if="loadingMore" class="flex justify-center py-4">
+
+      <!-- Loading more (inside card) -->
       <div
-        class="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
-      />
+        v-if="loadingMore"
+        class="flex justify-center py-3 border-t border-border"
+      >
+        <div
+          class="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+        />
+      </div>
+    </div>
+
+    <!-- Pagination controls — matches VouchersView style -->
+    <div
+      v-if="totalDisplayPages > 1"
+      class="flex items-center justify-between mt-4"
+    >
+      <p class="text-xs text-text-muted">
+        Page {{ displayPage }} / {{ totalDisplayPages }}
+      </p>
+      <div class="flex gap-1">
+        <button
+          :disabled="displayPage <= 1"
+          @click="goToPage(displayPage - 1)"
+          class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+        >
+          ← Précédent
+        </button>
+        <button
+          :disabled="displayPage >= totalDisplayPages && !hasServerMore"
+          @click="goToPage(displayPage + 1)"
+          class="px-4 py-2.5 text-xs rounded-lg border border-border hover:bg-surface-alt disabled:opacity-30 transition-colors"
+        >
+          Suivant →
+        </button>
+      </div>
     </div>
   </div>
 </template>
