@@ -32,6 +32,18 @@ export function buildPublicUrl(key) {
   return `${baseUrl}/${BUCKET}/${key}`;
 }
 
+export function extractStorageKeyFromUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const marker = `/${BUCKET}/`;
+    const idx = parsed.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(parsed.pathname.slice(idx + marker.length));
+  } catch {
+    return null;
+  }
+}
+
 export function createStorageKey(filename) {
   return createStorageKeyWithPrefix(filename, "");
 }
@@ -167,12 +179,16 @@ export async function getObjectBuffer(key) {
   return Buffer.concat(chunks);
 }
 
+export async function getObjectStream(key) {
+  return s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
 export async function deleteObjectKey(key) {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
 }
 
 export async function deleteFile(url) {
-  const key = url.split(`/${BUCKET}/`)[1];
+  const key = extractStorageKeyFromUrl(url);
   if (!key) {
     console.warn(`deleteFile: could not extract key from URL: ${url}`);
     return;

@@ -3,6 +3,29 @@ const REQUEST_TIMEOUT_MS = Number(
   import.meta.env.VITE_REQUEST_TIMEOUT_MS || 180000,
 );
 
+const MEDIA_EXT_RE =
+  /\.(?:png|jpe?g|webp|gif|svg|mp4|webm|ogg|mov|m4v|avi|mkv)(?:$|[?#])/i;
+
+function toProxyMediaUrl(value) {
+  if (typeof value !== "string") return value;
+  if (!/^https?:\/\//i.test(value)) return value;
+  if (value.includes("/api/media/proxy?url=")) return value;
+  if (!MEDIA_EXT_RE.test(value)) return value;
+  return `${API}/media/proxy?url=${encodeURIComponent(value)}`;
+}
+
+function normalizeMediaUrls(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeMediaUrls);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, normalizeMediaUrls(v)]),
+    );
+  }
+  return toProxyMediaUrl(value);
+}
+
 function getTimeoutMs(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -42,7 +65,7 @@ async function request(path, options = {}) {
     throw new Error(msg);
   }
   if (res.status === 204) return null;
-  return res.json();
+  return normalizeMediaUrls(await res.json());
 }
 
 export const api = {

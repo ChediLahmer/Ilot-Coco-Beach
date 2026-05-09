@@ -17,6 +17,7 @@ import { uploadRoutes } from "./routes/upload.js";
 import { passwordResetRoutes } from "./routes/password-reset.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { reviewRoutes } from "./routes/reviews.js";
+import { mediaRoutes } from "./routes/media.js";
 import { startScheduler } from "./lib/scheduler.js";
 import helmet from "@fastify/helmet";
 
@@ -139,6 +140,7 @@ await app.register(uploadRoutes, { prefix: "/api/upload" });
 await app.register(passwordResetRoutes, { prefix: "/api/auth" });
 await app.register(analyticsRoutes, { prefix: "/api/analytics" });
 await app.register(reviewRoutes, { prefix: "/api/reviews" });
+await app.register(mediaRoutes, { prefix: "/api/media" });
 
 const port = process.env.PORT || 3000;
 
