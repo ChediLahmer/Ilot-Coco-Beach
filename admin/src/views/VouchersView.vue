@@ -84,7 +84,7 @@ function resetForm() {
   defaultExpiry.setDate(defaultExpiry.getDate() + 30);
   defaultExpiry.setHours(23, 59, 0, 0);
   const expiryIso = defaultExpiry.toISOString().slice(0, 16);
-  
+
   return {
     code: "",
     discountPercent: 10,
