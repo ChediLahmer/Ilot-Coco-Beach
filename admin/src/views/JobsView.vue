@@ -13,6 +13,18 @@ const loading = ref(false);
 const page = ref(1);
 const ITEMS_PER_PAGE = 15;
 
+const JOB_LABELS = {
+  "deactivate-expired-items": "Désactivation des éléments expirés",
+  "dedup-media": "Déduplication des médias",
+  "cleanup-tokens-analytics": "Nettoyage des tokens et analytics",
+};
+
+const STATUS_LABELS = {
+  success: "réussi",
+  error: "erreur",
+  running: "en cours",
+};
+
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(totalItems.value / ITEMS_PER_PAGE)),
 );
@@ -61,6 +73,13 @@ const getStatusBadge = (status) => {
       return "bg-border text-text-muted";
   }
 };
+
+const getJobLabel = (jobName) => {
+  if (!jobName) return "—";
+  return JOB_LABELS[jobName] || jobName;
+};
+
+const getStatusLabel = (status) => STATUS_LABELS[status] || status;
 
 const loadStats = async () => {
   try {
@@ -163,7 +182,9 @@ onUnmounted(() => {
       >
         <div class="flex items-start justify-between mb-3">
           <div class="flex-1">
-            <h3 class="font-semibold text-text">{{ job.jobName }}</h3>
+            <h3 class="font-semibold text-text">
+              {{ getJobLabel(job.jobName) }}
+            </h3>
             <p class="text-xs text-text-muted mt-0.5">
               {{ job.totalRuns }} exécution(s)
             </p>
@@ -198,7 +219,7 @@ onUnmounted(() => {
     >
       <div class="px-6 py-4 border-b border-border">
         <h2 class="text-lg font-semibold text-text">
-          Historique: {{ selectedJob }}
+          Historique: {{ getJobLabel(selectedJob) }}
         </h2>
       </div>
       <div class="overflow-x-auto">
@@ -256,7 +277,7 @@ onUnmounted(() => {
                   class="inline-block px-2.5 py-1 rounded text-xs font-medium"
                   :class="getStatusBadge(run.status)"
                 >
-                  {{ run.status }}
+                  {{ getStatusLabel(run.status) }}
                 </span>
               </td>
               <td class="px-6 py-3 text-xs">
