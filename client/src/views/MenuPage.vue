@@ -117,19 +117,72 @@
             </article>
 
             <div class="premium-card rounded-[1.75rem] p-4 sm:col-span-3">
-              <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div
+                class="relative"
+                @mouseenter="pause"
+                @mouseleave="resume"
+                @touchstart.passive="pause"
+                @touchend.passive="resume"
+              >
                 <button
-                  v-for="category in menuCategories"
-                  :key="category.id"
-                  :class="[
-                    'rounded-full px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap shrink-0',
-                    activeCategory === category.id
-                      ? 'bg-deep text-white'
-                      : 'bg-sand text-charcoal/55 hover:bg-sand-dark hover:text-charcoal/75',
-                  ]"
-                  @click="activeCategory = category.id"
+                  v-if="canScrollLeft"
+                  @click="scrollByStep(-1)"
+                  class="absolute -left-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md text-charcoal/60 hover:text-charcoal transition-colors"
+                  aria-label="Scroll left"
                 >
-                  {{ category.name[locale] || category.name.fr }}
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                <div
+                  ref="catScrollerEl"
+                  class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth snap-x snap-mandatory"
+                  @scroll="updateScrollState"
+                >
+                  <button
+                    v-for="category in menuCategories"
+                    :key="category.id"
+                    data-rail-item
+                    :class="[
+                      'rounded-full px-4 py-1.5 text-sm font-medium transition-all whitespace-nowrap shrink-0 snap-start',
+                      activeCategory === category.id
+                        ? 'bg-deep text-white'
+                        : 'bg-sand text-charcoal/55 hover:bg-sand-dark hover:text-charcoal/75',
+                    ]"
+                    @click="activeCategory = category.id"
+                  >
+                    {{ category.name[locale] || category.name.fr }}
+                  </button>
+                </div>
+                <button
+                  v-if="canScrollRight"
+                  @click="scrollByStep(1)"
+                  class="absolute -right-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md text-charcoal/60 hover:text-charcoal transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -137,8 +190,8 @@
         </div>
 
         <div class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-          <div>
-            <div class="grid gap-5 md:grid-cols-2">
+          <div v-if="featureItems.length">
+            <div class="grid gap-5 grid-cols-1 sm:grid-cols-2">
               <article
                 v-for="item in featureItems"
                 :key="item.id"
@@ -241,12 +294,12 @@
 
             <button
               v-if="hasMoreItems"
-              @click="showAllItems = true"
+              @click="loadMoreItems"
               class="mt-6 w-full rounded-xl border border-charcoal/10 bg-white/60 py-3 text-sm font-heading font-semibold text-charcoal/60 hover:bg-white hover:text-charcoal transition-colors"
             >
               {{
                 t("menu.showMore", {
-                  count: activeItems.length - ITEMS_PAGE_SIZE,
+                  count: remainingCount,
                 })
               }}
             </button>
@@ -266,9 +319,26 @@ import { useI18n } from "vue-i18n";
 import FooterSection from "@/components/FooterSection.vue";
 import NavBar from "@/components/NavBar.vue";
 import { useData } from "@/composables/useData";
+import { useHorizontalRail } from "@/composables/useHorizontalRail";
 
 const { locale, t } = useI18n();
 const { menuCategories } = useData();
+
+const {
+  scrollerEl: catScrollerEl,
+  canScrollLeft,
+  canScrollRight,
+  scrollByStep,
+  updateScrollState,
+  pause,
+  resume,
+} = useHorizontalRail(
+  computed(() => menuCategories.value.length),
+  {
+    autoInterval: 5000,
+    wrap: true,
+  },
+);
 
 const priceMode = ref("standard");
 const activeCategory = ref(menuCategories.value[0]?.id ?? null);
@@ -282,7 +352,7 @@ watch(
 );
 
 watch(activeCategory, () => {
-  showAllItems.value = false;
+  itemsPage.value = 1;
 });
 
 const activeCategoryData = computed(
@@ -299,20 +369,23 @@ const activeCategoryLabel = computed(
 );
 const activeItems = computed(() => activeCategoryData.value?.items || []);
 const featureItems = computed(() =>
-  activeItems.value.filter((item) => item.image).slice(0, 4),
+  visibleItems.value.filter((item) => item.image).slice(0, 4),
 );
 
 const ITEMS_PAGE_SIZE = 8;
-const showAllItems = ref(false);
+const itemsPage = ref(1);
 const visibleItems = computed(() => {
-  if (showAllItems.value || activeItems.value.length <= ITEMS_PAGE_SIZE) {
-    return activeItems.value;
-  }
-  return activeItems.value.slice(0, ITEMS_PAGE_SIZE);
+  return activeItems.value.slice(0, itemsPage.value * ITEMS_PAGE_SIZE);
 });
 const hasMoreItems = computed(
-  () => !showAllItems.value && activeItems.value.length > ITEMS_PAGE_SIZE,
+  () => visibleItems.value.length < activeItems.value.length,
 );
+const remainingCount = computed(
+  () => activeItems.value.length - visibleItems.value.length,
+);
+function loadMoreItems() {
+  itemsPage.value++;
+}
 
 const copy = computed(
   () =>

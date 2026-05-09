@@ -753,14 +753,17 @@ async function main() {
     },
   ];
 
-  for (const cat of categories) {
-    const created = await prisma.menuCategory.create({
-      data: { name: cat.name, order: cat.order },
-    });
-    for (const item of cat.items) {
-      await prisma.menuItem.create({
-        data: { ...item, categoryId: created.id },
+  const existingCategories = await prisma.menuCategory.count();
+  if (existingCategories === 0) {
+    for (const cat of categories) {
+      const created = await prisma.menuCategory.create({
+        data: { name: cat.name, order: cat.order },
       });
+      for (const item of cat.items) {
+        await prisma.menuItem.create({
+          data: { ...item, categoryId: created.id },
+        });
+      }
     }
   }
 
@@ -906,8 +909,11 @@ async function main() {
     },
   ];
 
-  for (const space of spaces) {
-    await prisma.space.create({ data: space });
+  const existingSpaces = await prisma.space.count();
+  if (existingSpaces === 0) {
+    for (const space of spaces) {
+      await prisma.space.create({ data: space });
+    }
   }
 
   // Flash sales
@@ -1027,8 +1033,11 @@ async function main() {
     },
   ];
 
-  for (const sale of flashSales) {
-    await prisma.flashSale.create({ data: sale });
+  const existingSales = await prisma.flashSale.count();
+  if (existingSales === 0) {
+    for (const sale of flashSales) {
+      await prisma.flashSale.create({ data: sale });
+    }
   }
 
   // Vouchers
@@ -1076,8 +1085,11 @@ async function main() {
     },
   ];
 
-  for (const v of voucherData) {
-    await prisma.voucher.create({ data: v });
+  const existingVouchers = await prisma.voucher.count();
+  if (existingVouchers === 0) {
+    for (const v of voucherData) {
+      await prisma.voucher.create({ data: v });
+    }
   }
 
   // Reviews

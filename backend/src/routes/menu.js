@@ -1,6 +1,15 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 
+let publicMenuCache = null;
+let publicMenuCacheTime = 0;
+const MENU_CACHE_TTL = 60_000;
+
+function invalidateMenuCache() {
+  publicMenuCache = null;
+  publicMenuCacheTime = 0;
+}
+
 export async function menuRoutes(app) {
   app.addSchema({
     $id: "MenuCategory",
@@ -53,6 +62,15 @@ export async function menuRoutes(app) {
     },
     async (request) => {
       const { search, sort } = request.query;
+
+      // Serve cached result for public requests with no filters
+      if (!request.admin && !search && (!sort || sort === "order")) {
+        const now = Date.now();
+        if (publicMenuCache && now - publicMenuCacheTime < MENU_CACHE_TTL) {
+          return publicMenuCache;
+        }
+      }
+
       const where = search
         ? { name: { path: ["fr"], string_contains: search } }
         : {};
@@ -68,11 +86,18 @@ export async function menuRoutes(app) {
         default:
           itemOrderBy = { order: "asc" };
       }
-      return prisma.menuCategory.findMany({
+      const result = await prisma.menuCategory.findMany({
         where,
         include: { items: { where: itemWhere, orderBy: itemOrderBy } },
         orderBy: { order: "asc" },
       });
+
+      if (!request.admin && !search && (!sort || sort === "order")) {
+        publicMenuCache = result;
+        publicMenuCacheTime = Date.now();
+      }
+
+      return result;
     },
   );
 
@@ -109,6 +134,7 @@ export async function menuRoutes(app) {
       const cat = await prisma.menuCategory.create({
         data: { name, order: order || 0 },
       });
+      invalidateMenuCache();
       return reply.status(201).send(cat);
     },
   );
@@ -143,10 +169,12 @@ export async function menuRoutes(app) {
     },
     async (request) => {
       const { name, order } = request.body;
-      return prisma.menuCategory.update({
+      const updated = await prisma.menuCategory.update({
         where: { id: Number(request.params.id) },
         data: { name, order },
       });
+      invalidateMenuCache();
+      return updated;
     },
   );
 
@@ -166,6 +194,7 @@ export async function menuRoutes(app) {
       await prisma.menuCategory.delete({
         where: { id: Number(request.params.id) },
       });
+      invalidateMenuCache();
       return reply.status(204).send();
     },
   );
@@ -289,6 +318,7 @@ export async function menuRoutes(app) {
           order: order || 0,
         },
       });
+      invalidateMenuCache();
       return reply.status(201).send(item);
     },
   );
@@ -348,7 +378,7 @@ export async function menuRoutes(app) {
         categoryId,
         order,
       } = request.body;
-      return prisma.menuItem.update({
+      const updated = await prisma.menuItem.update({
         where: { id: Number(request.params.id) },
         data: {
           name,
@@ -362,6 +392,8 @@ export async function menuRoutes(app) {
           order,
         },
       });
+      invalidateMenuCache();
+      return updated;
     },
   );
 
@@ -381,6 +413,7 @@ export async function menuRoutes(app) {
       await prisma.menuItem.delete({
         where: { id: Number(request.params.id) },
       });
+      invalidateMenuCache();
       return reply.status(204).send();
     },
   );
