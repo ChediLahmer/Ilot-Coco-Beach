@@ -120,11 +120,11 @@
       </div>
 
       <button
-        class="flex h-12 w-12 items-center justify-center rounded-md border border-charcoal/10 lg:hidden"
+        class="flex h-11 w-11 items-center justify-center rounded-md border border-charcoal/10 lg:hidden"
         @click="mobileOpen = true"
       >
         <svg
-          class="h-6 w-6 text-charcoal/70"
+          class="h-5 w-5 text-charcoal/70"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -153,11 +153,11 @@
                 </p>
               </div>
               <button
-                class="flex h-12 w-12 items-center justify-center rounded-md border border-charcoal/10"
+                class="flex h-11 w-11 items-center justify-center rounded-md border border-charcoal/10"
                 @click="mobileOpen = false"
               >
                 <svg
-                  class="h-6 w-6"
+                  class="h-5 w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
