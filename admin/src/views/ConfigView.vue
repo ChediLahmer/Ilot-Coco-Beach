@@ -52,6 +52,11 @@ const mediaFields = [
     accept: "image/*",
   },
   {
+    key: "spaces_hero_image_url",
+    label: "Image Hero page Emplacements",
+    accept: "image/*",
+  },
+  {
     key: "section_video_url",
     label: "Vidéo section (présentation)",
     accept: "video/mp4,video/webm",
@@ -78,6 +83,7 @@ async function uploadMedia(key, event) {
   if (!file) return;
   uploading.value = key;
   uploadProgress.value = 0;
+  let uploadedUrl = null;
   try {
     const { url } = await api.upload(
       "/upload",
@@ -89,10 +95,14 @@ async function uploadMedia(key, event) {
         },
       },
     );
+    uploadedUrl = url;
     config.value[key] = url;
     await api.put(`/config/${key}`, { value: url });
     toast.success("Fichier téléversé");
   } catch (e) {
+    if (uploadedUrl) {
+      await api.post("/upload/cleanup", { url: uploadedUrl }).catch(() => {});
+    }
     toast.error(e.message || "Erreur lors de l'upload");
   }
   uploading.value = "";

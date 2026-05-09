@@ -234,13 +234,15 @@ export async function flashSalesRoutes(app) {
         menuItemId,
         spaceId,
       } = request.body;
+      const saleId = Number(request.params.id);
+      let oldImage = null;
       if (image !== undefined) {
         const existing = await prisma.flashSale.findUnique({
-          where: { id: Number(request.params.id) },
+          where: { id: saleId },
           select: { image: true },
         });
         if (existing?.image && existing.image !== image) {
-          deleteFile(existing.image).catch(() => {});
+          oldImage = existing.image;
         }
       }
       const data = {
@@ -256,7 +258,7 @@ export async function flashSalesRoutes(app) {
       if (spaceId !== undefined) data.spaceId = spaceId || null;
       return prisma.flashSale
         .update({
-          where: { id: Number(request.params.id) },
+          where: { id: saleId },
           data,
           include: {
             menuItem: {
@@ -271,6 +273,9 @@ export async function flashSalesRoutes(app) {
           },
         })
         .then((sale) => {
+          if (oldImage) {
+            deleteFile(oldImage).catch(() => {});
+          }
           scheduleIncomingCleanup(request.log, image);
           return sale;
         });

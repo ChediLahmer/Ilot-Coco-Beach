@@ -208,6 +208,7 @@ async function saveItem() {
   if (hasErrors()) return;
   saving.value = true;
   error.value = null;
+  let uploadedImageUrl = null;
   try {
     let imageUrl = editingItem.value?.image || null;
     if (removeItemImage.value) {
@@ -215,6 +216,9 @@ async function saveItem() {
     } else if (itemForm.value.image) {
       const res = await api.upload("/upload", itemForm.value.image);
       imageUrl = res.url;
+      if (imageUrl && imageUrl !== editingItem.value?.image) {
+        uploadedImageUrl = imageUrl;
+      }
     }
     const payload = {
       name: itemForm.value.name,
@@ -236,6 +240,11 @@ async function saveItem() {
     await loadData();
     toast.success(editingItem.value ? "Plat mis à jour" : "Plat créé");
   } catch (e) {
+    if (uploadedImageUrl) {
+      await api
+        .post("/upload/cleanup", { url: uploadedImageUrl })
+        .catch(() => {});
+    }
     toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;

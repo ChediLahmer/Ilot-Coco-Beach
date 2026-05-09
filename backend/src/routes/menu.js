@@ -383,17 +383,19 @@ export async function menuRoutes(app) {
         categoryId,
         order,
       } = request.body;
+      const itemId = Number(request.params.id);
+      let oldImage = null;
       if (image !== undefined) {
         const existing = await prisma.menuItem.findUnique({
-          where: { id: Number(request.params.id) },
+          where: { id: itemId },
           select: { image: true },
         });
         if (existing?.image && existing.image !== image) {
-          deleteFile(existing.image).catch(() => {});
+          oldImage = existing.image;
         }
       }
       const updated = await prisma.menuItem.update({
-        where: { id: Number(request.params.id) },
+        where: { id: itemId },
         data: {
           name,
           description,
@@ -406,6 +408,9 @@ export async function menuRoutes(app) {
           order,
         },
       });
+      if (oldImage) {
+        deleteFile(oldImage).catch(() => {});
+      }
       invalidateMenuCache();
       scheduleIncomingCleanup(request.log, image);
       return updated;

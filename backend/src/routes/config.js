@@ -12,6 +12,7 @@ export function invalidateConfigCache() {
 const MEDIA_KEYS = new Set([
   "hero_video_url",
   "hero_poster_url",
+  "spaces_hero_image_url",
   "section_video_url",
   "section_poster_url",
   "about_image_1",
@@ -34,6 +35,7 @@ const ALLOWED_CONFIG_KEYS = new Set([
   "hours",
   "hero_video_url",
   "hero_poster_url",
+  "spaces_hero_image_url",
   "section_video_url",
   "section_poster_url",
   "show_reviews",
@@ -100,10 +102,11 @@ export async function configRoutes(app) {
         return reply.status(400).send({ error: `Invalid config key: ${key}` });
       }
       const { value } = request.body;
+      let oldValue = null;
       if (MEDIA_KEYS.has(key)) {
         const old = await prisma.siteConfig.findUnique({ where: { key } });
         if (old?.value && old.value !== value) {
-          deleteFile(old.value).catch(() => {});
+          oldValue = old.value;
         }
       }
       return prisma.siteConfig
@@ -114,6 +117,9 @@ export async function configRoutes(app) {
         })
         .then((r) => {
           invalidateConfigCache();
+          if (oldValue) {
+            deleteFile(oldValue).catch(() => {});
+          }
           if (MEDIA_KEYS.has(key)) {
             scheduleIncomingCleanup(request.log, value);
           }
@@ -146,6 +152,7 @@ export async function configRoutes(app) {
         });
       }
       const mediaEntries = entries.filter(([k]) => MEDIA_KEYS.has(k));
+      const oldMediaToDelete = [];
       if (mediaEntries.length) {
         const oldConfigs = await prisma.siteConfig.findMany({
           where: { key: { in: mediaEntries.map(([k]) => k) } },
@@ -155,7 +162,7 @@ export async function configRoutes(app) {
         );
         for (const [k, v] of mediaEntries) {
           if (oldMap[k] && oldMap[k] !== v) {
-            deleteFile(oldMap[k]).catch(() => {});
+            oldMediaToDelete.push(oldMap[k]);
           }
         }
       }
@@ -169,6 +176,9 @@ export async function configRoutes(app) {
         ),
       );
       invalidateConfigCache();
+      for (const url of oldMediaToDelete) {
+        deleteFile(url).catch(() => {});
+      }
       for (const [, value] of mediaEntries) {
         scheduleIncomingCleanup(request.log, value);
       }

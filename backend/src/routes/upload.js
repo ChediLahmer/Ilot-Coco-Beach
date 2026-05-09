@@ -3,6 +3,7 @@ import {
   uploadFile,
   findExistingByHash,
   createPresignedUpload,
+  deleteFile,
 } from "../lib/storage.js";
 import { fileTypeFromBuffer } from "file-type";
 import { createHash } from "crypto";
@@ -15,7 +16,39 @@ import {
   ERROR_MSG_CONTENT,
 } from "../lib/media.js";
 
+const PRESIGN_MAX_VIDEO_BYTES = Number(
+  process.env.PRESIGN_MAX_VIDEO_BYTES || 200 * 1024 * 1024,
+);
+
 export async function uploadRoutes(app) {
+  app.post(
+    "/cleanup",
+    {
+      preHandler: authenticate,
+      schema: {
+        tags: ["Upload"],
+        summary: "Delete an uploaded file by URL",
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: "object",
+          required: ["url"],
+          additionalProperties: false,
+          properties: {
+            url: { type: "string", minLength: 1, maxLength: 1000 },
+          },
+        },
+        response: {
+          204: { type: "null" },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { url } = request.body;
+      await deleteFile(url);
+      return reply.status(204).send();
+    },
+  );
+
   app.post(
     "/presign",
     {
@@ -31,6 +64,7 @@ export async function uploadRoutes(app) {
           properties: {
             filename: { type: "string", minLength: 1, maxLength: 255 },
             contentType: { type: "string", minLength: 1, maxLength: 100 },
+            sizeBytes: { type: "integer", minimum: 1 },
           },
         },
         response: {
@@ -46,10 +80,20 @@ export async function uploadRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { filename, contentType } = request.body;
+      const { filename, contentType, sizeBytes } = request.body;
       if (!contentType?.startsWith("video/")) {
         return reply.status(400).send({
           error: "Presigned uploads are only enabled for videos.",
+        });
+      }
+      if (!isBrowserMimeAllowed(contentType)) {
+        return reply.status(400).send({
+          error: ERROR_MSG_BROWSER,
+        });
+      }
+      if (sizeBytes && sizeBytes > PRESIGN_MAX_VIDEO_BYTES) {
+        return reply.status(400).send({
+          error: `Video too large (max ${Math.round(PRESIGN_MAX_VIDEO_BYTES / (1024 * 1024))} MB).`,
         });
       }
       const upload = await createPresignedUpload({ filename, contentType });

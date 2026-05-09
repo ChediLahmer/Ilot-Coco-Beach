@@ -6,11 +6,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
 import { api } from "@/lib/supabase";
+import { useConfig, configReady } from "@/composables/useConfig";
 import waterSwingImg from "@/assets/images/water-swing.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const { locale } = useI18n();
+const config = useConfig();
 
 const PAGE_SIZE = 10;
 const emplacements = ref([]);
@@ -112,9 +114,12 @@ const emptyLabel = computed(
     })[locale.value] || "Aucun espace disponible pour le moment.",
 );
 
+const heroImageSrc = computed(() => config.spacesHeroImage || waterSwingImg);
+
 let observer = null;
 
 onMounted(async () => {
+  await configReady.catch(() => {});
   await loadMore();
 
   observer = new IntersectionObserver(
@@ -152,7 +157,7 @@ onUnmounted(() => {
     <section class="relative w-full overflow-hidden h-[60vh] mt-[72px]">
       <div class="absolute inset-0">
         <img
-          :src="waterSwingImg"
+          :src="heroImageSrc"
           alt="Emplacements — Ilot Coco Beach"
           class="w-full h-full object-cover"
         />

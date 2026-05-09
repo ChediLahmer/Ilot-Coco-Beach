@@ -169,7 +169,11 @@ async function uploadVideoViaPresign(path, file, extraFields = {}, onProgress) {
   const contentType = inferVideoContentType(file);
   const presign = await request("/upload/presign", {
     method: "POST",
-    body: JSON.stringify({ filename: file.name, contentType }),
+    body: JSON.stringify({
+      filename: file.name,
+      contentType,
+      sizeBytes: file.size,
+    }),
     timeoutMs: UPLOAD_TIMEOUT_MS,
   });
 

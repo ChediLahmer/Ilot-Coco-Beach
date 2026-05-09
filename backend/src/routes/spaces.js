@@ -206,18 +206,20 @@ export async function spacesRoutes(app) {
         available,
         visible,
       } = request.body;
+      const spaceId = Number(request.params.id);
+      let oldImage = null;
       if (image !== undefined) {
         const existing = await prisma.space.findUnique({
-          where: { id: Number(request.params.id) },
+          where: { id: spaceId },
           select: { image: true },
         });
         if (existing?.image && existing.image !== image) {
-          deleteFile(existing.image).catch(() => {});
+          oldImage = existing.image;
         }
       }
       return prisma.space
         .update({
-          where: { id: Number(request.params.id) },
+          where: { id: spaceId },
           data: {
             name,
             description,
@@ -230,6 +232,9 @@ export async function spacesRoutes(app) {
           },
         })
         .then((space) => {
+          if (oldImage) {
+            deleteFile(oldImage).catch(() => {});
+          }
           scheduleIncomingCleanup(request.log, image);
           return space;
         });

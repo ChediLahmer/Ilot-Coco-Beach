@@ -142,6 +142,7 @@ async function save() {
   if (hasErrors()) return;
   saving.value = true;
   error.value = null;
+  let uploadedImageUrl = null;
   try {
     let imageUrl = editing.value?.image || null;
     if (removeImage.value) {
@@ -149,6 +150,9 @@ async function save() {
     } else if (form.value.imageFile) {
       const res = await api.upload("/upload", form.value.imageFile);
       imageUrl = res.url;
+      if (imageUrl && imageUrl !== editing.value?.image) {
+        uploadedImageUrl = imageUrl;
+      }
     }
     const payload = {
       name: form.value.name,
@@ -169,6 +173,11 @@ async function save() {
     await loadData();
     toast.success(editing.value ? "Espace mis à jour" : "Espace créé");
   } catch (e) {
+    if (uploadedImageUrl) {
+      await api
+        .post("/upload/cleanup", { url: uploadedImageUrl })
+        .catch(() => {});
+    }
     toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
     saving.value = false;

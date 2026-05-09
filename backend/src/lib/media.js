@@ -68,7 +68,7 @@ export async function processMedia(buffer, detectedMime, filename) {
   }
 
   if (CONVERTIBLE_VIDEOS.has(detectedMime)) {
-    return { buffer, mime: "video/mp4", ext: null };
+    return { buffer, mime: detectedMime, ext: null };
   }
 
   return { buffer, mime: detectedMime, ext: null };
