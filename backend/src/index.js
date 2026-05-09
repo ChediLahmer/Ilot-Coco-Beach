@@ -18,6 +18,7 @@ import { passwordResetRoutes } from "./routes/password-reset.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { reviewRoutes } from "./routes/reviews.js";
 import { mediaRoutes } from "./routes/media.js";
+import { jobsRoutes } from "./routes/jobs.js";
 import { startScheduler } from "./lib/scheduler.js";
 import helmet from "@fastify/helmet";
 
@@ -51,6 +52,10 @@ await app.register(swagger, {
       { name: "Flash Sales", description: "Promotional flash sales" },
       { name: "Vouchers", description: "Discount vouchers" },
       { name: "Upload", description: "File upload to S3/MinIO" },
+      {
+        name: "Jobs",
+        description: "Job scheduler & execution history (admin only)",
+      },
     ],
     components: {
       securitySchemes: {
@@ -141,6 +146,7 @@ await app.register(passwordResetRoutes, { prefix: "/api/auth" });
 await app.register(analyticsRoutes, { prefix: "/api/analytics" });
 await app.register(reviewRoutes, { prefix: "/api/reviews" });
 await app.register(mediaRoutes, { prefix: "/api/media" });
+await app.register(jobsRoutes, { prefix: "/api/jobs" });
 
 const port = process.env.PORT || 3000;
 

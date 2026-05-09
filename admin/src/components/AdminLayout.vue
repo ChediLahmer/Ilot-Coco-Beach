@@ -36,6 +36,7 @@ const navItems = [
   { to: "/vouchers", label: "Vouchers", icon: "vouchers" },
   { to: "/reviews", label: "Avis", icon: "reviews" },
   { to: "/config", label: "Configuration", icon: "config" },
+  { to: "/jobs", label: "Tâches", icon: "jobs" },
 ];
 </script>
 
@@ -150,6 +151,12 @@ const navItems = [
               r="3"
               stroke-linecap="round"
               stroke-linejoin="round"
+            />
+            <path
+              v-if="item.icon === 'jobs'"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12h3.75M9 15h3.75M9 18h3.75m8.25-9V5.25M17.25 5.25H5.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
           <span v-show="sidebarOpen" class="truncate">{{ item.label }}</span>

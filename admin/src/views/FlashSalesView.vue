@@ -129,6 +129,17 @@ function clearImage() {
   form.value.imageFile = null;
 }
 
+function updateDateTime(type, value) {
+  const current = form.value.endsAt || "";
+  const [date, time] = [current.slice(0, 10), current.slice(11, 16)];
+
+  if (type === "date") {
+    form.value.endsAt = value ? `${value}T${time || "12:00"}` : "";
+  } else if (type === "time") {
+    form.value.endsAt = date ? `${date}T${value}` : "";
+  }
+}
+
 function resetForm() {
   return {
     title: { fr: "", en: "", ar: "" },
@@ -663,13 +674,36 @@ function formatDate(d) {
               <label class="block text-xs font-medium text-text-muted mb-1"
                 >Expire le</label
               >
-              <input
-                v-model="form.endsAt"
-                type="datetime-local"
-                required
-                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                :class="fieldErrors.endsAt ? 'border-danger' : 'border-border'"
-              />
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[0.7rem] text-text-muted/70 mb-1"
+                    >Date</label
+                  >
+                  <input
+                    :value="form.endsAt ? form.endsAt.slice(0, 10) : ''"
+                    @input="updateDateTime('date', $event.target.value)"
+                    type="date"
+                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                    :class="
+                      fieldErrors.endsAt ? 'border-danger' : 'border-border'
+                    "
+                  />
+                </div>
+                <div>
+                  <label class="block text-[0.7rem] text-text-muted/70 mb-1"
+                    >Heure</label
+                  >
+                  <input
+                    :value="form.endsAt ? form.endsAt.slice(11, 16) : ''"
+                    @input="updateDateTime('time', $event.target.value)"
+                    type="time"
+                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                    :class="
+                      fieldErrors.endsAt ? 'border-danger' : 'border-border'
+                    "
+                  />
+                </div>
+              </div>
               <FieldError :message="fieldErrors.endsAt" />
             </div>
           </div>

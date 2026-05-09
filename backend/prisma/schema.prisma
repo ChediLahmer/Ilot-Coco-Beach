@@ -174,3 +174,19 @@ model ReviewStats {
 
   @@map("review_stats")
 }
+
+model JobRun {
+  id           Int       @id @default(autoincrement())
+  jobName      String    @map("job_name")
+  status       String    // "running" | "success" | "error"
+  startedAt    DateTime  @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  durationMs   Int?      @map("duration_ms")
+  itemsCount   Int       @default(0) @map("items_count")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([jobName, startedAt])
+  @@index([jobName, status])
+  @@map("job_runs")
+}
