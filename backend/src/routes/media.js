@@ -1,4 +1,8 @@
-import { extractStorageKeyFromUrl, getObjectStream } from "../lib/storage.js";
+import {
+  extractStorageKeyFromUrl,
+  getObjectStream,
+  headObject,
+} from "../lib/storage.js";
 
 function unwrapProxyUrl(url) {
   let current = url;
@@ -60,8 +64,8 @@ export async function mediaRoutes(app) {
 
       try {
         const rangeHeader = request.headers.range;
-        const full = await getObjectStream(key);
-        const totalLength = Number(full.ContentLength || 0);
+        const meta = await headObject(key);
+        const totalLength = Number(meta.ContentLength || 0);
         const range = parseByteRange(rangeHeader, totalLength);
 
         if (range) {
@@ -86,14 +90,15 @@ export async function mediaRoutes(app) {
           return reply.status(206).send(partial.Body);
         }
 
+        const full = await getObjectStream(key);
         const contentType =
           key.toLowerCase().endsWith(".mp4") &&
-          full.ContentType === "video/quicktime"
+          meta.ContentType === "video/quicktime"
             ? "video/mp4"
-            : full.ContentType;
+            : meta.ContentType || full.ContentType;
         if (contentType) reply.header("Content-Type", contentType);
-        if (full.ContentLength != null) {
-          reply.header("Content-Length", String(full.ContentLength));
+        if (meta.ContentLength != null) {
+          reply.header("Content-Length", String(meta.ContentLength));
         }
         reply.header("Accept-Ranges", "bytes");
         reply.header("Cache-Control", "public, max-age=31536000, immutable");

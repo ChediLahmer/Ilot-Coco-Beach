@@ -457,6 +457,8 @@ async function deleteCat(cat) {
             :src="img.url"
             class="w-full h-full object-cover"
             muted
+            preload="metadata"
+            playsinline
           />
           <img
             v-else
@@ -613,6 +615,7 @@ async function deleteCat(cat) {
           autoplay
           muted
           playsinline
+          preload="metadata"
           class="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
         />
         <img

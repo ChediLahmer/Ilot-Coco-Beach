@@ -508,6 +508,8 @@ async function save() {
                 class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
                 controls
                 muted
+                preload="metadata"
+                playsinline
               />
             </div>
             <div
