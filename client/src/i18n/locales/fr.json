@@ -211,5 +211,10 @@
     "notFoundTitle": "Page introuvable",
     "notFoundDesc": "La page que vous cherchez n'existe pas ou a été déplacée.",
     "backHome": "Retour à l'accueil"
+  },
+  "error": {
+    "title": "Impossible de charger les données",
+    "description": "Vérifiez votre connexion internet et réessayez.",
+    "retry": "Réessayer"
   }
 }

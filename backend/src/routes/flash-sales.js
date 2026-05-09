@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
+import { deleteFile } from "../lib/storage.js";
 
 export async function flashSalesRoutes(app) {
   app.addSchema({
@@ -273,9 +274,14 @@ export async function flashSalesRoutes(app) {
       },
     },
     async (request, reply) => {
+      const sale = await prisma.flashSale.findUnique({
+        where: { id: Number(request.params.id) },
+        select: { image: true },
+      });
       await prisma.flashSale.delete({
         where: { id: Number(request.params.id) },
       });
+      if (sale?.image) deleteFile(sale.image).catch(() => {});
       return reply.status(204).send();
     },
   );

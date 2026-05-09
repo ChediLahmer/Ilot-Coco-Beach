@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
+import { deleteFile } from "../lib/storage.js";
 
 export async function spacesRoutes(app) {
   app.addSchema({
@@ -91,7 +92,7 @@ export async function spacesRoutes(app) {
         security: [{ BearerAuth: [] }],
         body: {
           type: "object",
-          required: ["name"],
+          required: ["name", "price", "capacity"],
           additionalProperties: false,
           properties: {
             name: {
@@ -232,7 +233,12 @@ export async function spacesRoutes(app) {
       },
     },
     async (request, reply) => {
+      const space = await prisma.space.findUnique({
+        where: { id: Number(request.params.id) },
+        select: { image: true },
+      });
       await prisma.space.delete({ where: { id: Number(request.params.id) } });
+      if (space?.image) deleteFile(space.image).catch(() => {});
       return reply.status(204).send();
     },
   );

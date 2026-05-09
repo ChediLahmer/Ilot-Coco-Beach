@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
+import { deleteFile } from "../lib/storage.js";
 
 let publicMenuCache = null;
 
@@ -186,9 +187,16 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
+      const items = await prisma.menuItem.findMany({
+        where: { categoryId: Number(request.params.id) },
+        select: { image: true },
+      });
       await prisma.menuCategory.delete({
         where: { id: Number(request.params.id) },
       });
+      for (const item of items) {
+        if (item.image) deleteFile(item.image).catch(() => {});
+      }
       invalidateMenuCache();
       return reply.status(204).send();
     },
@@ -405,9 +413,14 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
+      const item = await prisma.menuItem.findUnique({
+        where: { id: Number(request.params.id) },
+        select: { image: true },
+      });
       await prisma.menuItem.delete({
         where: { id: Number(request.params.id) },
       });
+      if (item?.image) deleteFile(item.image).catch(() => {});
       invalidateMenuCache();
       return reply.status(204).send();
     },

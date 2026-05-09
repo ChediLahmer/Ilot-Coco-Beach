@@ -18,7 +18,11 @@
           @click="togglePlay"
           @ended="isPlaying = false"
         >
-          <source :src="sectionVideo" type="video/mp4" />
+          <source
+            :src="sectionVideo"
+            :type="sectionVideo?.endsWith('.webm') ? 'video/webm' : 'video/mp4'"
+          />
+          {{ t("video.unsupported") }}
         </video>
 
         <Transition name="fade">

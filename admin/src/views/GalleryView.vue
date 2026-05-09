@@ -129,15 +129,25 @@ async function handleUpload(event) {
   const files = event.target.files;
   if (!files.length) return;
   uploading.value = true;
+  let succeeded = 0;
+  let failed = 0;
   try {
     for (const file of files) {
-      await api.upload("/gallery", file);
+      try {
+        await api.upload("/gallery", file);
+        succeeded++;
+      } catch (e) {
+        failed++;
+        toast.error(`${file.name} : ${e.message || "Erreur"}`);
+      }
     }
     event.target.value = "";
     await loadData();
-    toast.success(`${files.length} fichier(s) ajouté(s)`);
-  } catch (e) {
-    toast.error(e.message || "Erreur lors de l'upload");
+    if (succeeded > 0) {
+      toast.success(
+        `${succeeded} fichier(s) ajouté(s)${failed ? `, ${failed} échoué(s)` : ""}`,
+      );
+    }
   } finally {
     uploading.value = false;
   }
@@ -270,7 +280,7 @@ async function deleteCat(cat) {
         {{ uploading ? "Envoi en cours..." : "Ajouter des médias" }}
         <input
           type="file"
-          accept="image/*,video/*"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm"
           multiple
           class="hidden"
           @change="handleUpload"

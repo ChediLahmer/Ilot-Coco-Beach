@@ -229,154 +229,186 @@ async function save() {
       {{ error }}
     </div>
 
+    <!-- Loading spinner -->
     <div
-      class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+      v-if="loading && !Object.keys(config).length"
+      class="flex items-center justify-center py-16"
     >
-      <div class="divide-y divide-border">
-        <div v-for="field in fields" :key="field.key" class="px-6 py-4">
-          <label class="block text-sm font-medium text-text mb-1.5">{{
-            field.label
-          }}</label>
-          <input
-            v-model="config[field.key]"
-            :type="field.type"
-            :min="field.key === 'satisfaction_rate' ? 0 : undefined"
-            :max="field.key === 'satisfaction_rate' ? 100 : undefined"
-            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
-          />
-        </div>
-      </div>
+      <svg
+        class="h-8 w-8 animate-spin text-primary"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        />
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        />
+      </svg>
     </div>
 
-    <!-- Sections visibles -->
-    <h3 class="text-lg font-bold text-text mt-8 mb-4">Sections du site</h3>
-    <div
-      class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
-    >
-      <div class="px-6 py-4 flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-text">Section Avis clients</p>
-          <p class="text-xs text-text-muted mt-0.5">
-            Afficher la section avis et le lien vers la page avis sur la page
-            d'accueil
-          </p>
-        </div>
-        <AppToggle v-model="showReviews" />
-      </div>
-    </div>
-
-    <!-- Horaires multilangues -->
-    <h3 class="text-lg font-bold text-text mt-8 mb-4">Horaires</h3>
-    <div
-      class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
-    >
-      <div class="divide-y divide-border">
-        <div class="px-6 py-4">
-          <label class="block text-sm font-medium text-text mb-1.5"
-            >Français</label
-          >
-          <input
-            v-model="hours.fr"
-            type="text"
-            placeholder="Ex: Tous les jours 10h - 00h"
-            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
-          />
-        </div>
-        <div class="px-6 py-4">
-          <label class="block text-sm font-medium text-text mb-1.5"
-            >English</label
-          >
-          <input
-            v-model="hours.en"
-            type="text"
-            placeholder="Ex: Every day 10am - 12am"
-            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
-          />
-        </div>
-        <div class="px-6 py-4">
-          <label class="block text-sm font-medium text-text mb-1.5"
-            >العربية</label
-          >
-          <input
-            v-model="hours.ar"
-            type="text"
-            dir="rtl"
-            placeholder="مثال: كل يوم 10 صباحًا - 12 مساءً"
-            class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
-          />
+    <template v-else>
+      <div
+        class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+      >
+        <div class="divide-y divide-border">
+          <div v-for="field in fields" :key="field.key" class="px-6 py-4">
+            <label class="block text-sm font-medium text-text mb-1.5">{{
+              field.label
+            }}</label>
+            <input
+              v-model="config[field.key]"
+              :type="field.type"
+              :min="field.key === 'satisfaction_rate' ? 0 : undefined"
+              :max="field.key === 'satisfaction_rate' ? 100 : undefined"
+              class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+            />
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Media uploads -->
-    <h3 class="text-lg font-bold text-text mt-8 mb-4">Médias Hero</h3>
-    <div
-      class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
-    >
-      <div class="divide-y divide-border">
-        <div v-for="mf in mediaFields" :key="mf.key" class="px-6 py-4">
-          <label class="block text-sm font-medium text-text mb-1.5">{{
-            mf.label
-          }}</label>
-          <div class="flex items-center gap-3">
-            <label
-              class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg cursor-pointer hover:bg-primary/20 transition-colors"
+      <!-- Sections visibles -->
+      <h3 class="text-lg font-bold text-text mt-8 mb-4">Sections du site</h3>
+      <div
+        class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+      >
+        <div class="px-6 py-4 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-text">Section Avis clients</p>
+            <p class="text-xs text-text-muted mt-0.5">
+              Afficher la section avis et le lien vers la page avis sur la page
+              d'accueil
+            </p>
+          </div>
+          <AppToggle v-model="showReviews" />
+        </div>
+      </div>
+
+      <!-- Horaires multilangues -->
+      <h3 class="text-lg font-bold text-text mt-8 mb-4">Horaires</h3>
+      <div
+        class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+      >
+        <div class="divide-y divide-border">
+          <div class="px-6 py-4">
+            <label class="block text-sm font-medium text-text mb-1.5"
+              >Français</label
             >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <input
+              v-model="hours.fr"
+              type="text"
+              placeholder="Ex: Tous les jours 10h - 00h"
+              class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+            />
+          </div>
+          <div class="px-6 py-4">
+            <label class="block text-sm font-medium text-text mb-1.5"
+              >English</label
+            >
+            <input
+              v-model="hours.en"
+              type="text"
+              placeholder="Ex: Every day 10am - 12am"
+              class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+            />
+          </div>
+          <div class="px-6 py-4">
+            <label class="block text-sm font-medium text-text mb-1.5"
+              >العربية</label
+            >
+            <input
+              v-model="hours.ar"
+              type="text"
+              dir="rtl"
+              placeholder="مثال: كل يوم 10 صباحًا - 12 مساءً"
+              class="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Media uploads -->
+      <h3 class="text-lg font-bold text-text mt-8 mb-4">Médias Hero</h3>
+      <div
+        class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+      >
+        <div class="divide-y divide-border">
+          <div v-for="mf in mediaFields" :key="mf.key" class="px-6 py-4">
+            <label class="block text-sm font-medium text-text mb-1.5">{{
+              mf.label
+            }}</label>
+            <div class="flex items-center gap-3">
+              <label
+                class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg cursor-pointer hover:bg-primary/20 transition-colors"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                {{ uploading === mf.key ? "Upload..." : "Choisir un fichier" }}
+                <input
+                  type="file"
+                  :accept="mf.accept"
+                  class="hidden"
+                  @change="uploadMedia(mf.key, $event)"
+                  :disabled="uploading === mf.key"
                 />
-              </svg>
-              {{ uploading === mf.key ? "Upload..." : "Choisir un fichier" }}
-              <input
-                type="file"
-                :accept="mf.accept"
-                class="hidden"
-                @change="uploadMedia(mf.key, $event)"
-                :disabled="uploading === mf.key"
+              </label>
+              <span
+                v-if="config[mf.key]"
+                class="text-xs text-green-600 truncate max-w-[200px]"
+                >✓ {{ config[mf.key].split("/").pop() }}</span
+              >
+              <button
+                v-if="config[mf.key]"
+                @click="removeMedia(mf.key)"
+                class="text-xs text-danger hover:text-red-700 font-medium transition-colors"
+              >
+                Supprimer
+              </button>
+              <span v-else class="text-xs text-text-muted">Aucun fichier</span>
+            </div>
+            <div
+              v-if="config[mf.key] && isVideoUrl(config[mf.key])"
+              class="mt-3"
+            >
+              <video
+                :src="config[mf.key]"
+                class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
+                controls
+                muted
               />
-            </label>
-            <span
-              v-if="config[mf.key]"
-              class="text-xs text-green-600 truncate max-w-[200px]"
-              >✓ {{ config[mf.key].split("/").pop() }}</span
+            </div>
+            <div
+              v-else-if="config[mf.key] && !isVideoUrl(config[mf.key])"
+              class="mt-3"
             >
-            <button
-              v-if="config[mf.key]"
-              @click="removeMedia(mf.key)"
-              class="text-xs text-danger hover:text-red-700 font-medium transition-colors"
-            >
-              Supprimer
-            </button>
-            <span v-else class="text-xs text-text-muted">Aucun fichier</span>
-          </div>
-          <div v-if="config[mf.key] && isVideoUrl(config[mf.key])" class="mt-3">
-            <video
-              :src="config[mf.key]"
-              class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
-              controls
-              muted
-            />
-          </div>
-          <div
-            v-else-if="config[mf.key] && !isVideoUrl(config[mf.key])"
-            class="mt-3"
-          >
-            <img
-              :src="config[mf.key]"
-              class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
-            />
+              <img
+                :src="config[mf.key]"
+                class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>

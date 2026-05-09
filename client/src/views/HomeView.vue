@@ -3,16 +3,49 @@
     <NavBar />
     <main>
       <HeroSection />
-      <div data-reveal><AboutSection /></div>
-      <div data-reveal><FlashSaleSection /></div>
-      <div data-reveal><MenuSection /></div>
-      <div data-reveal><ExperienceSection /></div>
-      <div data-reveal><GallerySection /></div>
-      <div data-reveal><VoucherSection /></div>
-      <div v-if="config.showReviews" data-reveal><ReviewsSection /></div>
-      <div v-if="config.sectionVideo" data-reveal><VideoSection /></div>
-      <div data-reveal><ReservationSection /></div>
-      <div data-reveal><LocationSection /></div>
+
+      <!-- Global error state -->
+      <div
+        v-if="dataError"
+        class="flex flex-col items-center justify-center px-4 py-24 text-center"
+      >
+        <svg
+          class="h-12 w-12 text-coral/60 mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+          />
+        </svg>
+        <p class="font-brand text-lg text-deep mb-2">{{ t("error.title") }}</p>
+        <p class="text-sm text-charcoal/60 mb-6">
+          {{ t("error.description") }}
+        </p>
+        <button
+          class="rounded-full bg-ocean px-6 py-2.5 font-heading text-xs font-bold uppercase tracking-widest text-white shadow-lg hover:bg-ocean/90 transition-colors"
+          @click="retryData"
+        >
+          {{ t("error.retry") }}
+        </button>
+      </div>
+
+      <template v-else>
+        <div data-reveal><AboutSection /></div>
+        <div data-reveal><FlashSaleSection /></div>
+        <div data-reveal><MenuSection /></div>
+        <div data-reveal><ExperienceSection /></div>
+        <div data-reveal><GallerySection /></div>
+        <div data-reveal><VoucherSection /></div>
+        <div v-if="config.showReviews" data-reveal><ReviewsSection /></div>
+        <div v-if="config.sectionVideo" data-reveal><VideoSection /></div>
+        <div data-reveal><ReservationSection /></div>
+        <div data-reveal><LocationSection /></div>
+      </template>
     </main>
     <FooterSection />
     <FloatingSocial />
@@ -44,6 +77,7 @@
 import { ref, defineAsyncComponent, onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfig } from "@/composables/useConfig";
+import { useData } from "@/composables/useData";
 import { useScrollReveal } from "@/composables/useScrollReveal";
 
 import NavBar from "@/components/NavBar.vue";
@@ -89,6 +123,7 @@ const FloatingSocial = defineAsyncComponent(
 
 const { t, locale } = useI18n();
 const config = useConfig();
+const { error: dataError, retry: retryData } = useData();
 
 const homeRef = ref(null);
 const showStickyBar = ref(false);

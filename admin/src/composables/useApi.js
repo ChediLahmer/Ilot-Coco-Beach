@@ -15,7 +15,12 @@ async function request(path, options = {}) {
     headers["Content-Type"] = "application/json";
   }
   const base = options._directUpload ? UPLOAD_BASE : BASE;
-  const res = await fetch(`${base}${path}`, { ...options, headers });
+  let res;
+  try {
+    res = await fetch(`${base}${path}`, { ...options, headers });
+  } catch {
+    throw new Error("Erreur réseau — vérifiez votre connexion internet.");
+  }
   if (res.status === 401) {
     useAuth().logout();
     router.push("/login");
@@ -59,6 +64,22 @@ export function useApi() {
       const MAX_SIZE = 50 * 1024 * 1024;
       if (file.size > MAX_SIZE) {
         throw new Error("Fichier trop volumineux (max 50 Mo)");
+      }
+      const rejected = [
+        "image/heic",
+        "image/heif",
+        "image/tiff",
+        "image/bmp",
+        "image/svg+xml",
+        "video/quicktime",
+        "video/x-msvideo",
+        "video/x-matroska",
+        "video/x-m4v",
+      ];
+      if (file.type && rejected.includes(file.type)) {
+        throw new Error(
+          "Format non supporté. Formats acceptés : JPEG, PNG, WebP, GIF, AVIF, MP4, WebM.",
+        );
       }
       const validPrefixes = ["image/", "video/"];
       if (
