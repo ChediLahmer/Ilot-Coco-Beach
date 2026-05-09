@@ -1,5 +1,38 @@
 import { extractStorageKeyFromUrl, getObjectStream } from "../lib/storage.js";
 
+function unwrapProxyUrl(url) {
+  let current = url;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const parsed = new URL(current);
+      if (!parsed.pathname.endsWith("/api/media/proxy")) break;
+      const nested = parsed.searchParams.get("url");
+      if (!nested) break;
+      current = decodeURIComponent(nested);
+    } catch {
+      break;
+    }
+  }
+  return current;
+}
+
+function parseByteRange(rangeHeader, totalLength) {
+  if (!rangeHeader || !rangeHeader.startsWith("bytes=")) return null;
+  const [startRaw, endRaw] = rangeHeader.replace("bytes=", "").split("-");
+  let start = Number.parseInt(startRaw, 10);
+  let end = Number.parseInt(endRaw, 10);
+  if (Number.isNaN(start)) {
+    const suffix = Number.parseInt(endRaw, 10);
+    if (Number.isNaN(suffix) || suffix <= 0) return null;
+    start = Math.max(0, totalLength - suffix);
+    end = totalLength - 1;
+  } else {
+    if (Number.isNaN(end) || end >= totalLength) end = totalLength - 1;
+  }
+  if (start < 0 || end < start || start >= totalLength) return null;
+  return { start, end };
+}
+
 export async function mediaRoutes(app) {
   app.get(
     "/proxy",
@@ -19,19 +52,52 @@ export async function mediaRoutes(app) {
     },
     async (request, reply) => {
       const { url } = request.query;
-      const key = extractStorageKeyFromUrl(url);
+      const finalUrl = unwrapProxyUrl(url);
+      const key = extractStorageKeyFromUrl(finalUrl);
       if (!key) {
         return reply.status(400).send({ error: "Invalid media URL" });
       }
 
       try {
-        const obj = await getObjectStream(key);
-        if (obj.ContentType) reply.header("Content-Type", obj.ContentType);
-        if (obj.ContentLength != null) {
-          reply.header("Content-Length", String(obj.ContentLength));
+        const rangeHeader = request.headers.range;
+        const full = await getObjectStream(key);
+        const totalLength = Number(full.ContentLength || 0);
+        const range = parseByteRange(rangeHeader, totalLength);
+
+        if (range) {
+          const partial = await getObjectStream(
+            key,
+            `bytes=${range.start}-${range.end}`,
+          );
+          const length = range.end - range.start + 1;
+          const contentType =
+            key.toLowerCase().endsWith(".mp4") &&
+            partial.ContentType === "video/quicktime"
+              ? "video/mp4"
+              : partial.ContentType;
+          if (contentType) reply.header("Content-Type", contentType);
+          reply.header("Accept-Ranges", "bytes");
+          reply.header(
+            "Content-Range",
+            `bytes ${range.start}-${range.end}/${totalLength}`,
+          );
+          reply.header("Content-Length", String(length));
+          reply.header("Cache-Control", "public, max-age=31536000, immutable");
+          return reply.status(206).send(partial.Body);
         }
+
+        const contentType =
+          key.toLowerCase().endsWith(".mp4") &&
+          full.ContentType === "video/quicktime"
+            ? "video/mp4"
+            : full.ContentType;
+        if (contentType) reply.header("Content-Type", contentType);
+        if (full.ContentLength != null) {
+          reply.header("Content-Length", String(full.ContentLength));
+        }
+        reply.header("Accept-Ranges", "bytes");
         reply.header("Cache-Control", "public, max-age=31536000, immutable");
-        return reply.send(obj.Body);
+        return reply.send(full.Body);
       } catch (error) {
         if (
           error?.name === "NoSuchKey" ||

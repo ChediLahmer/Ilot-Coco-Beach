@@ -179,8 +179,14 @@ export async function getObjectBuffer(key) {
   return Buffer.concat(chunks);
 }
 
-export async function getObjectStream(key) {
-  return s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+export async function getObjectStream(key, range) {
+  return s3.send(
+    new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ...(range ? { Range: range } : {}),
+    }),
+  );
 }
 
 export async function deleteObjectKey(key) {
