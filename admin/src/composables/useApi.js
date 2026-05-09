@@ -4,7 +4,7 @@ import { router } from "../router.js";
 const BASE = import.meta.env.VITE_API_URL || "/api";
 const UPLOAD_BASE =
   import.meta.env.VITE_UPLOAD_URL || import.meta.env.VITE_API_URL || "/api";
-const REQUEST_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 60000;
 
 async function request(path, options = {}) {
   const { token } = useAuth();

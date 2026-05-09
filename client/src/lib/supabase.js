@@ -1,10 +1,24 @@
 const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const REQUEST_TIMEOUT_MS = 60000;
 
 async function request(path, options = {}) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
-    ...options,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch(`${API}${path}`, {
+      headers: { "Content-Type": "application/json", ...options.headers },
+      ...options,
+      signal: options.signal || controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("La requête a expiré. Réessayez.");
+    }
+    throw new Error("Erreur réseau — vérifiez votre connexion internet.");
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!res.ok) {
     let msg = `${res.status}`;
     try {
