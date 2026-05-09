@@ -311,8 +311,8 @@ function getSaleCountdown(sale) {
   ];
 }
 
-function scrollToReservation() {
-  trackReserveClick();
+async function scrollToReservation() {
+  await trackReserveClick();
   const el = document.getElementById("reservation");
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }

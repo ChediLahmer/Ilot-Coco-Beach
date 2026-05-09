@@ -80,7 +80,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import gsap from "gsap";
-
+import { trackReserveClick } from "@/composables/useAnalytics";
 import { useConfig } from "@/composables/useConfig";
 
 const { t } = useI18n();
@@ -95,7 +95,8 @@ const videoSrc = ref("");
 const videoCanPlay = ref(false);
 const videoError = ref(false);
 
-function scrollTo(id) {
+async function scrollTo(id) {
+  if (id === "reservation") await trackReserveClick();
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }

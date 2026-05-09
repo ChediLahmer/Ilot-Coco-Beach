@@ -71,6 +71,7 @@
 <script setup>
 import { useI18n } from "vue-i18n";
 import { useConfig } from "@/composables/useConfig";
+import { trackReserveClick } from "@/composables/useAnalytics";
 
 import overwaterImg from "@/assets/images/overwater-cabin.jpg";
 import cabinHammockImg from "@/assets/images/cabin-hammock.jpg";
@@ -78,7 +79,8 @@ import cabinHammockImg from "@/assets/images/cabin-hammock.jpg";
 const { t } = useI18n();
 const config = useConfig();
 
-function scrollTo(id) {
+async function scrollTo(id) {
+  if (id === "reservation") await trackReserveClick();
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }

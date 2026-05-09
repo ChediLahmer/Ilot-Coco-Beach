@@ -271,8 +271,8 @@ function goHome() {
   router.push("/");
 }
 
-function scrollTo(id) {
-  if (id === "reservation") trackReserveClick();
+async function scrollTo(id) {
+  if (id === "reservation") await trackReserveClick();
   if (route.path === "/") {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });

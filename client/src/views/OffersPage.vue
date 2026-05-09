@@ -352,7 +352,8 @@ function formatVoucherDate(dateStr) {
   });
 }
 
-function scrollToReservation() {
+async function scrollToReservation() {
+  await trackReserveClick();
   router.push("/#reservation");
 }
 
