@@ -13,6 +13,7 @@ const reviewStats = ref(null);
 const saving = ref(false);
 const saved = ref(false);
 const uploading = ref("");
+const uploadProgress = ref(0);
 const loading = ref(false);
 const error = ref(null);
 
@@ -76,8 +77,18 @@ async function uploadMedia(key, event) {
   const file = event.target.files?.[0];
   if (!file) return;
   uploading.value = key;
+  uploadProgress.value = 0;
   try {
-    const { url } = await api.upload("/upload", file);
+    const { url } = await api.upload(
+      "/upload",
+      file,
+      {},
+      {
+        onProgress: (pct) => {
+          uploadProgress.value = pct;
+        },
+      },
+    );
     config.value[key] = url;
     await api.put(`/config/${key}`, { value: url });
     toast.success("Fichier téléversé");
@@ -85,6 +96,7 @@ async function uploadMedia(key, event) {
     toast.error(e.message || "Erreur lors de l'upload");
   }
   uploading.value = "";
+  uploadProgress.value = 0;
 }
 
 async function removeMedia(key) {
@@ -454,6 +466,20 @@ async function save() {
                 Supprimer
               </button>
               <span v-else class="text-xs text-text-muted">Aucun fichier</span>
+            </div>
+            <!-- Upload progress bar -->
+            <div v-if="uploading === mf.key" class="mt-2 max-w-md">
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                    :style="{ width: uploadProgress + '%' }"
+                  />
+                </div>
+                <span class="text-xs font-medium text-text-muted tabular-nums"
+                  >{{ uploadProgress }}%</span
+                >
+              </div>
             </div>
             <div
               v-if="config[mf.key] && isVideoUrl(config[mf.key])"

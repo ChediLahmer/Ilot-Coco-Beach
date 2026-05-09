@@ -15,6 +15,9 @@ const { confirm } = useConfirm();
 const images = ref([]);
 const categories = ref([]);
 const uploading = ref(false);
+const uploadProgress = ref(0);
+const uploadTotal = ref(0);
+const uploadDone = ref(0);
 const previewUrl = ref(null);
 const loading = ref(false);
 const error = ref(null);
@@ -129,17 +132,31 @@ async function handleUpload(event) {
   const files = event.target.files;
   if (!files.length) return;
   uploading.value = true;
+  uploadTotal.value = files.length;
+  uploadDone.value = 0;
+  uploadProgress.value = 0;
   let succeeded = 0;
   let failed = 0;
   try {
     for (const file of files) {
       try {
-        await api.upload("/gallery", file);
+        uploadProgress.value = 0;
+        await api.upload(
+          "/gallery",
+          file,
+          {},
+          {
+            onProgress: (pct) => {
+              uploadProgress.value = pct;
+            },
+          },
+        );
         succeeded++;
       } catch (e) {
         failed++;
         toast.error(`${file.name} : ${e.message || "Erreur"}`);
       }
+      uploadDone.value++;
     }
     event.target.value = "";
     await loadData();
@@ -277,7 +294,11 @@ async function deleteCat(cat) {
             d="M12 4v16m8-8H4"
           />
         </svg>
-        {{ uploading ? "Envoi en cours..." : "Ajouter des médias" }}
+        {{
+          uploading
+            ? `Envoi ${uploadDone}/${uploadTotal} (${uploadProgress}%)`
+            : "Ajouter des médias"
+        }}
         <input
           type="file"
           accept="image/*,video/*"
@@ -287,6 +308,20 @@ async function deleteCat(cat) {
           :disabled="uploading"
         />
       </label>
+      <!-- Upload progress -->
+      <div v-if="uploading" class="w-full max-w-xs">
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-2 bg-border rounded-full overflow-hidden">
+            <div
+              class="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+              :style="{ width: uploadProgress + '%' }"
+            />
+          </div>
+          <span class="text-xs font-medium text-text-muted tabular-nums"
+            >{{ uploadProgress }}%</span
+          >
+        </div>
+      </div>
     </div>
 
     <!-- Categories management -->

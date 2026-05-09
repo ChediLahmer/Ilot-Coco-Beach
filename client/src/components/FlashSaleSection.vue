@@ -170,10 +170,27 @@
             </article>
           </SwiperSlide>
           <SwiperSlide v-if="flashSalesLoading" class="!h-auto">
-            <div class="flex min-h-[14rem] h-full items-center justify-center rounded-lg border border-charcoal/8 bg-white/50">
-              <svg class="h-6 w-6 animate-spin text-ocean" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <div
+              class="flex min-h-[14rem] h-full items-center justify-center rounded-lg border border-charcoal/8 bg-white/50"
+            >
+              <svg
+                class="h-6 w-6 animate-spin text-ocean"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
             </div>
           </SwiperSlide>
@@ -198,7 +215,8 @@ const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
 const now = useCountdown();
 
-const { flashSales, flashSalesHasMore, flashSalesLoading, loadMoreFlashSales } = useData();
+const { flashSales, flashSalesHasMore, flashSalesLoading, loadMoreFlashSales } =
+  useData();
 
 const flashPrev = ref(null);
 const flashNext = ref(null);

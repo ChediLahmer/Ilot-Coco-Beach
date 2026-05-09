@@ -5,22 +5,26 @@
   >
     <!-- Video background -->
     <div class="absolute inset-0">
-      <video
-        v-if="heroVideo"
-        :key="heroVideo"
-        :src="heroVideo"
+      <!-- Always show poster first for instant visual -->
+      <img
+        v-if="heroPoster"
+        :src="heroPoster"
         class="h-full w-full object-cover"
+        :class="{ invisible: videoCanPlay }"
+        fetchpriority="high"
+      />
+      <video
+        v-if="videoSrc"
+        ref="videoEl"
+        :src="videoSrc"
+        class="absolute inset-0 h-full w-full object-cover"
         :poster="heroPoster"
         autoplay
         muted
         loop
         playsinline
         preload="auto"
-      />
-      <img
-        v-else-if="heroPoster"
-        :src="heroPoster"
-        class="h-full w-full object-cover"
+        @canplay="videoCanPlay = true"
       />
       <div
         class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"
@@ -72,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import gsap from "gsap";
 
@@ -85,13 +89,35 @@ const heroVideo = computed(() => config.heroVideo || "");
 const heroPoster = computed(() => config.heroPoster || "");
 
 const contentEl = ref(null);
+const videoEl = ref(null);
+const videoSrc = ref("");
+const videoCanPlay = ref(false);
 
 function scrollTo(id) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }
 
+function deferVideo() {
+  if (!heroVideo.value) return;
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(() => {
+      videoSrc.value = heroVideo.value;
+    });
+  } else {
+    setTimeout(() => {
+      videoSrc.value = heroVideo.value;
+    }, 200);
+  }
+}
+
+watch(heroVideo, (v) => {
+  if (v) deferVideo();
+});
+
 onMounted(() => {
+  if (heroVideo.value) deferVideo();
+
   const els = contentEl.value
     ? Array.from(contentEl.value.querySelectorAll("[data-animate]"))
     : [];

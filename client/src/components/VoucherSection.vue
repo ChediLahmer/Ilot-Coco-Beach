@@ -148,10 +148,27 @@
             </div>
           </SwiperSlide>
           <SwiperSlide v-if="vouchersLoading" class="!h-auto">
-            <div class="flex h-full min-h-[10rem] items-center justify-center rounded-lg border border-charcoal/8 bg-white/50">
-              <svg class="h-6 w-6 animate-spin text-ocean" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <div
+              class="flex h-full min-h-[10rem] items-center justify-center rounded-lg border border-charcoal/8 bg-white/50"
+            >
+              <svg
+                class="h-6 w-6 animate-spin text-ocean"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
             </div>
           </SwiperSlide>
@@ -180,7 +197,8 @@ import { useData } from "@/composables/useData";
 
 const swiperModules = [Navigation, Autoplay, Scrollbar];
 const { t, locale } = useI18n();
-const { vouchers, vouchersHasMore, vouchersLoading, loadMoreVouchers } = useData();
+const { vouchers, vouchersHasMore, vouchersLoading, loadMoreVouchers } =
+  useData();
 
 const copiedCode = ref(null);
 

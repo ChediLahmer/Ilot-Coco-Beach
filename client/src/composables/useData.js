@@ -108,7 +108,11 @@ async function loadMoreSpaces() {
 }
 
 async function loadMoreFlashSales() {
-  if (flashSalesPage.value >= flashSalesTotalPages.value || flashSalesLoading.value) return;
+  if (
+    flashSalesPage.value >= flashSalesTotalPages.value ||
+    flashSalesLoading.value
+  )
+    return;
   flashSalesLoading.value = true;
   try {
     const page = flashSalesPage.value + 1;
@@ -125,7 +129,8 @@ async function loadMoreFlashSales() {
 }
 
 async function loadMoreVouchers() {
-  if (vouchersPage.value >= vouchersTotalPages.value || vouchersLoading.value) return;
+  if (vouchersPage.value >= vouchersTotalPages.value || vouchersLoading.value)
+    return;
   vouchersLoading.value = true;
   try {
     const page = vouchersPage.value + 1;
@@ -164,11 +169,15 @@ export function useData() {
     spacesLoading,
     loadMoreSpaces,
     flashSales,
-    flashSalesHasMore: computed(() => flashSalesPage.value < flashSalesTotalPages.value),
+    flashSalesHasMore: computed(
+      () => flashSalesPage.value < flashSalesTotalPages.value,
+    ),
     flashSalesLoading,
     loadMoreFlashSales,
     vouchers: vouchersList,
-    vouchersHasMore: computed(() => vouchersPage.value < vouchersTotalPages.value),
+    vouchersHasMore: computed(
+      () => vouchersPage.value < vouchersTotalPages.value,
+    ),
     vouchersLoading,
     loadMoreVouchers,
     galleryImages,

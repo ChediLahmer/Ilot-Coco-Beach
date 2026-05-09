@@ -20,26 +20,35 @@ function getDeviceId() {
 async function fetchReviews(cursor) {
   if (loading.value) return;
   loading.value = true;
-  try {
-    const res = await api.getReviews(cursor);
-    if (cursor) {
-      reviews.value = [...reviews.value, ...res.items];
-    } else {
-      reviews.value = res.items;
+  let attempts = 0;
+  while (attempts < 2) {
+    try {
+      const res = await api.getReviews(cursor);
+      if (cursor) {
+        reviews.value = [...reviews.value, ...res.items];
+      } else {
+        reviews.value = res.items;
+      }
+      nextCursor.value = res.nextCursor;
+      break;
+    } catch {
+      attempts++;
+      if (attempts < 2) await new Promise((r) => setTimeout(r, 1500));
     }
-    nextCursor.value = res.nextCursor;
-  } catch {
-    /* keep current */
-  } finally {
-    loading.value = false;
   }
+  loading.value = false;
 }
 
 async function fetchStats() {
-  try {
-    stats.value = await api.getReviewStats();
-  } catch {
-    /* keep defaults */
+  let attempts = 0;
+  while (attempts < 2) {
+    try {
+      stats.value = await api.getReviewStats();
+      break;
+    } catch {
+      attempts++;
+      if (attempts < 2) await new Promise((r) => setTimeout(r, 1500));
+    }
   }
 }
 

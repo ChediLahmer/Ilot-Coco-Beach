@@ -60,7 +60,7 @@ export function useApi() {
         body: body instanceof FormData ? body : JSON.stringify(body),
       }),
     del: (path) => request(path, { method: "DELETE" }),
-    upload: (path, file, extraFields = {}) => {
+    upload: (path, file, extraFields = {}, { onProgress } = {}) => {
       const MAX_SIZE = 50 * 1024 * 1024;
       if (file.size > MAX_SIZE) {
         throw new Error("Fichier trop volumineux (max 50 Mo)");
@@ -79,6 +79,47 @@ export function useApi() {
       form.append("file", file);
       for (const [k, v] of Object.entries(extraFields)) {
         form.append(k, v);
+      }
+      if (onProgress) {
+        const { token } = useAuth();
+        const base = UPLOAD_BASE;
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", `${base}${path}`);
+          if (token.value)
+            xhr.setRequestHeader("Authorization", `Bearer ${token.value}`);
+          xhr.upload.addEventListener("progress", (e) => {
+            if (e.lengthComputable)
+              onProgress(Math.round((e.loaded / e.total) * 100));
+          });
+          xhr.addEventListener("load", () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch {
+                resolve(null);
+              }
+            } else if (xhr.status === 401) {
+              useAuth().logout();
+              router.push("/login");
+              reject(new Error("Unauthorized"));
+            } else {
+              let msg;
+              try {
+                msg = JSON.parse(xhr.responseText)?.error || xhr.statusText;
+              } catch {
+                msg = xhr.statusText;
+              }
+              if (xhr.status === 413)
+                msg = "Fichier trop volumineux (max 50 Mo)";
+              reject(new Error(msg));
+            }
+          });
+          xhr.addEventListener("error", () =>
+            reject(new Error("Erreur réseau")),
+          );
+          xhr.send(form);
+        });
       }
       return request(path, { method: "POST", body: form, _directUpload: true });
     },
