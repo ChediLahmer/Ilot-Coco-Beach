@@ -9,6 +9,8 @@ export function useScrollReveal(containerRef, options = {}) {
 
   let observer = null;
   let mutationObserver = null;
+  let initTimer = null;
+  let disposed = false;
   const observed = new WeakSet();
 
   function observeElement(el) {
@@ -22,6 +24,7 @@ export function useScrollReveal(containerRef, options = {}) {
   }
 
   function init() {
+    if (disposed) return;
     const root = containerRef?.value;
     if (!root) return;
 
@@ -45,8 +48,14 @@ export function useScrollReveal(containerRef, options = {}) {
     mutationObserver.observe(root, { childList: true, subtree: true });
   }
 
-  onMounted(() => nextTick(() => setTimeout(init, 100)));
+  onMounted(() =>
+    nextTick(() => {
+      initTimer = setTimeout(init, 100);
+    }),
+  );
   onUnmounted(() => {
+    disposed = true;
+    clearTimeout(initTimer);
     observer?.disconnect();
     mutationObserver?.disconnect();
   });

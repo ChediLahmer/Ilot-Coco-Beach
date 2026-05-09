@@ -56,6 +56,33 @@ async function writeStoredStats(stats, client = prisma) {
   });
 }
 
+async function applyStoredStatsDelta(delta, client = prisma) {
+  try {
+    await client.reviewStats.update({
+      where: { id: REVIEW_STATS_ID },
+      data: {
+        visibleCount: { increment: delta.count },
+        totalRating: { increment: delta.totalRating },
+        recommendedCount: { increment: delta.recommendedCount },
+      },
+    });
+  } catch (error) {
+    if (error?.code !== "P2025") {
+      throw error;
+    }
+
+    await refreshStoredReviewStats(client);
+    await client.reviewStats.update({
+      where: { id: REVIEW_STATS_ID },
+      data: {
+        visibleCount: { increment: delta.count },
+        totalRating: { increment: delta.totalRating },
+        recommendedCount: { increment: delta.recommendedCount },
+      },
+    });
+  }
+}
+
 async function computeStats(client = prisma) {
   const agg = await client.review.aggregate({
     where: { visible: true },
@@ -87,35 +114,38 @@ export async function adjustReviewStatsForVisibilityChange(
 ) {
   if (!before || before.visible === after.visible) return;
 
-  const stats = (await readStoredStats(client)) ?? (await computeStats(client));
+  const delta = {
+    count: 0,
+    totalRating: 0,
+    recommendedCount: 0,
+  };
 
   if (!before.visible && after.visible) {
-    stats.count += 1;
-    stats.totalRating += after.rating;
-    if (isRecommended(after.rating)) stats.recommendedCount += 1;
+    delta.count = 1;
+    delta.totalRating = after.rating;
+    if (isRecommended(after.rating)) delta.recommendedCount = 1;
   } else if (before.visible && !after.visible) {
-    stats.count = Math.max(0, stats.count - 1);
-    stats.totalRating = Math.max(0, stats.totalRating - before.rating);
+    delta.count = -1;
+    delta.totalRating = -before.rating;
     if (isRecommended(before.rating)) {
-      stats.recommendedCount = Math.max(0, stats.recommendedCount - 1);
+      delta.recommendedCount = -1;
     }
   }
 
-  await writeStoredStats(stats, client);
+  await applyStoredStatsDelta(delta, client);
 }
 
 export async function adjustReviewStatsForDelete(review, client = prisma) {
   if (!review?.visible) return;
 
-  const stats = (await readStoredStats(client)) ?? (await computeStats(client));
-
-  stats.count = Math.max(0, stats.count - 1);
-  stats.totalRating = Math.max(0, stats.totalRating - review.rating);
-  if (isRecommended(review.rating)) {
-    stats.recommendedCount = Math.max(0, stats.recommendedCount - 1);
-  }
-
-  await writeStoredStats(stats, client);
+  await applyStoredStatsDelta(
+    {
+      count: -1,
+      totalRating: -review.rating,
+      recommendedCount: isRecommended(review.rating) ? -1 : 0,
+    },
+    client,
+  );
 }
 
 export async function refreshStoredReviewStats(client = prisma) {
