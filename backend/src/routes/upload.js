@@ -2,6 +2,14 @@ import { authenticate } from "../lib/auth.js";
 import { uploadFile, findExistingByHash } from "../lib/storage.js";
 import { fileTypeFromBuffer } from "file-type";
 import { createHash } from "crypto";
+import {
+  isBrowserMimeAllowed,
+  isDetectedMimeAllowed,
+  isSvgBuffer,
+  processMedia,
+  ERROR_MSG_BROWSER,
+  ERROR_MSG_CONTENT,
+} from "../lib/media.js";
 
 export async function uploadRoutes(app) {
   app.post(
@@ -26,32 +34,28 @@ export async function uploadRoutes(app) {
       const file = await request.file();
       if (!file) return reply.status(400).send({ error: "No file uploaded" });
 
-      const allowedImages = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-        "image/avif",
-      ];
-      const allowedVideos = ["video/mp4", "video/webm"];
-      const allowed = [...allowedImages, ...allowedVideos];
-      const allowedBrowser = [...allowed, "application/octet-stream"];
-      if (!allowedBrowser.includes(file.mimetype)) {
-        return reply.status(400).send({
-          error: `Type de fichier non supporté (${file.mimetype}). Formats acceptés : JPEG, PNG, WebP, GIF, AVIF, MP4, WebM.`,
-        });
+      if (!isBrowserMimeAllowed(file.mimetype)) {
+        return reply.status(400).send({ error: ERROR_MSG_BROWSER });
       }
 
-      const buffer = await file.toBuffer();
+      const rawBuffer = await file.toBuffer();
 
-      const detected = await fileTypeFromBuffer(buffer);
-      if (!detected || !allowed.includes(detected.mime)) {
-        const detectedType = detected?.mime || "inconnu";
-        return reply.status(400).send({
-          error: `Le contenu du fichier (${detectedType}) ne correspond pas à un format supporté. Formats acceptés : JPEG, PNG, WebP, GIF, AVIF, MP4, WebM.`,
-        });
+      let detectedMime;
+      if (isSvgBuffer(file.mimetype, rawBuffer)) {
+        detectedMime = "image/svg+xml";
+      } else {
+        const detected = await fileTypeFromBuffer(rawBuffer);
+        if (!detected || !isDetectedMimeAllowed(detected.mime)) {
+          return reply.status(400).send({ error: ERROR_MSG_CONTENT });
+        }
+        detectedMime = detected.mime;
       }
-      const detectedMime = detected.mime;
+
+      const { buffer, mime, ext, baseName } = await processMedia(
+        rawBuffer,
+        detectedMime,
+        file.filename,
+      );
 
       const hash = createHash("sha256").update(buffer).digest("hex");
       const existing = await findExistingByHash(hash);
@@ -59,7 +63,10 @@ export async function uploadRoutes(app) {
         return reply.status(201).send({ url: existing });
       }
 
-      const url = await uploadFile(buffer, file.filename, detectedMime, hash);
+      const finalName = ext
+        ? `${baseName || file.filename.replace(/\.[^.]+$/, "")}.${ext}`
+        : file.filename;
+      const url = await uploadFile(buffer, finalName, mime, hash);
       return reply.status(201).send({ url });
     },
   );

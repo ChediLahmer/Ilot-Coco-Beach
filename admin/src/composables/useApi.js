@@ -65,22 +65,6 @@ export function useApi() {
       if (file.size > MAX_SIZE) {
         throw new Error("Fichier trop volumineux (max 50 Mo)");
       }
-      const rejected = [
-        "image/heic",
-        "image/heif",
-        "image/tiff",
-        "image/bmp",
-        "image/svg+xml",
-        "video/quicktime",
-        "video/x-msvideo",
-        "video/x-matroska",
-        "video/x-m4v",
-      ];
-      if (file.type && rejected.includes(file.type)) {
-        throw new Error(
-          "Format non supporté. Formats acceptés : JPEG, PNG, WebP, GIF, AVIF, MP4, WebM.",
-        );
-      }
       const validPrefixes = ["image/", "video/"];
       if (
         file.type &&

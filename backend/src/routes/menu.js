@@ -381,6 +381,15 @@ export async function menuRoutes(app) {
         categoryId,
         order,
       } = request.body;
+      if (image !== undefined) {
+        const existing = await prisma.menuItem.findUnique({
+          where: { id: Number(request.params.id) },
+          select: { image: true },
+        });
+        if (existing?.image && existing.image !== image) {
+          deleteFile(existing.image).catch(() => {});
+        }
+      }
       const updated = await prisma.menuItem.update({
         where: { id: Number(request.params.id) },
         data: {

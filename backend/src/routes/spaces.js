@@ -204,6 +204,15 @@ export async function spacesRoutes(app) {
         available,
         visible,
       } = request.body;
+      if (image !== undefined) {
+        const existing = await prisma.space.findUnique({
+          where: { id: Number(request.params.id) },
+          select: { image: true },
+        });
+        if (existing?.image && existing.image !== image) {
+          deleteFile(existing.image).catch(() => {});
+        }
+      }
       return prisma.space.update({
         where: { id: Number(request.params.id) },
         data: {

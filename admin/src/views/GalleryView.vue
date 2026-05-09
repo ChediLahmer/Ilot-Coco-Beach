@@ -280,7 +280,7 @@ async function deleteCat(cat) {
         {{ uploading ? "Envoi en cours..." : "Ajouter des médias" }}
         <input
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm"
+          accept="image/*,video/*"
           multiple
           class="hidden"
           @change="handleUpload"

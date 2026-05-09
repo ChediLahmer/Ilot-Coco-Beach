@@ -1,11 +1,21 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate } from "../lib/auth.js";
+import { deleteFile } from "../lib/storage.js";
 
 let configCache = null;
 
 export function invalidateConfigCache() {
   configCache = null;
 }
+
+const MEDIA_KEYS = new Set([
+  "hero_video_url",
+  "hero_poster_url",
+  "section_video_url",
+  "section_poster_url",
+  "about_image_1",
+  "about_image_2",
+]);
 
 const ALLOWED_CONFIG_KEYS = new Set([
   "name",
@@ -89,6 +99,12 @@ export async function configRoutes(app) {
         return reply.status(400).send({ error: `Invalid config key: ${key}` });
       }
       const { value } = request.body;
+      if (MEDIA_KEYS.has(key)) {
+        const old = await prisma.siteConfig.findUnique({ where: { key } });
+        if (old?.value && old.value !== value) {
+          deleteFile(old.value).catch(() => {});
+        }
+      }
       return prisma.siteConfig
         .upsert({
           where: { key: request.params.key },
@@ -124,6 +140,20 @@ export async function configRoutes(app) {
         return reply.status(400).send({
           error: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
         });
+      }
+      const mediaEntries = entries.filter(([k]) => MEDIA_KEYS.has(k));
+      if (mediaEntries.length) {
+        const oldConfigs = await prisma.siteConfig.findMany({
+          where: { key: { in: mediaEntries.map(([k]) => k) } },
+        });
+        const oldMap = Object.fromEntries(
+          oldConfigs.map((c) => [c.key, c.value]),
+        );
+        for (const [k, v] of mediaEntries) {
+          if (oldMap[k] && oldMap[k] !== v) {
+            deleteFile(oldMap[k]).catch(() => {});
+          }
+        }
       }
       await prisma.$transaction(
         entries.map(([key, value]) =>

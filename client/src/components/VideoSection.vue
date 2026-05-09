@@ -14,15 +14,17 @@
           :poster="sectionPoster"
           class="w-full aspect-video object-cover"
           playsinline
-          preload="metadata"
+          preload="auto"
           @click="togglePlay"
           @ended="isPlaying = false"
+          @canplay="videoReady = true"
+          @waiting="videoBuffering = true"
+          @playing="videoBuffering = false"
         >
           <source
             :src="sectionVideo"
             :type="sectionVideo?.endsWith('.webm') ? 'video/webm' : 'video/mp4'"
           />
-          {{ t("video.unsupported") }}
         </video>
 
         <Transition name="fade">
@@ -35,14 +37,63 @@
               class="flex h-16 w-16 items-center justify-center rounded-full bg-ocean text-white shadow-lg transition-transform hover:scale-105"
             >
               <svg
+                v-if="!videoBuffering"
                 class="ms-0.5 h-6 w-6"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path d="M8 5v14l11-7z" />
               </svg>
+              <svg
+                v-else
+                class="h-6 w-6 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
             </div>
           </button>
+        </Transition>
+
+        <!-- Buffering overlay when playing -->
+        <Transition name="fade">
+          <div
+            v-if="isPlaying && videoBuffering"
+            class="absolute inset-0 flex items-center justify-center bg-black/30"
+          >
+            <svg
+              class="h-10 w-10 animate-spin text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+          </div>
         </Transition>
       </div>
     </div>
@@ -62,6 +113,8 @@ const sectionPoster = computed(() => config.sectionPoster || "");
 
 const videoEl = ref(null);
 const isPlaying = ref(false);
+const videoReady = ref(false);
+const videoBuffering = ref(false);
 
 function togglePlay() {
   if (!videoEl.value) return;

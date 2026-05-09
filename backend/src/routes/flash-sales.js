@@ -232,6 +232,15 @@ export async function flashSalesRoutes(app) {
         menuItemId,
         spaceId,
       } = request.body;
+      if (image !== undefined) {
+        const existing = await prisma.flashSale.findUnique({
+          where: { id: Number(request.params.id) },
+          select: { image: true },
+        });
+        if (existing?.image && existing.image !== image) {
+          deleteFile(existing.image).catch(() => {});
+        }
+      }
       const data = {
         title,
         description,
