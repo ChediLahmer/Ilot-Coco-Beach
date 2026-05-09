@@ -50,23 +50,32 @@ export async function jobsRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { limit = 50, offset = 0, jobName, status } = request.query;
+      try {
+        const { limit = 50, offset = 0, jobName, status } = request.query;
 
-      const where = {};
-      if (jobName) where.jobName = jobName;
-      if (status) where.status = status;
+        const where = {};
+        if (jobName) where.jobName = jobName;
+        if (status) where.status = status;
 
-      const [runs, total] = await Promise.all([
-        prisma.jobRun.findMany({
-          where,
-          orderBy: { startedAt: "desc" },
-          take: limit,
-          skip: offset,
-        }),
-        prisma.jobRun.count({ where }),
-      ]);
+        const [runs, total] = await Promise.all([
+          prisma.jobRun.findMany({
+            where,
+            orderBy: { startedAt: "desc" },
+            take: limit,
+            skip: offset,
+          }),
+          prisma.jobRun.count({ where }),
+        ]);
 
-      return reply.send({ runs, total });
+        return reply.send({ runs, total });
+      } catch (err) {
+        request.log.error(err, "Failed to fetch job history");
+        // Return empty array if table doesn't exist
+        if (err.code === "P1003" || err.code === "P2021") {
+          return reply.send({ runs: [], total: 0 });
+        }
+        throw err;
+      }
     },
   );
 
@@ -104,59 +113,73 @@ export async function jobsRoutes(app) {
       },
     },
     async (request, reply) => {
-      // Get unique job names
-      const jobNames = await prisma.jobRun.findMany({
-        select: { jobName: true },
-        distinct: ["jobName"],
-      });
+      try {
+        // Get unique job names
+        const jobNames = await prisma.jobRun.findMany({
+          select: { jobName: true },
+          distinct: ["jobName"],
+        });
 
-      const stats = await Promise.all(
-        jobNames.map(async ({ jobName }) => {
-          const [
-            successCount,
-            errorCount,
-            totalRuns,
-            lastRun,
-            avgDuration,
-            totalItems,
-          ] = await Promise.all([
-            prisma.jobRun.count({
-              where: { jobName, status: "success" },
-            }),
-            prisma.jobRun.count({
-              where: { jobName, status: "error" },
-            }),
-            prisma.jobRun.count({
-              where: { jobName },
-            }),
-            prisma.jobRun.findFirst({
-              where: { jobName },
-              orderBy: { startedAt: "desc" },
-              select: { startedAt: true },
-            }),
-            prisma.jobRun.aggregate({
-              where: { jobName, status: "success" },
-              _avg: { durationMs: true },
-            }),
-            prisma.jobRun.aggregate({
-              where: { jobName },
-              _sum: { itemsCount: true },
-            }),
-          ]);
+        // If no jobs have run yet, return empty stats
+        if (!jobNames || jobNames.length === 0) {
+          return reply.send({ jobs: [] });
+        }
 
-          return {
-            jobName,
-            totalRuns,
-            successCount,
-            errorCount,
-            lastRun: lastRun?.startedAt || null,
-            avgDurationMs: avgDuration._avg.durationMs || null,
-            totalItemsProcessed: totalItems._sum.itemsCount || 0,
-          };
-        }),
-      );
+        const stats = await Promise.all(
+          jobNames.map(async ({ jobName }) => {
+            const [
+              successCount,
+              errorCount,
+              totalRuns,
+              lastRun,
+              avgDuration,
+              totalItems,
+            ] = await Promise.all([
+              prisma.jobRun.count({
+                where: { jobName, status: "success" },
+              }),
+              prisma.jobRun.count({
+                where: { jobName, status: "error" },
+              }),
+              prisma.jobRun.count({
+                where: { jobName },
+              }),
+              prisma.jobRun.findFirst({
+                where: { jobName },
+                orderBy: { startedAt: "desc" },
+                select: { startedAt: true },
+              }),
+              prisma.jobRun.aggregate({
+                where: { jobName, status: "success" },
+                _avg: { durationMs: true },
+              }),
+              prisma.jobRun.aggregate({
+                where: { jobName },
+                _sum: { itemsCount: true },
+              }),
+            ]);
 
-      return reply.send({ jobs: stats });
+            return {
+              jobName,
+              totalRuns,
+              successCount,
+              errorCount,
+              lastRun: lastRun?.startedAt || null,
+              avgDurationMs: avgDuration._avg.durationMs || null,
+              totalItemsProcessed: totalItems._sum.itemsCount || 0,
+            };
+          }),
+        );
+
+        return reply.send({ jobs: stats });
+      } catch (err) {
+        request.log.error(err, "Failed to fetch job statistics");
+        // Return empty stats instead of 500 error if table doesn't exist
+        if (err.code === "P1003" || err.code === "P2021") {
+          return reply.send({ jobs: [] });
+        }
+        throw err;
+      }
     },
   );
 
