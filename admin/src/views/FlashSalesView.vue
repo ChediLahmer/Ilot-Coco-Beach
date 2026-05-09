@@ -694,7 +694,7 @@ function formatDate(d) {
               </p>
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1"
                 >Réduction (%) *</label
@@ -717,7 +717,7 @@ function formatDate(d) {
             </div>
             <DateTimeInput
               v-model="form.endsAt"
-              label="Expire le *"
+              label="Expire le"
               hint="Date et heure futures requises. Format DD/MM/YYYY"
               :error="fieldErrors.endsAt"
               required

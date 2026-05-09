@@ -703,17 +703,16 @@ onUnmounted(() => {
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1.5"
-              >Nom FR *</label
+              >Nom EN</label
             >
             <input
-              v-model="catForm.name.fr"
-              required
+              v-model="catForm.name.en"
               maxlength="200"
               class="w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow"
-              :class="fieldErrors.catNameFr ? 'border-danger' : 'border-border'"
+              :class="fieldErrors.catNameEn ? 'border-danger' : 'border-border'"
             />
             <p class="text-xs text-text-muted mt-1.5">
-              Requis, max 200 caractères
+              Optionnel, max 200 caractères
             </p>
             <FieldError :message="fieldErrors.catNameEn" />
           </div>
@@ -851,7 +850,7 @@ onUnmounted(() => {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-medium text-text-muted mb-1.5"
-                >Prix Standard (DT)</label
+                >Prix Standard (DT) *</label
               >
               <input
                 v-model.number="itemForm.priceStandard"
