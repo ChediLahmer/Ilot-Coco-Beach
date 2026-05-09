@@ -153,7 +153,9 @@ function openModal(sale = null) {
         title: { ...sale.title },
         description: { ...sale.description },
         discountPercent: sale.discountPercent,
-        endsAt: (sale.endsAt || "").slice(0, 16),
+        endsAt: sale.endsAt
+          ? new Date(sale.endsAt).toISOString().slice(0, 16)
+          : "",
         isActive: sale.isActive,
         visible: sale.visible,
         imageFile: null,

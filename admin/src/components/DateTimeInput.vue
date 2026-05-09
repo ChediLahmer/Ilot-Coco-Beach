@@ -22,8 +22,10 @@ defineEmits(["update:modelValue"]);
 
 const formatDateTime = (iso) => {
   if (!iso) return { date: "", time: "" };
-  const [date, time] = iso.slice(0, 16).split("T");
-  return { date, time: time || "12:00" };
+  // Handle full ISO strings like "2026-08-31T00:00:00.000Z" or "2026-08-31T00:00"
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  if (!match) return { date: "", time: "" };
+  return { date: match[1], time: match[2] || "12:00" };
 };
 
 const updateDateTime = (emit, modelValue) => (type, value) => {

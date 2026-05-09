@@ -97,7 +97,9 @@ function openModal(v = null) {
     ? {
         code: v.code,
         discountPercent: v.discountPercent,
-        validUntil: (v.validUntil || "").slice(0, 16),
+        validUntil: v.validUntil
+          ? new Date(v.validUntil).toISOString().slice(0, 16)
+          : "",
         isActive: v.isActive,
         visible: v.visible,
       }
