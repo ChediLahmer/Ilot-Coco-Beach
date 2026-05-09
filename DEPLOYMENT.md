@@ -162,6 +162,8 @@ S3_BUCKET="cocobeach"
 S3_REGION="us-east-1"
 S3_PUBLIC_URL="https://yourdomain.com/storage"
 CORS_ORIGIN="https://yourdomain.com,https://admin.yourdomain.com"
+DEDUP_MEDIA_CRON="0 3 * * 0"
+JOB_RUN_RETENTION_DAYS=30
 EOF
 
 # Run migrations + seed
@@ -334,21 +336,23 @@ pm2 monit
 
 ## Environment Variables Reference
 
-| Variable             | Description                       | Example                                           |
-| -------------------- | --------------------------------- | ------------------------------------------------- |
-| `DATABASE_URL`       | PostgreSQL connection             | `postgresql://user:pass@localhost:5432/cocobeach` |
-| `JWT_SECRET`         | Token signing key (min 32 chars)  | Random string                                     |
-| `PORT`               | Backend port                      | `3000`                                            |
-| `S3_ENDPOINT`        | MinIO/S3 endpoint                 | `http://localhost:9000`                           |
-| `S3_ACCESS_KEY`      | Storage access key                | `minioadmin`                                      |
-| `S3_SECRET_KEY`      | Storage secret key                | Secret                                            |
-| `S3_BUCKET`          | Bucket name                       | `cocobeach`                                       |
-| `S3_REGION`          | Region                            | `us-east-1`                                       |
-| `S3_PUBLIC_URL`      | Public URL for uploaded files     | `https://yourdomain.com/storage`                  |
-| `CORS_ORIGIN`        | Allowed origins (comma-separated) | `https://yourdomain.com`                          |
-| `BREVO_API_KEY`      | Brevo transactional email API key | `xkeysib-...`                                     |
-| `BREVO_SENDER_EMAIL` | Sender email for password resets  | `noreply@ilotcocobeach.tn`                        |
-| `ADMIN_URL`          | Admin panel URL (for reset links) | `https://admin.yourdomain.com`                    |
+| Variable                 | Description                           | Example                                           |
+| ------------------------ | ------------------------------------- | ------------------------------------------------- |
+| `DATABASE_URL`           | PostgreSQL connection                 | `postgresql://user:pass@localhost:5432/cocobeach` |
+| `JWT_SECRET`             | Token signing key (min 32 chars)      | Random string                                     |
+| `PORT`                   | Backend port                          | `3000`                                            |
+| `S3_ENDPOINT`            | MinIO/S3 endpoint                     | `http://localhost:9000`                           |
+| `S3_ACCESS_KEY`          | Storage access key                    | `minioadmin`                                      |
+| `S3_SECRET_KEY`          | Storage secret key                    | Secret                                            |
+| `S3_BUCKET`              | Bucket name                           | `cocobeach`                                       |
+| `S3_REGION`              | Region                                | `us-east-1`                                       |
+| `S3_PUBLIC_URL`          | Public URL for uploaded files         | `https://yourdomain.com/storage`                  |
+| `CORS_ORIGIN`            | Allowed origins (comma-separated)     | `https://yourdomain.com`                          |
+| `DEDUP_MEDIA_CRON`       | Dedup scheduler cron expression       | `0 3 * * 0`                                       |
+| `JOB_RUN_RETENTION_DAYS` | Keep scheduler run history for N days | `30`                                              |
+| `BREVO_API_KEY`          | Brevo transactional email API key     | `xkeysib-...`                                     |
+| `BREVO_SENDER_EMAIL`     | Sender email for password resets      | `noreply@ilotcocobeach.tn`                        |
+| `ADMIN_URL`              | Admin panel URL (for reset links)     | `https://admin.yourdomain.com`                    |
 
 ---
 
