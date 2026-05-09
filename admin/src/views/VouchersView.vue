@@ -7,6 +7,7 @@ import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
+import DateTimeInput from "@/components/DateTimeInput.vue";
 
 const {
   fieldErrors,
@@ -96,7 +97,7 @@ function openModal(v = null) {
     ? {
         code: v.code,
         discountPercent: v.discountPercent,
-        validUntil: (v.validUntil || "").slice(0, 10),
+        validUntil: (v.validUntil || "").slice(0, 16),
         isActive: v.isActive,
         visible: v.visible,
       }
@@ -478,41 +479,28 @@ function formatDate(d) {
             />
             <FieldError :message="fieldErrors.code" />
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-text-muted mb-1"
-                >Réduction (%)</label
-              >
-              <input
-                v-model.number="form.discountPercent"
-                type="number"
-                min="0"
-                max="100"
-                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                :class="
-                  fieldErrors.discountPercent
-                    ? 'border-danger'
-                    : 'border-border'
-                "
-              />
-              <FieldError :message="fieldErrors.discountPercent" />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-text-muted mb-1"
-                >Valide jusqu'au</label
-              >
-              <input
-                v-model="form.validUntil"
-                type="date"
-                required
-                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                :class="
-                  fieldErrors.validUntil ? 'border-danger' : 'border-border'
-                "
-              />
-              <FieldError :message="fieldErrors.validUntil" />
-            </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1"
+              >Réduction (%)</label
+            >
+            <input
+              v-model.number="form.discountPercent"
+              type="number"
+              min="0"
+              max="100"
+              class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+              :class="
+                fieldErrors.discountPercent ? 'border-danger' : 'border-border'
+              "
+            />
+            <FieldError :message="fieldErrors.discountPercent" />
           </div>
+          <DateTimeInput
+            v-model="form.validUntil"
+            label="Valide jusqu'au"
+            :error="fieldErrors.validUntil"
+            required
+          />
           <div class="flex items-center justify-between">
             <label
               class="flex items-center gap-2.5 text-sm text-text cursor-pointer"

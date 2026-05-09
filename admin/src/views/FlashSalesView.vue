@@ -7,6 +7,7 @@ import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
+import DateTimeInput from "@/components/DateTimeInput.vue";
 
 const {
   fieldErrors,
@@ -127,17 +128,6 @@ function clearImage() {
   removeImage.value = true;
   imagePreview.value = null;
   form.value.imageFile = null;
-}
-
-function updateDateTime(type, value) {
-  const current = form.value.endsAt || "";
-  const [date, time] = [current.slice(0, 10), current.slice(11, 16)];
-
-  if (type === "date") {
-    form.value.endsAt = value ? `${value}T${time || "12:00"}` : "";
-  } else if (type === "time") {
-    form.value.endsAt = date ? `${date}T${value}` : "";
-  }
 }
 
 function resetForm() {
@@ -670,42 +660,12 @@ function formatDate(d) {
               />
               <FieldError :message="fieldErrors.discountPercent" />
             </div>
-            <div>
-              <label class="block text-xs font-medium text-text-muted mb-1"
-                >Expire le</label
-              >
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[0.7rem] text-text-muted/70 mb-1"
-                    >Date</label
-                  >
-                  <input
-                    :value="form.endsAt ? form.endsAt.slice(0, 10) : ''"
-                    @input="updateDateTime('date', $event.target.value)"
-                    type="date"
-                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                    :class="
-                      fieldErrors.endsAt ? 'border-danger' : 'border-border'
-                    "
-                  />
-                </div>
-                <div>
-                  <label class="block text-[0.7rem] text-text-muted/70 mb-1"
-                    >Heure</label
-                  >
-                  <input
-                    :value="form.endsAt ? form.endsAt.slice(11, 16) : ''"
-                    @input="updateDateTime('time', $event.target.value)"
-                    type="time"
-                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                    :class="
-                      fieldErrors.endsAt ? 'border-danger' : 'border-border'
-                    "
-                  />
-                </div>
-              </div>
-              <FieldError :message="fieldErrors.endsAt" />
-            </div>
+            <DateTimeInput
+              v-model="form.endsAt"
+              label="Expire le"
+              :error="fieldErrors.endsAt"
+              required
+            />
           </div>
           <div class="space-y-3">
             <label class="block text-xs font-medium text-text-muted"
