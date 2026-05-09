@@ -97,7 +97,10 @@ export async function spacesRoutes(app) {
         // Validate sort is in allowed list
         const allowedSorts = ["order", "name", "price", "capacity"];
         if (sort && !allowedSorts.includes(sort)) {
-          request.log.warn({ sort, allowed: allowedSorts }, "Invalid sort parameter");
+          request.log.warn(
+            { sort, allowed: allowedSorts },
+            "Invalid sort parameter",
+          );
           throw new ValidationError(
             "sort",
             `sort doit être parmi: ${allowedSorts.join(", ")}`,
@@ -153,10 +156,6 @@ export async function spacesRoutes(app) {
       } catch (error) {
         return handleValidationError(error, reply, request.log);
       }
-    },
-        }
-        limitNum = Math.min(limitNum, 100);
-
     },
   );
 

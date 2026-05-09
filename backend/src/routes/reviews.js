@@ -124,7 +124,10 @@ export async function reviewRoutes(app) {
 
         // Validate user name
         if (!userName || userName.trim().length < 2) {
-          request.log.warn({ field: "userName", value: userName }, "Invalid userName");
+          request.log.warn(
+            { field: "userName", value: userName },
+            "Invalid userName",
+          );
           throw new ValidationError(
             "userName",
             "Le nom d'utilisateur doit faire au moins 2 caractères",
@@ -133,7 +136,10 @@ export async function reviewRoutes(app) {
 
         // Validate comment
         if (!comment || comment.trim().length < 10) {
-          request.log.warn({ field: "comment", length: comment?.length }, "Invalid comment");
+          request.log.warn(
+            { field: "comment", length: comment?.length },
+            "Invalid comment",
+          );
           throw new ValidationError(
             "comment",
             "Le commentaire doit faire au moins 10 caractères",
@@ -158,7 +164,10 @@ export async function reviewRoutes(app) {
             visible: false,
           },
         });
-        request.log.info({ reviewId: review.id, rating: validatedRating }, "Review created");
+        request.log.info(
+          { reviewId: review.id, rating: validatedRating },
+          "Review created",
+        );
         return reply.status(201).send(review);
       } catch (error) {
         // Log rate limit exceeded if it's a 429
@@ -166,9 +175,6 @@ export async function reviewRoutes(app) {
           request.log.warn({ clientIp: request.ip }, "Rate limit exceeded");
         }
         return handleValidationError(error, reply, request.log);
-      }
-    },
-  );
       }
     },
   );
