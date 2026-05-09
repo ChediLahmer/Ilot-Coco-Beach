@@ -2,12 +2,16 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
+import { useToast } from "@/composables/useToast.js";
+import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 
 const { fieldErrors, clearErrors, validateRequired, hasErrors } =
   useFormValidation();
 const api = useApi();
+const toast = useToast();
+const { confirm } = useConfirm();
 const images = ref([]);
 const categories = ref([]);
 const uploading = ref(false);
@@ -128,8 +132,9 @@ async function handleUpload(event) {
     }
     event.target.value = "";
     await loadData();
-  } catch {
-    error.value = "Erreur lors de l'upload";
+    toast.success(`${files.length} fichier(s) ajouté(s)`);
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de l'upload");
   } finally {
     uploading.value = false;
   }
@@ -139,18 +144,25 @@ async function updateImage(img, data) {
   try {
     await api.put(`/gallery/${img.id}`, data);
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success("Image mise à jour");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
 async function remove(img) {
-  if (!confirm("Supprimer cette image ?")) return;
+  const ok = await confirm({
+    title: "Supprimer l'image",
+    message:
+      "Êtes-vous sûr de vouloir supprimer cette image ? Cette action est irréversible.",
+  });
+  if (!ok) return;
   try {
     await api.del(`/gallery/${img.id}`);
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Image supprimée");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -158,8 +170,9 @@ async function toggleVisible(img) {
   try {
     await api.put(`/gallery/${img.id}`, { visible: !img.visible });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(img.visible ? "Image masquée" : "Image rendue visible");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -187,18 +200,26 @@ async function saveCat() {
     }
     showCatModal.value = false;
     await loadCategories();
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+    toast.success(
+      editingCat.value ? "Catégorie mise à jour" : "Catégorie créée",
+    );
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la sauvegarde");
   }
 }
 
 async function deleteCat(cat) {
-  if (!confirm(`Supprimer la catégorie "${cat.name.fr}" ?`)) return;
+  const ok = await confirm({
+    title: "Supprimer la catégorie",
+    message: `Êtes-vous sûr de vouloir supprimer "${cat.name.fr}" ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/gallery/categories/${cat.id}`);
     await loadCategories();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Catégorie supprimée");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 </script>

@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
+import { useToast } from "@/composables/useToast.js";
+import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -10,6 +12,8 @@ const { fieldErrors, clearErrors, validateRequired, validateMin, hasErrors } =
   useFormValidation();
 
 const api = useApi();
+const toast = useToast();
+const { confirm } = useConfirm();
 const spaces = ref([]);
 const totalItems = ref(0);
 const showModal = ref(false);
@@ -161,20 +165,26 @@ async function save() {
     }
     showModal.value = false;
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+    toast.success(editing.value ? "Espace mis à jour" : "Espace créé");
+  } catch (e) {
+    error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(space) {
-  if (!confirm(`Supprimer "${space.name.fr}" ?`)) return;
+  const ok = await confirm({
+    title: "Supprimer l'espace",
+    message: `Êtes-vous sûr de vouloir supprimer "${space.name.fr}" ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/spaces/${space.id}`);
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Espace supprimé");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -182,8 +192,11 @@ async function toggleAvailability(space) {
   try {
     await api.put(`/spaces/${space.id}`, { available: !space.available });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(
+      space.available ? "Marqué indisponible" : "Marqué disponible",
+    );
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -191,8 +204,9 @@ async function toggleVisible(space) {
   try {
     await api.put(`/spaces/${space.id}`, { visible: !space.visible });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(space.visible ? "Masqué" : "Rendu visible");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -613,9 +627,10 @@ onUnmounted(() => {
           </button>
           <button
             @click="save"
-            class="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm"
+            :disabled="saving"
+            class="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
           >
-            Enregistrer
+            {{ saving ? "Enregistrement..." : "Enregistrer" }}
           </button>
         </div>
       </div>

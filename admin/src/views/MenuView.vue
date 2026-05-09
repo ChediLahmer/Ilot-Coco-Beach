@@ -2,6 +2,8 @@
 import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
+import { useToast } from "@/composables/useToast.js";
+import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -10,6 +12,8 @@ const { fieldErrors, clearErrors, validateRequired, validateMin, hasErrors } =
   useFormValidation();
 
 const api = useApi();
+const toast = useToast();
+const { confirm } = useConfirm();
 const categories = ref([]);
 const activeCategory = ref(null);
 const showCatModal = ref(false);
@@ -132,22 +136,27 @@ async function saveCat() {
     }
     showCatModal.value = false;
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+    toast.success(editingCat.value ? "Catégorie mise à jour" : "Catégorie créée");
+  } catch (e) {
+    error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
     saving.value = false;
   }
 }
 
 async function deleteCat(cat) {
-  if (!confirm(`Supprimer la catégorie "${cat.name.fr}" et tous ses plats ?`))
-    return;
+  const ok = await confirm({
+    title: "Supprimer la catégorie",
+    message: `Êtes-vous sûr de vouloir supprimer "${cat.name.fr}" et tous ses plats ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/menu/categories/${cat.id}`);
     if (activeCategory.value === cat.id) activeCategory.value = null;
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Catégorie supprimée");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -218,20 +227,26 @@ async function saveItem() {
     }
     showItemModal.value = false;
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+    toast.success(editingItem.value ? "Plat mis à jour" : "Plat créé");
+  } catch (e) {
+    error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
     saving.value = false;
   }
 }
 
 async function deleteItem(item) {
-  if (!confirm(`Supprimer "${item.name.fr}" ?`)) return;
+  const ok = await confirm({
+    title: "Supprimer le plat",
+    message: `Êtes-vous sûr de vouloir supprimer "${item.name.fr}" ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/menu/items/${item.id}`);
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Plat supprimé");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -239,8 +254,9 @@ async function toggleAvailability(item) {
   try {
     await api.put(`/menu/items/${item.id}`, { available: !item.available });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(item.available ? "Marqué indisponible" : "Marqué disponible");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -248,8 +264,9 @@ async function toggleVisible(item) {
   try {
     await api.put(`/menu/items/${item.id}`, { visible: !item.visible });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(item.visible ? "Masqué" : "Rendu visible");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -611,9 +628,10 @@ onUnmounted(() => {
           </button>
           <button
             @click="saveCat"
-            class="px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark shadow-sm transition-colors"
+            :disabled="saving"
+            class="px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark shadow-sm transition-colors disabled:opacity-50"
           >
-            Enregistrer
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
           </button>
         </div>
       </div>
@@ -789,9 +807,10 @@ onUnmounted(() => {
           </button>
           <button
             @click="saveItem"
-            class="px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark shadow-sm transition-colors"
+            :disabled="saving"
+            class="px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark shadow-sm transition-colors disabled:opacity-50"
           >
-            Enregistrer
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
           </button>
         </div>
       </div>

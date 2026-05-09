@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
+import { useToast } from "@/composables/useToast.js";
+import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -16,6 +18,8 @@ const {
 } = useFormValidation();
 
 const api = useApi();
+const toast = useToast();
+const { confirm } = useConfirm();
 const vouchers = ref([]);
 const totalItems = ref(0);
 const showModal = ref(false);
@@ -119,20 +123,26 @@ async function save() {
     }
     showModal.value = false;
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+    toast.success(editing.value ? "Voucher mis à jour" : "Voucher créé");
+  } catch (e) {
+    error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(v) {
-  if (!confirm(`Supprimer le voucher "${v.code}" ?`)) return;
+  const ok = await confirm({
+    title: "Supprimer le voucher",
+    message: `Êtes-vous sûr de vouloir supprimer le voucher "${v.code}" ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/vouchers/${v.id}`);
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Voucher supprimé");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -140,8 +150,9 @@ async function toggleActive(v) {
   try {
     await api.put(`/vouchers/${v.id}`, { isActive: !v.isActive });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(v.isActive ? "Désactivé" : "Activé");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -149,8 +160,9 @@ async function toggleVisible(v) {
   try {
     await api.put(`/vouchers/${v.id}`, { visible: !v.visible });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(v.visible ? "Masqué" : "Rendu visible");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -499,9 +511,10 @@ function formatDate(d) {
           </button>
           <button
             @click="save"
-            class="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm"
+            :disabled="saving"
+            class="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
           >
-            Enregistrer
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
           </button>
         </div>
       </div>

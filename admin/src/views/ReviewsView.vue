@@ -1,9 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useToast } from "@/composables/useToast.js";
+import { useConfirm } from "@/composables/useConfirm.js";
 import AppToggle from "@/components/AppToggle.vue";
 
 const api = useApi();
+const toast = useToast();
+const { confirm } = useConfirm();
 const reviews = ref([]);
 const loading = ref(false);
 const error = ref(null);
@@ -63,12 +67,17 @@ onMounted(loadData);
 onUnmounted(() => clearTimeout(debounceTimer));
 
 async function remove(r) {
-  if (!confirm(`Supprimer l'avis de "${r.userName}" ?`)) return;
+  const ok = await confirm({
+    title: "Supprimer l'avis",
+    message: `Êtes-vous sûr de vouloir supprimer l'avis de "${r.userName}" ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/reviews/${r.id}`);
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Avis supprimé");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -76,8 +85,9 @@ async function toggleVisible(r) {
   try {
     await api.put(`/reviews/${r.id}`, { visible: !r.visible });
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la mise à jour";
+    toast.success(r.visible ? "Avis masqué" : "Avis rendu visible");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la mise à jour");
   }
 }
 

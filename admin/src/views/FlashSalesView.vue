@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
+import { useToast } from "@/composables/useToast.js";
+import { useConfirm } from "@/composables/useConfirm.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 import AppModal from "@/components/AppModal.vue";
@@ -16,6 +18,8 @@ const {
 } = useFormValidation();
 
 const api = useApi();
+const toast = useToast();
+const { confirm } = useConfirm();
 const sales = ref([]);
 const totalItems = ref(0);
 const showModal = ref(false);
@@ -154,7 +158,11 @@ function openModal(sale = null) {
         spaceId: sale.spaceId || null,
       }
     : resetForm();
-  targetType.value = sale?.menuItemId ? "menuItem" : sale?.spaceId ? "space" : "none";
+  targetType.value = sale?.menuItemId
+    ? "menuItem"
+    : sale?.spaceId
+      ? "space"
+      : "none";
   showModal.value = true;
 }
 
@@ -183,7 +191,8 @@ async function save() {
       isActive: form.value.isActive,
       visible: form.value.visible,
       image: imageUrl,
-      menuItemId: targetType.value === "menuItem" ? form.value.menuItemId : null,
+      menuItemId:
+        targetType.value === "menuItem" ? form.value.menuItemId : null,
       spaceId: targetType.value === "space" ? form.value.spaceId : null,
     };
     if (editing.value) {
@@ -193,20 +202,28 @@ async function save() {
     }
     showModal.value = false;
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+    toast.success(
+      editing.value ? "Vente flash mise à jour" : "Vente flash créée",
+    );
+  } catch (e) {
+    error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(sale) {
-  if (!confirm(`Supprimer "${sale.title.fr}" ?`)) return;
+  const ok = await confirm({
+    title: "Supprimer la vente flash",
+    message: `Êtes-vous sûr de vouloir supprimer "${sale.title.fr}" ? Cette action est irréversible.`,
+  });
+  if (!ok) return;
   try {
     await api.del(`/flash-sales/${sale.id}`);
     await loadData();
-  } catch {
-    error.value = "Erreur lors de la suppression";
+    toast.success("Vente flash supprimée");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
   }
 }
 
@@ -214,8 +231,9 @@ async function toggleActive(sale) {
   try {
     await api.put(`/flash-sales/${sale.id}`, { isActive: !sale.isActive });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(sale.isActive ? "Désactivée" : "Activée");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -223,8 +241,9 @@ async function toggleVisible(sale) {
   try {
     await api.put(`/flash-sales/${sale.id}`, { visible: !sale.visible });
     await loadData();
-  } catch {
-    error.value = "Erreur de mise à jour";
+    toast.success(sale.visible ? "Masquée" : "Rendue visible");
+  } catch (e) {
+    toast.error(e.message || "Erreur de mise à jour");
   }
 }
 
@@ -372,10 +391,19 @@ function formatDate(d) {
             >
               <td class="px-5 py-3.5 font-medium text-text">
                 {{ sale.title.fr }}
-                <span v-if="sale.menuItem" class="block text-xs text-text-muted font-normal">
-                  Plat : {{ sale.menuItem.name?.fr }} ({{ sale.menuItem.priceStandard }} DT)
+                <span
+                  v-if="sale.menuItem"
+                  class="block text-xs text-text-muted font-normal"
+                >
+                  Plat : {{ sale.menuItem.name?.fr }} ({{
+                    sale.menuItem.priceStandard
+                  }}
+                  DT)
                 </span>
-                <span v-else-if="sale.space" class="block text-xs text-text-muted font-normal">
+                <span
+                  v-else-if="sale.space"
+                  class="block text-xs text-text-muted font-normal"
+                >
                   Espace : {{ sale.space.name?.fr }} ({{ sale.space.price }} DT)
                 </span>
               </td>
@@ -611,39 +639,83 @@ function formatDate(d) {
             </div>
           </div>
           <div class="space-y-3">
-            <label class="block text-xs font-medium text-text-muted">Appliquer à</label>
+            <label class="block text-xs font-medium text-text-muted"
+              >Appliquer à</label
+            >
             <div class="flex gap-3">
-              <button type="button" @click="targetType = 'none'; form.menuItemId = null; form.spaceId = null"
+              <button
+                type="button"
+                @click="
+                  targetType = 'none';
+                  form.menuItemId = null;
+                  form.spaceId = null;
+                "
                 class="px-3 py-1.5 text-xs rounded-lg border transition-colors"
-                :class="targetType === 'none' ? 'bg-primary text-white border-primary' : 'border-border text-text-muted hover:bg-surface-alt'">
+                :class="
+                  targetType === 'none'
+                    ? 'bg-primary text-white border-primary'
+                    : 'border-border text-text-muted hover:bg-surface-alt'
+                "
+              >
                 Général
               </button>
-              <button type="button" @click="targetType = 'menuItem'; form.spaceId = null"
+              <button
+                type="button"
+                @click="
+                  targetType = 'menuItem';
+                  form.spaceId = null;
+                "
                 class="px-3 py-1.5 text-xs rounded-lg border transition-colors"
-                :class="targetType === 'menuItem' ? 'bg-primary text-white border-primary' : 'border-border text-text-muted hover:bg-surface-alt'">
+                :class="
+                  targetType === 'menuItem'
+                    ? 'bg-primary text-white border-primary'
+                    : 'border-border text-text-muted hover:bg-surface-alt'
+                "
+              >
                 Plat du menu
               </button>
-              <button type="button" @click="targetType = 'space'; form.menuItemId = null"
+              <button
+                type="button"
+                @click="
+                  targetType = 'space';
+                  form.menuItemId = null;
+                "
                 class="px-3 py-1.5 text-xs rounded-lg border transition-colors"
-                :class="targetType === 'space' ? 'bg-primary text-white border-primary' : 'border-border text-text-muted hover:bg-surface-alt'">
+                :class="
+                  targetType === 'space'
+                    ? 'bg-primary text-white border-primary'
+                    : 'border-border text-text-muted hover:bg-surface-alt'
+                "
+              >
                 Espace
               </button>
             </div>
             <div v-if="targetType === 'menuItem'">
-              <select v-model="form.menuItemId"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface">
+              <select
+                v-model="form.menuItemId"
+                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+              >
                 <option :value="null">-- Choisir un plat --</option>
-                <option v-for="item in menuItems" :key="item.id" :value="item.id">
-                  {{ item.categoryName }} › {{ item.name?.fr || '—' }} ({{ item.priceStandard }} DT)
+                <option
+                  v-for="item in menuItems"
+                  :key="item.id"
+                  :value="item.id"
+                >
+                  {{ item.categoryName }} › {{ item.name?.fr || "—" }} ({{
+                    item.priceStandard
+                  }}
+                  DT)
                 </option>
               </select>
             </div>
             <div v-if="targetType === 'space'">
-              <select v-model="form.spaceId"
-                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface">
+              <select
+                v-model="form.spaceId"
+                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-surface"
+              >
                 <option :value="null">-- Choisir un espace --</option>
                 <option v-for="sp in spaces" :key="sp.id" :value="sp.id">
-                  {{ sp.name?.fr || '—' }} ({{ sp.price }} DT)
+                  {{ sp.name?.fr || "—" }} ({{ sp.price }} DT)
                 </option>
               </select>
             </div>
@@ -704,9 +776,10 @@ function formatDate(d) {
           </button>
           <button
             @click="save"
-            class="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm"
+            :disabled="saving"
+            class="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
           >
-            Enregistrer
+            {{ saving ? "Enregistrement..." : "Enregistrer" }}
           </button>
         </div>
       </div>

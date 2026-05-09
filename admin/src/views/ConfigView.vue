@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
+import { useToast } from "@/composables/useToast.js";
 import AppToggle from "@/components/AppToggle.vue";
 
 const api = useApi();
+const toast = useToast();
 const config = ref({});
 const hours = ref({ fr: "", en: "", ar: "" });
 const showReviews = ref(false);
@@ -77,15 +79,21 @@ async function uploadMedia(key, event) {
     const { url } = await api.upload("/upload", file);
     config.value[key] = url;
     await api.put(`/config/${key}`, { value: url });
+    toast.success("Fichier téléversé");
   } catch (e) {
-    alert("Erreur lors de l'upload: " + e.message);
+    toast.error(e.message || "Erreur lors de l'upload");
   }
   uploading.value = "";
 }
 
 async function removeMedia(key) {
-  config.value[key] = "";
-  await api.put(`/config/${key}`, { value: "" });
+  try {
+    config.value[key] = "";
+    await api.put(`/config/${key}`, { value: "" });
+    toast.success("Média supprimé");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
+  }
 }
 
 async function loadData() {
@@ -132,9 +140,10 @@ async function save() {
     payload.show_reviews = showReviews.value ? "true" : "false";
     await api.put("/config", payload);
     saved.value = true;
+    toast.success("Configuration enregistrée");
     setTimeout(() => (saved.value = false), 2000);
-  } catch {
-    error.value = "Erreur lors de la sauvegarde";
+  } catch (e) {
+    error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
     saving.value = false;
   }
