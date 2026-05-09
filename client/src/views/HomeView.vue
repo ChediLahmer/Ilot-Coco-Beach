@@ -172,8 +172,9 @@ function validateConfig(cfg) {
       throw new Error("Config phone must be a valid phone format");
     }
     if (
-      typeof cfg.email !== "string" ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cfg.email)
+      cfg.email &&
+      (typeof cfg.email !== "string" ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cfg.email))
     ) {
       throw new Error("Config email must be a valid email format");
     }

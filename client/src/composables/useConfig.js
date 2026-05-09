@@ -34,7 +34,10 @@ function unwrapVideoUrl(value) {
     const url = new URL(value);
     const nested = url.searchParams.get("url");
     if (nested && url.pathname.endsWith("/media/proxy")) {
-      return decodeURIComponent(nested);
+      const decoded = decodeURIComponent(nested);
+      // Keep incoming videos proxied to avoid R2 range-request CORS failures.
+      if (decoded.includes("/incoming/")) return value;
+      return decoded;
     }
   } catch {
     // not a URL, return as-is
