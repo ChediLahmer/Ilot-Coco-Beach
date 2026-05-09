@@ -6,29 +6,14 @@ export function trackEvent(event, path) {
   try {
     const payload = JSON.stringify({ event, path });
 
-    // For sendBeacon: must use Blob with proper content-type
-    if (navigator.sendBeacon) {
-      const blob = new Blob([payload], { type: "application/json" });
-      const sent = navigator.sendBeacon(`${API_BASE}/analytics/event`, blob);
-
-      if (!sent) {
-        // sendBeacon failed, fallback to fetch
-        fetch(`${API_BASE}/analytics/event`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: payload,
-          keepalive: true,
-        }).catch(() => {});
-      }
-    } else {
-      // Fallback to fetch with keepalive
-      fetch(`${API_BASE}/analytics/event`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-        keepalive: true,
-      }).catch(() => {});
-    }
+    // Use fetch with keepalive — works reliably cross-origin without credentials
+    fetch(`${API_BASE}/analytics/event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true,
+      credentials: "omit",
+    }).catch(() => {});
   } catch {
     // silently fail — analytics should never break the app
   }
