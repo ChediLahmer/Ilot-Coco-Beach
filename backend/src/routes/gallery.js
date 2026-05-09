@@ -12,6 +12,13 @@ import {
   ERROR_MSG_CONTENT,
 } from "../lib/media.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
+import {
+  ValidationError,
+  validateMultilingual,
+  validateIntegerId,
+  validateEntityExists,
+  handleValidationError,
+} from "../lib/validation.js";
 
 export async function galleryRoutes(app) {
   // ─── Gallery Categories ───────────────────────────────────────────
@@ -48,11 +55,17 @@ export async function galleryRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { name, order } = request.body;
-      const cat = await prisma.galleryCategory.create({
-        data: { name, order: order ?? 0 },
-      });
-      return reply.status(201).send(cat);
+      try {
+        const { name, order } = request.body;
+        validateMultilingual(name, "name", { required: true, maxLength: 200 });
+
+        const cat = await prisma.galleryCategory.create({
+          data: { name, order: order ?? 0 },
+        });
+        return reply.status(201).send(cat);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -84,15 +97,30 @@ export async function galleryRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { name, order } = request.body;
-      const data = {};
-      if (name !== undefined) data.name = name;
-      if (order !== undefined) data.order = order;
-      return prisma.galleryCategory.update({
-        where: { id: Number(request.params.id) },
-        data,
-      });
+    async (request, reply) => {
+      try {
+        const { name, order } = request.body;
+
+        if (name) validateMultilingual(name, "name", { maxLength: 200 });
+
+        const categoryId = validateIntegerId(Number(request.params.id), "id");
+        const category = await prisma.galleryCategory.findUnique({
+          where: { id: categoryId },
+        });
+        validateEntityExists(category, "id", "GalleryCategory");
+
+        const data = {};
+        if (name !== undefined) data.name = name;
+        if (order !== undefined) data.order = order;
+
+        const updated = await prisma.galleryCategory.update({
+          where: { id: categoryId },
+          data,
+        });
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -193,69 +221,98 @@ export async function galleryRoutes(app) {
       },
     },
     async (request, reply) => {
-      if (!request.isMultipart || !request.isMultipart()) {
-        const { url, alt, category, categoryId, order } = request.body || {};
-        if (!url) return reply.status(400).send({ error: "No file uploaded" });
+      try {
+        if (!request.isMultipart || !request.isMultipart()) {
+          const { url, alt, category, categoryId, order } = request.body || {};
+          if (!url)
+            return reply.status(400).send({ error: "No file uploaded" });
+
+          let validatedCategoryId = null;
+          if (categoryId) {
+            validatedCategoryId = validateIntegerId(categoryId, "categoryId");
+            const cat = await prisma.galleryCategory.findUnique({
+              where: { id: validatedCategoryId },
+            });
+            validateEntityExists(cat, "categoryId", "GalleryCategory");
+          }
+
+          const image = await prisma.galleryImage.create({
+            data: {
+              url,
+              alt: alt || null,
+              category: category || null,
+              categoryId: validatedCategoryId,
+              order: order ?? 0,
+            },
+            include: { catRef: true },
+          });
+          scheduleIncomingCleanup(request.log, url);
+          return reply.status(201).send(image);
+        }
+
+        const file = await request.file();
+        if (!file) return reply.status(400).send({ error: "No file uploaded" });
+
+        if (!isBrowserMimeAllowed(file.mimetype)) {
+          return reply.status(400).send({ error: ERROR_MSG_BROWSER });
+        }
+
+        const rawBuffer = await file.toBuffer();
+
+        let detectedMime;
+        if (isSvgBuffer(file.mimetype, rawBuffer)) {
+          detectedMime = "image/svg+xml";
+        } else {
+          const detected = await fileTypeFromBuffer(rawBuffer);
+          if (!detected || !isDetectedMimeAllowed(detected.mime)) {
+            return reply.status(400).send({ error: ERROR_MSG_CONTENT });
+          }
+          detectedMime = detected.mime;
+        }
+
+        const { buffer, mime, ext, baseName } = await processMedia(
+          rawBuffer,
+          detectedMime,
+          file.filename,
+        );
+
+        const hash = createHash("sha256").update(buffer).digest("hex");
+        const existing = await findExistingByHash(hash);
+        const finalName = ext
+          ? `${baseName || file.filename.replace(/\.[^.]+$/, "")}.${ext}`
+          : file.filename;
+        const url =
+          existing || (await uploadFile(buffer, finalName, mime, hash));
+
+        const category = file.fields?.category?.value || null;
+        const categoryId = file.fields?.categoryId?.value
+          ? Number(file.fields.categoryId.value)
+          : null;
+
+        let validatedCategoryId = null;
+        if (categoryId) {
+          validatedCategoryId = validateIntegerId(categoryId, "categoryId");
+          const cat = await prisma.galleryCategory.findUnique({
+            where: { id: validatedCategoryId },
+          });
+          validateEntityExists(cat, "categoryId", "GalleryCategory");
+        }
+
         const image = await prisma.galleryImage.create({
           data: {
             url,
-            alt: alt || null,
-            category: category || null,
-            categoryId:
-              categoryId !== undefined && categoryId !== null
-                ? Number(categoryId)
-                : null,
-            order: order ?? 0,
+            alt: file.filename,
+            category,
+            categoryId: validatedCategoryId,
+            order: 0,
           },
           include: { catRef: true },
         });
         scheduleIncomingCleanup(request.log, url);
         return reply.status(201).send(image);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
       }
-
-      const file = await request.file();
-      if (!file) return reply.status(400).send({ error: "No file uploaded" });
-
-      if (!isBrowserMimeAllowed(file.mimetype)) {
-        return reply.status(400).send({ error: ERROR_MSG_BROWSER });
-      }
-
-      const rawBuffer = await file.toBuffer();
-
-      let detectedMime;
-      if (isSvgBuffer(file.mimetype, rawBuffer)) {
-        detectedMime = "image/svg+xml";
-      } else {
-        const detected = await fileTypeFromBuffer(rawBuffer);
-        if (!detected || !isDetectedMimeAllowed(detected.mime)) {
-          return reply.status(400).send({ error: ERROR_MSG_CONTENT });
-        }
-        detectedMime = detected.mime;
-      }
-
-      const { buffer, mime, ext, baseName } = await processMedia(
-        rawBuffer,
-        detectedMime,
-        file.filename,
-      );
-
-      const hash = createHash("sha256").update(buffer).digest("hex");
-      const existing = await findExistingByHash(hash);
-      const finalName = ext
-        ? `${baseName || file.filename.replace(/\.[^.]+$/, "")}.${ext}`
-        : file.filename;
-      const url = existing || (await uploadFile(buffer, finalName, mime, hash));
-
-      const category = file.fields?.category?.value || null;
-      const categoryId = file.fields?.categoryId?.value
-        ? Number(file.fields.categoryId.value)
-        : null;
-      const image = await prisma.galleryImage.create({
-        data: { url, alt: file.filename, category, categoryId, order: 0 },
-        include: { catRef: true },
-      });
-      scheduleIncomingCleanup(request.log, url);
-      return reply.status(201).send(image);
     },
   );
 
@@ -281,19 +338,43 @@ export async function galleryRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { order, alt, category, categoryId, visible } = request.body;
-      const data = {};
-      if (order !== undefined) data.order = order;
-      if (alt !== undefined) data.alt = alt;
-      if (category !== undefined) data.category = category;
-      if (categoryId !== undefined) data.categoryId = categoryId;
-      if (visible !== undefined) data.visible = visible;
-      return prisma.galleryImage.update({
-        where: { id: Number(request.params.id) },
-        data,
-        include: { catRef: true },
-      });
+    async (request, reply) => {
+      try {
+        const { order, alt, category, categoryId, visible } = request.body;
+
+        const imageId = validateIntegerId(Number(request.params.id), "id");
+        const image = await prisma.galleryImage.findUnique({
+          where: { id: imageId },
+        });
+        validateEntityExists(image, "id", "GalleryImage");
+
+        if (categoryId) {
+          const validatedCategoryId = validateIntegerId(
+            categoryId,
+            "categoryId",
+          );
+          const cat = await prisma.galleryCategory.findUnique({
+            where: { id: validatedCategoryId },
+          });
+          validateEntityExists(cat, "categoryId", "GalleryCategory");
+        }
+
+        const data = {};
+        if (order !== undefined) data.order = order;
+        if (alt !== undefined) data.alt = alt;
+        if (category !== undefined) data.category = category;
+        if (categoryId !== undefined) data.categoryId = categoryId;
+        if (visible !== undefined) data.visible = visible;
+
+        const updated = await prisma.galleryImage.update({
+          where: { id: imageId },
+          data,
+          include: { catRef: true },
+        });
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

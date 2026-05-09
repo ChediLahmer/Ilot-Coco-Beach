@@ -2,6 +2,11 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
+import {
+  ValidationError,
+  validatePattern,
+  handleValidationError,
+} from "../lib/validation.js";
 
 let configCache = null;
 
@@ -97,34 +102,46 @@ export async function configRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { key } = request.params;
-      if (!ALLOWED_CONFIG_KEYS.has(key)) {
-        return reply.status(400).send({ error: `Invalid config key: ${key}` });
-      }
-      const { value } = request.body;
-      let oldValue = null;
-      if (MEDIA_KEYS.has(key)) {
-        const old = await prisma.siteConfig.findUnique({ where: { key } });
-        if (old?.value && old.value !== value) {
-          oldValue = old.value;
+      try {
+        const { key } = request.params;
+
+        // Validate key is in allowed list
+        if (!ALLOWED_CONFIG_KEYS.has(key)) {
+          return reply.status(400).send({
+            error: "Bad Request",
+            message: `Invalid config key: ${key}`,
+            field: "key",
+          });
         }
-      }
-      return prisma.siteConfig
-        .upsert({
-          where: { key: request.params.key },
+
+        const { value } = request.body;
+        let oldValue = null;
+
+        if (MEDIA_KEYS.has(key)) {
+          const old = await prisma.siteConfig.findUnique({ where: { key } });
+          if (old?.value && old.value !== value) {
+            oldValue = old.value;
+          }
+        }
+
+        const result = await prisma.siteConfig.upsert({
+          where: { key },
           update: { value },
-          create: { key: request.params.key, value },
-        })
-        .then((r) => {
-          invalidateConfigCache();
-          if (oldValue) {
-            deleteFile(oldValue).catch(() => {});
-          }
-          if (MEDIA_KEYS.has(key)) {
-            scheduleIncomingCleanup(request.log, value);
-          }
-          return r;
+          create: { key, value },
         });
+
+        invalidateConfigCache();
+        if (oldValue) {
+          deleteFile(oldValue).catch(() => {});
+        }
+        if (MEDIA_KEYS.has(key)) {
+          scheduleIncomingCleanup(request.log, value);
+        }
+
+        return reply.status(200).send(result);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -144,46 +161,60 @@ export async function configRoutes(app) {
       },
     },
     async (request, reply) => {
-      const entries = Object.entries(request.body);
-      const invalid = entries.filter(([k]) => !ALLOWED_CONFIG_KEYS.has(k));
-      if (invalid.length) {
-        return reply.status(400).send({
-          error: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
-        });
-      }
-      const mediaEntries = entries.filter(([k]) => MEDIA_KEYS.has(k));
-      const oldMediaToDelete = [];
-      if (mediaEntries.length) {
-        const oldConfigs = await prisma.siteConfig.findMany({
-          where: { key: { in: mediaEntries.map(([k]) => k) } },
-        });
-        const oldMap = Object.fromEntries(
-          oldConfigs.map((c) => [c.key, c.value]),
-        );
-        for (const [k, v] of mediaEntries) {
-          if (oldMap[k] && oldMap[k] !== v) {
-            oldMediaToDelete.push(oldMap[k]);
+      try {
+        const entries = Object.entries(request.body);
+        const invalid = entries.filter(([k]) => !ALLOWED_CONFIG_KEYS.has(k));
+
+        if (invalid.length) {
+          return reply.status(400).send({
+            error: "Bad Request",
+            message: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
+            fields: invalid.map(([k]) => k),
+          });
+        }
+
+        const mediaEntries = entries.filter(([k]) => MEDIA_KEYS.has(k));
+        const oldMediaToDelete = [];
+
+        if (mediaEntries.length) {
+          const oldConfigs = await prisma.siteConfig.findMany({
+            where: { key: { in: mediaEntries.map(([k]) => k) } },
+          });
+          const oldMap = Object.fromEntries(
+            oldConfigs.map((c) => [c.key, c.value]),
+          );
+          for (const [k, v] of mediaEntries) {
+            if (oldMap[k] && oldMap[k] !== v) {
+              oldMediaToDelete.push(oldMap[k]);
+            }
           }
         }
+
+        await prisma.$transaction(
+          entries.map(([key, value]) =>
+            prisma.siteConfig.upsert({
+              where: { key },
+              update: { value },
+              create: { key, value },
+            }),
+          ),
+        );
+
+        invalidateConfigCache();
+        for (const url of oldMediaToDelete) {
+          deleteFile(url).catch(() => {});
+        }
+        for (const [, value] of mediaEntries) {
+          scheduleIncomingCleanup(request.log, value);
+        }
+
+        const configs = await prisma.siteConfig.findMany();
+        return reply
+          .status(200)
+          .send(Object.fromEntries(configs.map((c) => [c.key, c.value])));
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
       }
-      await prisma.$transaction(
-        entries.map(([key, value]) =>
-          prisma.siteConfig.upsert({
-            where: { key },
-            update: { value },
-            create: { key, value },
-          }),
-        ),
-      );
-      invalidateConfigCache();
-      for (const url of oldMediaToDelete) {
-        deleteFile(url).catch(() => {});
-      }
-      for (const [, value] of mediaEntries) {
-        scheduleIncomingCleanup(request.log, value);
-      }
-      const configs = await prisma.siteConfig.findMany();
-      return Object.fromEntries(configs.map((c) => [c.key, c.value]));
     },
   );
 }

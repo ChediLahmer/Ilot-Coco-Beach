@@ -2,6 +2,13 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
+import {
+  ValidationError,
+  validateMultilingual,
+  validateIntegerId,
+  validateEntityExists,
+  handleValidationError,
+} from "../lib/validation.js";
 
 export async function spacesRoutes(app) {
   app.addSchema({
@@ -126,30 +133,39 @@ export async function spacesRoutes(app) {
       },
     },
     async (request, reply) => {
-      const {
-        name,
-        description,
-        image,
-        price,
-        capacity,
-        order,
-        available,
-        visible,
-      } = request.body;
-      const space = await prisma.space.create({
-        data: {
+      try {
+        const {
           name,
           description,
           image,
           price,
           capacity,
-          order: order || 0,
-          available: available ?? true,
-          visible: visible ?? true,
-        },
-      });
-      scheduleIncomingCleanup(request.log, image);
-      return reply.status(201).send(space);
+          order,
+          available,
+          visible,
+        } = request.body;
+
+        validateMultilingual(name, "name", { required: true, maxLength: 200 });
+        if (description)
+          validateMultilingual(description, "description", { maxLength: 2000 });
+
+        const space = await prisma.space.create({
+          data: {
+            name,
+            description,
+            image,
+            price,
+            capacity,
+            order: order || 0,
+            available: available ?? true,
+            visible: visible ?? true,
+          },
+        });
+        scheduleIncomingCleanup(request.log, image);
+        return reply.status(201).send(space);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -195,49 +211,61 @@ export async function spacesRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const {
-        name,
-        description,
-        image,
-        price,
-        capacity,
-        order,
-        available,
-        visible,
-      } = request.body;
-      const spaceId = Number(request.params.id);
-      let oldImage = null;
-      if (image !== undefined) {
-        const existing = await prisma.space.findUnique({
-          where: { id: spaceId },
-          select: { image: true },
-        });
-        if (existing?.image && existing.image !== image) {
-          oldImage = existing.image;
+    async (request, reply) => {
+      try {
+        const {
+          name,
+          description,
+          image,
+          price,
+          capacity,
+          order,
+          available,
+          visible,
+        } = request.body;
+
+        // Validate input
+        if (name) validateMultilingual(name, "name", { maxLength: 200 });
+        if (description)
+          validateMultilingual(description, "description", { maxLength: 2000 });
+
+        const spaceId = validateIntegerId(Number(request.params.id), "id");
+        const space = await prisma.space.findUnique({ where: { id: spaceId } });
+        validateEntityExists(space, "id", "Space");
+
+        let oldImage = null;
+        if (image !== undefined) {
+          const existing = await prisma.space.findUnique({
+            where: { id: spaceId },
+            select: { image: true },
+          });
+          if (existing?.image && existing.image !== image) {
+            oldImage = existing.image;
+          }
         }
-      }
-      return prisma.space
-        .update({
+
+        const updated = await prisma.space.update({
           where: { id: spaceId },
           data: {
-            name,
-            description,
-            image,
-            price,
-            capacity,
-            order,
-            available,
-            visible,
+            ...(name && { name }),
+            ...(description && { description }),
+            ...(image !== undefined && { image }),
+            ...(price !== undefined && { price }),
+            ...(capacity !== undefined && { capacity }),
+            ...(order !== undefined && { order }),
+            ...(available !== undefined && { available }),
+            ...(visible !== undefined && { visible }),
           },
-        })
-        .then((space) => {
-          if (oldImage) {
-            deleteFile(oldImage).catch(() => {});
-          }
-          scheduleIncomingCleanup(request.log, image);
-          return space;
         });
+
+        if (oldImage) {
+          deleteFile(oldImage).catch(() => {});
+        }
+        scheduleIncomingCleanup(request.log, image);
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

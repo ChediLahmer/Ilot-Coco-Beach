@@ -5,6 +5,12 @@ import {
   adjustReviewStatsForVisibilityChange,
   getStoredReviewStats,
 } from "../lib/review-stats.js";
+import {
+  ValidationError,
+  validateIntegerId,
+  validateEntityExists,
+  handleValidationError,
+} from "../lib/validation.js";
 
 export async function reviewRoutes(app) {
   // Public stats — always based on visible reviews only
@@ -117,18 +123,26 @@ export async function reviewRoutes(app) {
         },
       },
     },
-    async (request) => {
-      return prisma.$transaction(async (tx) => {
-        const existing = await tx.review.findUnique({
-          where: { id: Number(request.params.id) },
+    async (request, reply) => {
+      try {
+        const reviewId = validateIntegerId(Number(request.params.id), "id");
+        const existing = await prisma.review.findUnique({
+          where: { id: reviewId },
         });
-        const updated = await tx.review.update({
-          where: { id: Number(request.params.id) },
-          data: { visible: request.body.visible },
+        validateEntityExists(existing, "id", "Review");
+
+        const updated = await prisma.$transaction(async (tx) => {
+          const result = await tx.review.update({
+            where: { id: reviewId },
+            data: { visible: request.body.visible },
+          });
+          await adjustReviewStatsForVisibilityChange(existing, result, tx);
+          return result;
         });
-        await adjustReviewStatsForVisibilityChange(existing, updated, tx);
-        return updated;
-      });
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

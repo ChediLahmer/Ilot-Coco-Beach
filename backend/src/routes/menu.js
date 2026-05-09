@@ -2,6 +2,13 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
+import {
+  ValidationError,
+  validateMultilingual,
+  validateIntegerId,
+  validateEntityExists,
+  handleValidationError,
+} from "../lib/validation.js";
 
 let publicMenuCache = null;
 
@@ -127,12 +134,18 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { name, order } = request.body;
-      const cat = await prisma.menuCategory.create({
-        data: { name, order: order || 0 },
-      });
-      invalidateMenuCache();
-      return reply.status(201).send(cat);
+      try {
+        const { name, order } = request.body;
+        validateMultilingual(name, "name", { required: true, maxLength: 200 });
+
+        const cat = await prisma.menuCategory.create({
+          data: { name, order: order || 0 },
+        });
+        invalidateMenuCache();
+        return reply.status(201).send(cat);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -164,14 +177,26 @@ export async function menuRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { name, order } = request.body;
-      const updated = await prisma.menuCategory.update({
-        where: { id: Number(request.params.id) },
-        data: { name, order },
-      });
-      invalidateMenuCache();
-      return updated;
+    async (request, reply) => {
+      try {
+        const { name, order } = request.body;
+        validateMultilingual(name, "name", { required: true, maxLength: 200 });
+
+        const categoryId = validateIntegerId(Number(request.params.id), "id");
+        const category = await prisma.menuCategory.findUnique({
+          where: { id: categoryId },
+        });
+        validateEntityExists(category, "id", "MenuCategory");
+
+        const updated = await prisma.menuCategory.update({
+          where: { id: categoryId },
+          data: { name, order },
+        });
+        invalidateMenuCache();
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -298,33 +323,49 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
-      const {
-        name,
-        description,
-        image,
-        priceStandard,
-        priceExtra,
-        available,
-        visible,
-        categoryId,
-        order,
-      } = request.body;
-      const item = await prisma.menuItem.create({
-        data: {
+      try {
+        const {
           name,
           description,
           image,
           priceStandard,
-          priceExtra: priceExtra || 0,
+          priceExtra,
           available,
-          visible: visible ?? true,
+          visible,
           categoryId,
-          order: order || 0,
-        },
-      });
-      invalidateMenuCache();
-      scheduleIncomingCleanup(request.log, image);
-      return reply.status(201).send(item);
+          order,
+        } = request.body;
+
+        // Validate input
+        validateMultilingual(name, "name", { required: true, maxLength: 200 });
+        if (description)
+          validateMultilingual(description, "description", { maxLength: 2000 });
+
+        const validatedCategoryId = validateIntegerId(categoryId, "categoryId");
+        const category = await prisma.menuCategory.findUnique({
+          where: { id: validatedCategoryId },
+        });
+        validateEntityExists(category, "categoryId", "MenuCategory");
+
+        const item = await prisma.menuItem.create({
+          data: {
+            name,
+            description,
+            image,
+            priceStandard,
+            priceExtra: priceExtra || 0,
+            available: available ?? true,
+            visible: visible ?? true,
+            categoryId: validatedCategoryId,
+            order: order || 0,
+          },
+        });
+        invalidateMenuCache();
+        scheduleIncomingCleanup(request.log, image);
+        return reply.status(201).send(item);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -371,32 +412,9 @@ export async function menuRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const {
-        name,
-        description,
-        image,
-        priceStandard,
-        priceExtra,
-        available,
-        visible,
-        categoryId,
-        order,
-      } = request.body;
-      const itemId = Number(request.params.id);
-      let oldImage = null;
-      if (image !== undefined) {
-        const existing = await prisma.menuItem.findUnique({
-          where: { id: itemId },
-          select: { image: true },
-        });
-        if (existing?.image && existing.image !== image) {
-          oldImage = existing.image;
-        }
-      }
-      const updated = await prisma.menuItem.update({
-        where: { id: itemId },
-        data: {
+    async (request, reply) => {
+      try {
+        const {
           name,
           description,
           image,
@@ -406,14 +424,65 @@ export async function menuRoutes(app) {
           visible,
           categoryId,
           order,
-        },
-      });
-      if (oldImage) {
-        deleteFile(oldImage).catch(() => {});
+        } = request.body;
+
+        // Validate input
+        if (name) validateMultilingual(name, "name", { maxLength: 200 });
+        if (description)
+          validateMultilingual(description, "description", { maxLength: 2000 });
+
+        const itemId = validateIntegerId(Number(request.params.id), "id");
+        const item = await prisma.menuItem.findUnique({
+          where: { id: itemId },
+        });
+        validateEntityExists(item, "id", "MenuItem");
+
+        if (categoryId) {
+          const validatedCategoryId = validateIntegerId(
+            categoryId,
+            "categoryId",
+          );
+          const category = await prisma.menuCategory.findUnique({
+            where: { id: validatedCategoryId },
+          });
+          validateEntityExists(category, "categoryId", "MenuCategory");
+        }
+
+        let oldImage = null;
+        if (image !== undefined) {
+          const existing = await prisma.menuItem.findUnique({
+            where: { id: itemId },
+            select: { image: true },
+          });
+          if (existing?.image && existing.image !== image) {
+            oldImage = existing.image;
+          }
+        }
+
+        const updated = await prisma.menuItem.update({
+          where: { id: itemId },
+          data: {
+            ...(name && { name }),
+            ...(description && { description }),
+            ...(image !== undefined && { image }),
+            ...(priceStandard !== undefined && { priceStandard }),
+            ...(priceExtra !== undefined && { priceExtra }),
+            ...(available !== undefined && { available }),
+            ...(visible !== undefined && { visible }),
+            ...(categoryId && { categoryId }),
+            ...(order !== undefined && { order }),
+          },
+        });
+
+        if (oldImage) {
+          deleteFile(oldImage).catch(() => {});
+        }
+        invalidateMenuCache();
+        scheduleIncomingCleanup(request.log, image);
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
       }
-      invalidateMenuCache();
-      scheduleIncomingCleanup(request.log, image);
-      return updated;
     },
   );
 
