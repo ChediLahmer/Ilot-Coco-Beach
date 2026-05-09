@@ -1,6 +1,30 @@
 <template>
+  <!-- Loading skeleton -->
   <section
-    v-if="images.length > 0"
+    v-if="dataLoading && !images.length"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-b from-mist via-white to-sand-dark/30"
+  >
+    <div class="mx-auto max-w-6xl animate-pulse">
+      <div class="flex flex-col gap-3 mb-8">
+        <div class="h-3 w-20 rounded-full bg-charcoal/10" />
+        <div class="h-7 w-36 rounded-full bg-charcoal/10" />
+        <div class="h-0.5 w-14 rounded-full bg-charcoal/8" />
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div
+          class="col-span-2 row-span-2 aspect-square rounded-lg bg-charcoal/8"
+        />
+        <div
+          v-for="j in 4"
+          :key="j"
+          class="aspect-square rounded-lg bg-charcoal/8"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section
+    v-else-if="images.length > 0"
     id="gallery"
     class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-b from-mist via-white to-sand-dark/30"
   >
@@ -101,7 +125,7 @@ import { useI18n } from "vue-i18n";
 import { useData } from "@/composables/useData";
 
 const { t } = useI18n();
-const { galleryImages } = useData();
+const { galleryImages, loading: dataLoading } = useData();
 
 function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);

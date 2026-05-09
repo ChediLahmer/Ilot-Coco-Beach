@@ -1,6 +1,27 @@
 <template>
+  <!-- Loading skeleton -->
   <section
-    v-if="flashSales.length > 0"
+    v-if="dataLoading && !flashSales.length"
+    class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-r from-ocean-dark/5 via-lagoon/8 to-sunset/10"
+  >
+    <div class="mx-auto max-w-6xl animate-pulse">
+      <div class="flex flex-col gap-2 mb-8">
+        <div class="h-3 w-20 rounded-full bg-charcoal/10" />
+        <div class="h-7 w-48 rounded-full bg-charcoal/10" />
+        <div class="h-0.5 w-14 rounded-full bg-charcoal/8" />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          v-for="j in 3"
+          :key="j"
+          class="rounded-lg overflow-hidden min-h-[14rem] bg-charcoal/8"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section
+    v-else-if="flashSales.length > 0"
     id="flash-offers"
     class="px-6 py-14 md:px-12 lg:px-20 bg-gradient-to-r from-ocean-dark/5 via-lagoon/8 to-sunset/10"
   >
@@ -215,8 +236,13 @@ const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
 const now = useCountdown();
 
-const { flashSales, flashSalesHasMore, flashSalesLoading, loadMoreFlashSales } =
-  useData();
+const {
+  flashSales,
+  flashSalesHasMore,
+  flashSalesLoading,
+  loadMoreFlashSales,
+  loading: dataLoading,
+} = useData();
 
 const flashPrev = ref(null);
 const flashNext = ref(null);

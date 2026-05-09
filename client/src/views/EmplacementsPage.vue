@@ -191,14 +191,23 @@ onUnmounted(() => {
 
     <!-- Spaces Grid -->
     <div class="bg-white py-12 md:py-16 px-6 md:px-16">
-      <!-- Loading indicator -->
+      <!-- Loading skeleton -->
       <div
         v-if="loading && !emplacements.length"
-        class="flex justify-center py-16"
+        class="mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse"
       >
         <div
-          class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
-        />
+          v-for="j in 6"
+          :key="j"
+          class="rounded-2xl border border-charcoal/8 bg-white overflow-hidden"
+        >
+          <div class="aspect-[4/3] bg-charcoal/8" />
+          <div class="p-5 space-y-3">
+            <div class="h-5 w-3/4 rounded bg-charcoal/8" />
+            <div class="h-3 w-full rounded bg-charcoal/6" />
+            <div class="h-3 w-1/2 rounded bg-charcoal/6" />
+          </div>
+        </div>
       </div>
 
       <!-- Empty state -->

@@ -64,7 +64,20 @@
 
     <!-- Masonry grid with infinite scroll -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-      <div class="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+      <!-- Initial loading skeleton -->
+      <div
+        v-if="!visibleImages.length && galleryHasMore"
+        class="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3 animate-pulse"
+      >
+        <div
+          v-for="j in 8"
+          :key="j"
+          class="break-inside-avoid rounded-xl bg-charcoal/8"
+          :style="{ height: 140 + (j % 3) * 60 + 'px' }"
+        />
+      </div>
+
+      <div v-else class="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
         <div
           v-for="(img, idx) in visibleImages"
           :key="img.key + '-' + idx"

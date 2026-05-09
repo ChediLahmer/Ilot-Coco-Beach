@@ -155,7 +155,36 @@
             </div>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-2">
+          <!-- Loading skeleton for initial load -->
+          <div
+            v-if="loading && !reviews.length"
+            class="grid gap-4 md:grid-cols-2 animate-pulse"
+          >
+            <div
+              v-for="j in 4"
+              :key="j"
+              class="rounded-[1.75rem] border border-charcoal/8 bg-white p-6 min-h-[18rem]"
+            >
+              <div class="flex gap-1">
+                <div
+                  v-for="s in 5"
+                  :key="s"
+                  class="h-4 w-4 rounded bg-charcoal/8"
+                />
+              </div>
+              <div class="mt-5 space-y-2">
+                <div class="h-3 w-full rounded bg-charcoal/6" />
+                <div class="h-3 w-5/6 rounded bg-charcoal/6" />
+                <div class="h-3 w-3/4 rounded bg-charcoal/6" />
+              </div>
+              <div class="mt-auto pt-5 border-t border-charcoal/8">
+                <div class="h-4 w-28 rounded bg-charcoal/8" />
+                <div class="mt-2 h-3 w-20 rounded bg-charcoal/6" />
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="grid gap-4 md:grid-cols-2">
             <article
               v-for="review in reviews"
               :key="review.id"

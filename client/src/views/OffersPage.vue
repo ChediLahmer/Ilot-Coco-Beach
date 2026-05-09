@@ -43,13 +43,15 @@
 
     <!-- Sales grid -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-      <!-- Loading -->
+      <!-- Loading skeleton -->
       <div
         v-if="loadingSales && !flashSales.length"
-        class="flex justify-center py-16"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-pulse"
       >
         <div
-          class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
+          v-for="j in 6"
+          :key="j"
+          class="rounded-2xl overflow-hidden aspect-[3/4] bg-charcoal/8"
         />
       </div>
 
@@ -184,7 +186,23 @@
           </router-link>
         </div>
 
-        <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <!-- Loading skeleton for vouchers -->
+        <div
+          v-if="loadingVouchers && !vouchers.length"
+          class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 animate-pulse"
+        >
+          <div
+            v-for="j in 4"
+            :key="j"
+            class="rounded-[1.5rem] border border-charcoal/8 bg-white/72 p-5"
+          >
+            <div class="h-3 w-14 rounded bg-charcoal/8 mb-2" />
+            <div class="h-7 w-24 rounded bg-charcoal/8 mb-3" />
+            <div class="h-3 w-20 rounded bg-charcoal/6" />
+          </div>
+        </div>
+
+        <div v-else class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <article
             v-for="voucher in vouchers"
             :key="voucher.id"

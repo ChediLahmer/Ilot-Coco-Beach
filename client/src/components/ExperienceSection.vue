@@ -1,6 +1,27 @@
 <template>
+  <!-- Loading skeleton -->
   <section
-    v-if="spaces.length > 0"
+    v-if="dataLoading && !spaces.length"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-lagoon/10 via-ocean-light/25 to-foam"
+  >
+    <div class="mx-auto max-w-6xl animate-pulse">
+      <div class="flex flex-col items-center gap-3 mb-8">
+        <div class="h-3 w-24 rounded-full bg-charcoal/10" />
+        <div class="h-7 w-44 rounded-full bg-charcoal/10" />
+        <div class="h-0.5 w-14 rounded-full bg-charcoal/8" />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          v-for="j in 3"
+          :key="j"
+          class="rounded-lg overflow-hidden min-h-[18rem] bg-charcoal/8"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section
+    v-else-if="spaces.length > 0"
     id="experience"
     class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-br from-lagoon/10 via-ocean-light/25 to-foam"
   >
@@ -177,7 +198,13 @@ import { trackReserveClick } from "@/composables/useAnalytics";
 
 const swiperModules = [Navigation, Autoplay];
 const { t, locale } = useI18n();
-const { spaces, spacesHasMore, spacesLoading, loadMoreSpaces } = useData();
+const {
+  spaces,
+  spacesHasMore,
+  spacesLoading,
+  loadMoreSpaces,
+  loading: dataLoading,
+} = useData();
 
 const spacePrev = ref(null);
 const spaceNext = ref(null);

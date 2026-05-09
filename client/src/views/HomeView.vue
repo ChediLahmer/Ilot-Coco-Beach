@@ -35,43 +35,16 @@
       </div>
 
       <template v-else>
-        <!-- Loading skeleton while data fetches -->
-        <div v-if="dataLoading" class="mx-auto max-w-6xl px-6 py-16 space-y-16">
-          <div v-for="i in 3" :key="i" class="animate-pulse">
-            <div class="flex flex-col items-center gap-3 mb-8">
-              <div class="h-3 w-24 rounded-full bg-charcoal/10" />
-              <div class="h-7 w-56 rounded-full bg-charcoal/10" />
-              <div class="h-0.5 w-16 rounded-full bg-charcoal/8" />
-            </div>
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div
-                v-for="j in 3"
-                :key="j"
-                class="rounded-lg border border-charcoal/8 bg-white overflow-hidden"
-              >
-                <div class="aspect-[4/3] bg-charcoal/8" />
-                <div class="p-4 space-y-3">
-                  <div class="h-5 w-3/4 rounded bg-charcoal/8" />
-                  <div class="h-3 w-full rounded bg-charcoal/6" />
-                  <div class="h-3 w-2/3 rounded bg-charcoal/6" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <template v-else>
-          <div data-reveal><AboutSection /></div>
-          <div data-reveal><FlashSaleSection /></div>
-          <div data-reveal><MenuSection /></div>
-          <div data-reveal><ExperienceSection /></div>
-          <div data-reveal><GallerySection /></div>
-          <div data-reveal><VoucherSection /></div>
-          <div v-if="config.showReviews" data-reveal><ReviewsSection /></div>
-          <div v-if="config.sectionVideo" data-reveal><VideoSection /></div>
-          <div data-reveal><ReservationSection /></div>
-          <div data-reveal><LocationSection /></div>
-        </template>
+        <div data-reveal><AboutSection /></div>
+        <div data-reveal><FlashSaleSection /></div>
+        <div data-reveal><MenuSection /></div>
+        <div data-reveal><ExperienceSection /></div>
+        <div data-reveal><GallerySection /></div>
+        <div data-reveal><VoucherSection /></div>
+        <div v-if="config.showReviews" data-reveal><ReviewsSection /></div>
+        <div v-if="config.sectionVideo" data-reveal><VideoSection /></div>
+        <div data-reveal><ReservationSection /></div>
+        <div data-reveal><LocationSection /></div>
       </template>
     </main>
     <FooterSection />
@@ -150,7 +123,7 @@ const FloatingSocial = defineAsyncComponent(
 
 const { t, locale } = useI18n();
 const config = useConfig();
-const { error: dataError, retry: retryData, loading: dataLoading } = useData();
+const { error: dataError, retry: retryData } = useData();
 
 const homeRef = ref(null);
 const showStickyBar = ref(false);

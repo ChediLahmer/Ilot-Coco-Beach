@@ -1,6 +1,41 @@
 <template>
+  <!-- Loading skeleton -->
   <section
-    v-if="menuCategories.length > 0"
+    v-if="dataLoading && !menuCategories.length"
+    class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-bl from-sand-dark/50 via-sand to-ocean-light/20"
+  >
+    <div class="mx-auto max-w-6xl animate-pulse">
+      <div class="flex flex-col items-center gap-3 mb-8">
+        <div class="h-3 w-20 rounded-full bg-charcoal/10" />
+        <div class="h-7 w-40 rounded-full bg-charcoal/10" />
+        <div class="h-0.5 w-14 rounded-full bg-charcoal/8" />
+      </div>
+      <div class="flex gap-2 mb-6">
+        <div
+          v-for="j in 4"
+          :key="j"
+          class="h-8 w-20 rounded-full bg-charcoal/8"
+        />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          v-for="j in 3"
+          :key="j"
+          class="rounded-lg border border-charcoal/8 bg-white overflow-hidden"
+        >
+          <div class="aspect-[4/3] bg-charcoal/8" />
+          <div class="p-4 space-y-3">
+            <div class="h-5 w-3/4 rounded bg-charcoal/8" />
+            <div class="h-3 w-full rounded bg-charcoal/6" />
+            <div class="h-3 w-1/2 rounded bg-charcoal/6" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section
+    v-else-if="menuCategories.length > 0"
     id="menu"
     class="px-6 py-20 md:px-12 lg:px-20 bg-gradient-to-bl from-sand-dark/50 via-sand to-ocean-light/20"
   >
@@ -204,7 +239,7 @@ import { useData } from "@/composables/useData";
 const swiperModules = [Navigation, Autoplay];
 
 const { t, locale } = useI18n();
-const { menuCategories } = useData();
+const { menuCategories, loading: dataLoading } = useData();
 
 const priceMode = ref("standard");
 const activeCategory = ref(menuCategories.value[0]?.id ?? null);

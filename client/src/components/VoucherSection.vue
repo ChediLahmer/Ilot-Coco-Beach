@@ -54,7 +54,31 @@
       </div>
 
       <!-- Swiper -->
-      <div v-if="vouchers.length > 0" class="mt-8">
+      <!-- Loading skeleton -->
+      <div
+        v-if="dataLoading && !vouchers.length"
+        class="mt-8 animate-pulse grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <div
+          v-for="j in 3"
+          :key="j"
+          class="rounded-lg border border-charcoal/8 bg-white p-5"
+        >
+          <div class="flex flex-col items-center gap-3">
+            <div class="h-8 w-20 rounded bg-charcoal/8" />
+            <div class="h-3 w-12 rounded bg-charcoal/6" />
+          </div>
+          <div class="my-4 h-px bg-charcoal/6" />
+          <div class="flex justify-center">
+            <div class="h-8 w-32 rounded-md bg-charcoal/8" />
+          </div>
+          <div class="mt-3 flex justify-center">
+            <div class="h-3 w-28 rounded bg-charcoal/6" />
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="vouchers.length > 0" class="mt-8">
         <Swiper
           :modules="swiperModules"
           :slides-per-view="1"
@@ -176,7 +200,7 @@
       </div>
 
       <p
-        v-if="vouchers.length === 0"
+        v-if="!dataLoading && vouchers.length === 0"
         class="mt-8 text-center text-sm text-charcoal/40"
       >
         {{ t("vouchers.subtitle") }}
@@ -197,8 +221,13 @@ import { useData } from "@/composables/useData";
 
 const swiperModules = [Navigation, Autoplay, Scrollbar];
 const { t, locale } = useI18n();
-const { vouchers, vouchersHasMore, vouchersLoading, loadMoreVouchers } =
-  useData();
+const {
+  vouchers,
+  vouchersHasMore,
+  vouchersLoading,
+  loadMoreVouchers,
+  loading: dataLoading,
+} = useData();
 
 const copiedCode = ref(null);
 

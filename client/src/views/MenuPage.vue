@@ -189,13 +189,33 @@
           </div>
         </div>
 
-        <div v-if="!menuCategories.length" class="mt-12 py-16 text-center">
-          <div v-if="loading" class="flex justify-center">
-            <div
-              class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
-            />
+        <div v-if="!menuCategories.length" class="mt-12 py-16">
+          <div v-if="loading" class="animate-pulse space-y-6">
+            <div class="flex gap-2 mb-6">
+              <div
+                v-for="j in 4"
+                :key="j"
+                class="h-8 w-20 rounded-full bg-charcoal/8"
+              />
+            </div>
+            <div class="grid gap-4 lg:grid-cols-2">
+              <div
+                v-for="j in 6"
+                :key="j"
+                class="flex gap-4 rounded-lg border border-charcoal/8 bg-white p-4"
+              >
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 w-3/4 rounded bg-charcoal/8" />
+                  <div class="h-3 w-full rounded bg-charcoal/6" />
+                  <div class="h-3 w-1/3 rounded bg-charcoal/6" />
+                </div>
+                <div class="h-4 w-12 rounded bg-charcoal/8" />
+              </div>
+            </div>
           </div>
-          <p v-else class="text-charcoal/50 text-sm">{{ copy.emptyMenu }}</p>
+          <p v-else class="text-charcoal/50 text-sm text-center">
+            {{ copy.emptyMenu }}
+          </p>
         </div>
 
         <div v-else class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
