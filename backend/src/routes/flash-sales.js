@@ -2,6 +2,14 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
+import {
+  validateDateTime,
+  validateDiscount,
+  validateMultilingual,
+  validateIntegerId,
+  validateEntityExists,
+  handleValidationError,
+} from "../lib/validation.js";
 
 export async function flashSalesRoutes(app) {
   app.addSchema({
@@ -139,44 +147,83 @@ export async function flashSalesRoutes(app) {
       },
     },
     async (request, reply) => {
-      const {
-        title,
-        description,
-        discountPercent,
-        image,
-        endsAt,
-        isActive,
-        visible,
-        menuItemId,
-        spaceId,
-      } = request.body;
-
-      const sale = await prisma.flashSale.create({
-        data: {
+      try {
+        const {
           title,
-          description: description || {},
+          description,
           discountPercent,
           image,
-          endsAt: new Date(endsAt),
-          isActive: isActive ?? true,
-          visible: visible ?? true,
-          menuItemId: menuItemId || null,
-          spaceId: spaceId || null,
-        },
-        include: {
-          menuItem: {
-            select: {
-              id: true,
-              name: true,
-              priceStandard: true,
-              priceExtra: true,
-            },
+          endsAt,
+          isActive,
+          visible,
+          menuItemId,
+          spaceId,
+        } = request.body;
+
+        // Business logic validation
+        validateMultilingual(title, "title", {
+          required: true,
+          maxLength: 200,
+        });
+        if (description) {
+          validateMultilingual(description, "description", { maxLength: 2000 });
+        }
+        const validatedDiscount = validateDiscount(discountPercent);
+        const validatedEndsAt = validateDateTime(endsAt, "endsAt", {
+          mustBeFuture: true,
+        });
+        const validatedMenuItemId = validateIntegerId(menuItemId, "menuItemId");
+        const validatedSpaceId = validateIntegerId(spaceId, "spaceId");
+
+        // Validate references exist
+        if (validatedMenuItemId) {
+          const menuItem = await prisma.menuItem.findUnique({
+            where: { id: validatedMenuItemId },
+          });
+          validateEntityExists(menuItem, "menuItemId", "MenuItem");
+        }
+
+        if (validatedSpaceId) {
+          const space = await prisma.space.findUnique({
+            where: { id: validatedSpaceId },
+          });
+          validateEntityExists(space, "spaceId", "Space");
+        }
+
+        // Cannot target both
+        if (validatedMenuItemId && validatedSpaceId) {
+          throw new Error("Cannot target both menuItem and space");
+        }
+
+        const sale = await prisma.flashSale.create({
+          data: {
+            title,
+            description: description || {},
+            discountPercent: validatedDiscount,
+            image,
+            endsAt: validatedEndsAt,
+            isActive: isActive ?? true,
+            visible: visible ?? true,
+            menuItemId: validatedMenuItemId || null,
+            spaceId: validatedSpaceId || null,
           },
-          space: { select: { id: true, name: true, price: true } },
-        },
-      });
-      scheduleIncomingCleanup(request.log, image);
-      return reply.status(201).send(sale);
+          include: {
+            menuItem: {
+              select: {
+                id: true,
+                name: true,
+                priceStandard: true,
+                priceExtra: true,
+              },
+            },
+            space: { select: { id: true, name: true, price: true } },
+          },
+        });
+        scheduleIncomingCleanup(request.log, image);
+        return reply.status(201).send(sale);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

@@ -1,5 +1,11 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
+import {
+  validateDateTime,
+  validateDiscount,
+  validatePattern,
+  handleValidationError,
+} from "../lib/validation.js";
 
 export async function vouchersRoutes(app) {
   function parseValidUntil(val) {
@@ -109,18 +115,42 @@ export async function vouchersRoutes(app) {
       },
     },
     async (request, reply) => {
-      const { code, discountPercent, validUntil, isActive, visible } =
-        request.body;
-      const voucher = await prisma.voucher.create({
-        data: {
-          code,
-          discountPercent,
-          validUntil: new Date(validUntil),
-          isActive: isActive ?? true,
-          visible: visible ?? true,
-        },
-      });
-      return reply.status(201).send(voucher);
+      try {
+        const { code, discountPercent, validUntil, isActive, visible } =
+          request.body;
+
+        // Business logic validation
+        validatePattern(code, "code", "^[A-Za-z0-9_-]+$");
+        const validatedDiscount = validateDiscount(discountPercent);
+        const validatedValidUntil = validateDateTime(validUntil, "validUntil", {
+          mustBeFuture: true,
+        });
+
+        // Check for duplicate code
+        const existing = await prisma.voucher.findUnique({
+          where: { code },
+        });
+        if (existing) {
+          return reply.status(400).send({
+            error: "Duplicate Entry",
+            message: "A voucher with this code already exists",
+            field: "code",
+          });
+        }
+
+        const voucher = await prisma.voucher.create({
+          data: {
+            code,
+            discountPercent: validatedDiscount,
+            validUntil: validatedValidUntil,
+            isActive: isActive ?? true,
+            visible: visible ?? true,
+          },
+        });
+        return reply.status(201).send(voucher);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

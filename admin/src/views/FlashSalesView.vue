@@ -174,8 +174,18 @@ function openModal(sale = null) {
 async function save() {
   clearErrors();
   validateRequired(form.value.title.fr, "titleFr", "Titre (FR)");
+  validateMaxLength(
+    form.value.description.fr || "",
+    "descriptionFr",
+    "Description (FR)",
+    2000,
+  );
   validateRequired(form.value.endsAt, "endsAt", "Date d'expiration");
-  validateMin(form.value.discountPercent, "discountPercent", "Réduction", 0);
+  validateDateTime(form.value.endsAt, "endsAt", "Date d'expiration", {
+    mustBeFuture: true,
+  });
+  validateRequired(form.value.discountPercent, "discountPercent", "Réduction");
+  validateMin(form.value.discountPercent, "discountPercent", "Réduction", 1);
   validateMax(form.value.discountPercent, "discountPercent", "Réduction", 100);
   if (hasErrors()) return;
   saving.value = true;

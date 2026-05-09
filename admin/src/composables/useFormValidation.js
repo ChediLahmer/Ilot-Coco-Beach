@@ -43,6 +43,64 @@ export function useFormValidation() {
     return true;
   }
 
+  function validateDateTime(
+    value,
+    field,
+    label,
+    { mustBeFuture = false } = {},
+  ) {
+    if (!value || typeof value !== "string") {
+      setError(field, `${label} doit être une date valide`);
+      return false;
+    }
+
+    const isoRegex =
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d{3})?(?:Z)?$/;
+    if (!isoRegex.test(value)) {
+      setError(field, `${label} doit être au format YYYY-MM-DDTHH:mm`);
+      return false;
+    }
+
+    const dt = new Date(value);
+    if (isNaN(dt.getTime())) {
+      setError(field, `${label} n'est pas une date valide`);
+      return false;
+    }
+
+    if (mustBeFuture && dt <= new Date()) {
+      setError(field, `${label} doit être dans le futur`);
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateEmail(value, field, label) {
+    if (!value || typeof value !== "string") {
+      setError(field, `${label} est requis`);
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setError(field, `${label} doit être un email valide`);
+      return false;
+    }
+    return true;
+  }
+
+  function validatePattern(value, field, label, pattern) {
+    if (!value || typeof value !== "string") {
+      setError(field, `${label} est requis`);
+      return false;
+    }
+    const regex = new RegExp(pattern);
+    if (!regex.test(value)) {
+      setError(field, `${label} a un format invalide`);
+      return false;
+    }
+    return true;
+  }
+
   function hasErrors() {
     return Object.keys(fieldErrors.value).length > 0;
   }
@@ -55,6 +113,9 @@ export function useFormValidation() {
     validateMin,
     validateMax,
     validateMaxLength,
+    validateDateTime,
+    validateEmail,
+    validatePattern,
     hasErrors,
   };
 }

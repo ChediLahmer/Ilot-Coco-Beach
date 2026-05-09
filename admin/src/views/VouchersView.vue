@@ -110,8 +110,13 @@ function openModal(v = null) {
 async function save() {
   clearErrors();
   validateRequired(form.value.code, "code", "Code");
+  validatePattern(form.value.code, "code", "Code", "^[A-Za-z0-9_-]+$");
   validateRequired(form.value.validUntil, "validUntil", "Date de validité");
-  validateMin(form.value.discountPercent, "discountPercent", "Réduction", 0);
+  validateDateTime(form.value.validUntil, "validUntil", "Date de validité", {
+    mustBeFuture: true,
+  });
+  validateRequired(form.value.discountPercent, "discountPercent", "Réduction");
+  validateMin(form.value.discountPercent, "discountPercent", "Réduction", 1);
   validateMax(form.value.discountPercent, "discountPercent", "Réduction", 100);
   if (hasErrors()) return;
   saving.value = true;
