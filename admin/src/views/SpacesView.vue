@@ -545,7 +545,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.nameFr ? 'border-danger' : 'border-border'"
               />
-              <p class="text-xs text-text-muted mt-1">Requis, max 200 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Requis, max 200 caractères
+              </p>
               <FieldError :message="fieldErrors.nameFr" />
             </div>
             <div>
@@ -558,7 +560,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.nameEn ? 'border-danger' : 'border-border'"
               />
-              <p class="text-xs text-text-muted mt-1">Optionnel, max 200 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 200 caractères
+              </p>
               <FieldError :message="fieldErrors.nameEn" />
             </div>
             <div>
@@ -572,7 +576,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.nameAr ? 'border-danger' : 'border-border'"
               />
-              <p class="text-xs text-text-muted mt-1">Optionnel, max 200 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 200 caractères
+              </p>
               <FieldError :message="fieldErrors.nameAr" />
             </div>
           </div>
@@ -588,7 +594,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
                 :class="fieldErrors.descFr ? 'border-danger' : 'border-border'"
               ></textarea>
-              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 2000 caractères
+              </p>
               <FieldError :message="fieldErrors.descFr" />
             </div>
             <div>
@@ -602,7 +610,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
                 :class="fieldErrors.descEn ? 'border-danger' : 'border-border'"
               ></textarea>
-              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 2000 caractères
+              </p>
               <FieldError :message="fieldErrors.descEn" />
             </div>
             <div>
@@ -617,7 +627,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors resize-y min-h-[5rem]"
                 :class="fieldErrors.descAr ? 'border-danger' : 'border-border'"
               ></textarea>
-              <p class="text-xs text-text-muted mt-1">Optionnel, max 2000 caractères</p>
+              <p class="text-xs text-text-muted mt-1">
+                Optionnel, max 2000 caractères
+              </p>
               <FieldError :message="fieldErrors.descAr" />
             </div>
           </div>
@@ -666,7 +678,9 @@ onUnmounted(() => {
                 class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                 :class="fieldErrors.order ? 'border-danger' : 'border-border'"
               />
-              <p class="text-xs text-text-muted mt-1">0 = premier, puis croissant</p>
+              <p class="text-xs text-text-muted mt-1">
+                0 = premier, puis croissant
+              </p>
               <FieldError :message="fieldErrors.order" />
             </div>
           </div>
