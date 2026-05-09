@@ -38,6 +38,28 @@
         </a>
 
         <a
+          :href="config.instagram"
+          target="_blank"
+          rel="noopener"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+        >
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-full bg-[#E1306C]/10"
+          >
+            <svg
+              class="h-5 w-5 text-[#E1306C]"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5Zm8.9 2.25a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+              />
+            </svg>
+          </div>
+          <span class="text-sm font-medium text-deep">Instagram</span>
+        </a>
+
+        <a
           :href="'tel:' + config.phone"
           class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
         >
@@ -58,29 +80,9 @@
               />
             </svg>
           </div>
-          <span class="text-sm font-medium text-deep">{{ config.phone }}</span>
-        </a>
-
-        <a
-          :href="config.instagram"
-          target="_blank"
-          rel="noopener"
-          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
-        >
-          <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-[#E1306C]/10"
-          >
-            <svg
-              class="h-5 w-5 text-[#E1306C]"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5Zm8.9 2.25a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
-              />
-            </svg>
-          </div>
-          <span class="text-sm font-medium text-deep">Instagram</span>
+          <span class="whitespace-nowrap text-sm font-medium text-deep">{{
+            config.phone
+          }}</span>
         </a>
 
         <a

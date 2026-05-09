@@ -1,5 +1,5 @@
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted } from "vue";
+import { ref, nextTick, onMounted, onUnmounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -103,6 +103,15 @@ function l(key) {
   return labels[locale.value]?.[key] ?? labels.fr[key];
 }
 
+const emptyLabel = computed(
+  () =>
+    ({
+      fr: "Aucun espace disponible pour le moment.",
+      en: "No spaces available at the moment.",
+      ar: "لا توجد أماكن متاحة حالياً.",
+    })[locale.value] || "Aucun espace disponible pour le moment.",
+);
+
 let observer = null;
 
 onMounted(async () => {
@@ -182,7 +191,23 @@ onUnmounted(() => {
 
     <!-- Spaces Grid -->
     <div class="bg-white py-12 md:py-16 px-6 md:px-16">
+      <!-- Loading indicator -->
       <div
+        v-if="loading && !emplacements.length"
+        class="flex justify-center py-16"
+      >
+        <div
+          class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
+        />
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="!emplacements.length" class="py-16 text-center">
+        <p class="text-charcoal/50 text-sm">{{ emptyLabel }}</p>
+      </div>
+
+      <div
+        v-else
         class="mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <div

@@ -417,8 +417,13 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+    <div v-if="loading" class="flex justify-center py-12">
+      <div
+        class="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+      />
+    </div>
     <div
-      v-if="!spaces.length && !searchQuery && filterStatus === 'all'"
+      v-else-if="!spaces.length && !searchQuery && filterStatus === 'all'"
       class="py-12 text-center text-text-muted text-sm"
     >
       Aucun espace pour le moment

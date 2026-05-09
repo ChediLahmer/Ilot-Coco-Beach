@@ -189,7 +189,16 @@
           </div>
         </div>
 
-        <div class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+        <div v-if="!menuCategories.length" class="mt-12 py-16 text-center">
+          <div v-if="loading" class="flex justify-center">
+            <div
+              class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
+            />
+          </div>
+          <p v-else class="text-charcoal/50 text-sm">{{ copy.emptyMenu }}</p>
+        </div>
+
+        <div v-else class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <div v-if="featureItems.length">
             <div class="grid gap-5 grid-cols-1 sm:grid-cols-2">
               <article
@@ -322,7 +331,7 @@ import { useData } from "@/composables/useData";
 import { useHorizontalRail } from "@/composables/useHorizontalRail";
 
 const { locale, t } = useI18n();
-const { menuCategories } = useData();
+const { menuCategories, loading } = useData();
 
 const {
   scrollerEl: catScrollerEl,
@@ -404,6 +413,7 @@ const copy = computed(
         itemsLabel: "plats",
         currency: "DT",
         backHome: "Retour à l’accueil",
+        emptyMenu: "Aucun plat disponible pour le moment.",
       },
       en: {
         title: "The full menu",
@@ -419,6 +429,7 @@ const copy = computed(
         itemsLabel: "items",
         currency: "DT",
         backHome: "Back to home",
+        emptyMenu: "No dishes available at the moment.",
       },
       ar: {
         title: "القائمة الكاملة",
@@ -434,6 +445,7 @@ const copy = computed(
         itemsLabel: "طبق",
         currency: "د.ت",
         backHome: "العودة للرئيسية",
+        emptyMenu: "لا توجد أطباق متاحة حالياً.",
       },
     })[locale.value] || {
       title: "La carte complète",
@@ -449,6 +461,7 @@ const copy = computed(
       itemsLabel: "plats",
       currency: "DT",
       backHome: "Retour à l’accueil",
+      emptyMenu: "Aucun plat disponible pour le moment.",
     },
 );
 

@@ -386,8 +386,13 @@ function formatDate(d) {
           </tbody>
         </table>
       </div>
+      <div v-if="loading" class="flex justify-center py-12">
+        <div
+          class="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+        />
+      </div>
       <div
-        v-if="!vouchers.length && !searchQuery && filterStatus === 'all'"
+        v-else-if="!vouchers.length && !searchQuery && filterStatus === 'all'"
         class="py-12 text-center text-text-muted text-sm"
       >
         Aucun voucher pour le moment

@@ -443,7 +443,12 @@ async function deleteCat(cat) {
       </div>
     </div>
 
-    <div v-if="!images.length" class="py-16 text-center">
+    <div v-if="loading" class="flex justify-center py-12">
+      <div
+        class="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+      />
+    </div>
+    <div v-else-if="!images.length" class="py-16 text-center">
       <svg
         class="w-12 h-12 mx-auto text-text-muted/30 mb-3"
         fill="none"

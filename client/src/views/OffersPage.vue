@@ -43,7 +43,23 @@
 
     <!-- Sales grid -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+      <!-- Loading -->
       <div
+        v-if="loadingSales && !flashSales.length"
+        class="flex justify-center py-16"
+      >
+        <div
+          class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
+        />
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="!flashSales.length" class="py-12 text-center">
+        <p class="text-charcoal/50 text-sm">{{ t("flash.subtitle") }}</p>
+      </div>
+
+      <div
+        v-else
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
       >
         <div
