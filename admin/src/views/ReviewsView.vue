@@ -10,10 +10,15 @@ const toast = useToast();
 const { confirm } = useConfirm();
 const reviews = ref([]);
 const loading = ref(false);
+const loadingMore = ref(false);
 const error = ref(null);
 const busy = ref(new Set());
 const nextCursor = ref(null);
-const hasMore = ref(true);
+const hasMore = ref(false);
+
+const REVIEWS_LIMIT = 25;
+const sentinel = ref(null);
+let observer = null;
 
 const searchQuery = ref("");
 const filterRating = ref("all");
@@ -49,24 +54,14 @@ const filteredReviews = computed(() => {
 async function loadData() {
   loading.value = true;
   error.value = null;
+  reviews.value = [];
+  nextCursor.value = null;
+  hasMore.value = false;
   try {
-    reviews.value = [];
-    nextCursor.value = null;
-    hasMore.value = true;
-    let cursor = null;
-    let all = [];
-    let iterations = 0;
-    while (hasMore.value && iterations < 20) {
-      const res = await api.get(
-        `/reviews?limit=50${cursor ? `&cursor=${cursor}` : ""}`,
-      );
-      all = [...all, ...res.items];
-      cursor = res.nextCursor;
-      hasMore.value = !!res.nextCursor;
-      nextCursor.value = res.nextCursor;
-      iterations++;
-    }
-    reviews.value = all;
+    const res = await api.get(`/reviews?limit=${REVIEWS_LIMIT}`);
+    reviews.value = res.items;
+    nextCursor.value = res.nextCursor;
+    hasMore.value = !!res.nextCursor;
   } catch (e) {
     error.value = "Impossible de charger les avis";
     toast.error("Impossible de charger les avis");
@@ -75,8 +70,37 @@ async function loadData() {
   }
 }
 
-onMounted(loadData);
-onUnmounted(() => clearTimeout(debounceTimer));
+async function loadMore() {
+  if (!hasMore.value || loadingMore.value || loading.value) return;
+  loadingMore.value = true;
+  try {
+    const res = await api.get(
+      `/reviews?limit=${REVIEWS_LIMIT}&cursor=${nextCursor.value}`,
+    );
+    reviews.value = [...reviews.value, ...res.items];
+    nextCursor.value = res.nextCursor;
+    hasMore.value = !!res.nextCursor;
+  } catch (e) {
+    toast.error(e.message || "Erreur de chargement");
+  } finally {
+    loadingMore.value = false;
+  }
+}
+
+onMounted(async () => {
+  await loadData();
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadMore();
+    },
+    { rootMargin: "200px" },
+  );
+  if (sentinel.value) observer.observe(sentinel.value);
+});
+onUnmounted(() => {
+  clearTimeout(debounceTimer);
+  observer?.disconnect();
+});
 
 async function remove(r) {
   const ok = await confirm({
@@ -285,6 +309,13 @@ function stars(rating) {
           </div>
         </div>
       </div>
+    </div>
+    <!-- Progressive load sentinel -->
+    <div ref="sentinel" class="h-2 mt-2" />
+    <div v-if="loadingMore" class="flex justify-center py-4">
+      <div
+        class="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+      />
     </div>
   </div>
 </template>

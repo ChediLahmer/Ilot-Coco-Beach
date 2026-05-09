@@ -74,6 +74,8 @@
     },
     "viewAll": "عرض القائمة كاملة",
     "showMore": "عرض {count} أطباق أخرى",
+    "prevPage": "السابق",
+    "nextPage": "التالي",
     "reserveCta": "اطلب طاولة",
     "standard": "عادي",
     "extra": "إضافي",

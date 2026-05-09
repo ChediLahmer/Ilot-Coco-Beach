@@ -223,70 +223,76 @@
           class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start"
         >
           <div class="order-2 lg:order-1">
-            <div
-              v-if="featureItems.length"
-              class="grid grid-cols-1 gap-5 sm:grid-cols-2"
-            >
-              <article
-                v-for="item in featureItems"
-                :key="item.id"
-                class="premium-card overflow-hidden rounded-[1.75rem]"
-              >
-                <div class="relative aspect-[4/3] overflow-hidden bg-sand/70">
-                  <img
-                    v-if="item.image"
-                    :src="item.image"
-                    :alt="item.name[locale] || item.name.fr"
-                    class="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div
-                    class="absolute inset-x-4 top-4 flex items-start justify-between gap-3"
+            <Transition :name="transitionName" mode="out-in">
+              <div :key="String(activeCategory) + '-' + carPage">
+                <div
+                  v-if="pagedFeatureItems.length"
+                  class="grid grid-cols-1 gap-5 sm:grid-cols-2"
+                >
+                  <article
+                    v-for="item in pagedFeatureItems"
+                    :key="item.id"
+                    class="premium-card overflow-hidden rounded-[1.75rem]"
                   >
-                    <p
-                      class="rounded-full border border-white/30 bg-white/88 px-3 py-1 font-heading text-[0.62rem] font-bold uppercase tracking-[0.18em] text-charcoal/78 shadow-sm"
+                    <div
+                      class="relative aspect-[4/3] overflow-hidden bg-sand/70"
                     >
-                      {{ activeCategoryLabel }}
+                      <img
+                        v-if="item.image"
+                        :src="item.image"
+                        :alt="item.name[locale] || item.name.fr"
+                        class="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div
+                        class="absolute inset-x-4 top-4 flex items-start justify-between gap-3"
+                      >
+                        <p
+                          class="rounded-full border border-white/30 bg-white/88 px-3 py-1 font-heading text-[0.62rem] font-bold uppercase tracking-[0.18em] text-charcoal/78 shadow-sm"
+                        >
+                          {{ activeCategoryLabel }}
+                        </p>
+                        <p
+                          class="rounded-full bg-[linear-gradient(135deg,var(--color-sunset),var(--color-gold))] px-3 py-1 text-[0.72rem] font-heading font-bold uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(255,123,58,0.18)]"
+                        >
+                          {{ displayPrice(item) }} {{ copy.currency }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="p-6 overflow-hidden">
+                      <h2
+                        class="font-brand text-[2rem] leading-tight text-deep line-clamp-2"
+                      >
+                        {{ item.name[locale] || item.name.fr }}
+                      </h2>
+                      <p
+                        class="mt-4 text-sm leading-7 text-charcoal/66 line-clamp-3"
+                      >
+                        {{ item.desc[locale] || item.desc.fr }}
+                      </p>
+                    </div>
+                  </article>
+                </div>
+
+                <div
+                  v-else
+                  class="premium-card flex min-h-[22rem] items-center justify-center rounded-[1.75rem] border border-dashed border-charcoal/12 px-6 py-10 text-center"
+                >
+                  <div class="max-w-sm">
+                    <p
+                      class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-ocean/70"
+                    >
+                      {{ copy.selectionTitle }}
                     </p>
-                    <p
-                      class="rounded-full bg-[linear-gradient(135deg,var(--color-sunset),var(--color-gold))] px-3 py-1 text-[0.72rem] font-heading font-bold uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(255,123,58,0.18)]"
-                    >
-                      {{ displayPrice(item) }} {{ copy.currency }}
+                    <p class="mt-4 text-sm leading-7 text-charcoal/60">
+                      {{ copy.emptyVisuals }}
                     </p>
                   </div>
                 </div>
-
-                <div class="p-6 overflow-hidden">
-                  <h2
-                    class="font-brand text-[2rem] leading-tight text-deep line-clamp-2"
-                  >
-                    {{ item.name[locale] || item.name.fr }}
-                  </h2>
-                  <p
-                    class="mt-4 text-sm leading-7 text-charcoal/66 line-clamp-3"
-                  >
-                    {{ item.desc[locale] || item.desc.fr }}
-                  </p>
-                </div>
-              </article>
-            </div>
-
-            <div
-              v-else
-              class="premium-card flex min-h-[22rem] items-center justify-center rounded-[1.75rem] border border-dashed border-charcoal/12 px-6 py-10 text-center"
-            >
-              <div class="max-w-sm">
-                <p
-                  class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-ocean/70"
-                >
-                  {{ copy.selectionTitle }}
-                </p>
-                <p class="mt-4 text-sm leading-7 text-charcoal/60">
-                  {{ copy.emptyVisuals }}
-                </p>
               </div>
-            </div>
+            </Transition>
           </div>
 
           <div
@@ -310,52 +316,96 @@
               </span>
             </div>
 
-            <div class="mt-8 space-y-4">
-              <article
-                v-for="item in visibleItems"
-                :key="item.id"
-                class="rounded-[1.35rem] border border-charcoal/8 bg-white/70 px-5 py-4"
+            <Transition :name="transitionName" mode="out-in">
+              <div
+                :key="String(activeCategory) + '-' + carPage"
+                class="mt-8 space-y-4"
               >
-                <div class="flex items-start gap-3">
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-baseline gap-3">
-                      <h3 class="font-heading text-base font-bold text-deep">
-                        {{ item.name[locale] || item.name.fr }}
-                      </h3>
-                      <span
-                        v-if="item.available === false"
-                        class="shrink-0 rounded bg-red-100 px-2 py-0.5 text-[0.65rem] font-semibold text-red-600"
-                      >
-                        {{ t("menu.unavailable") }}
-                      </span>
-                      <span
-                        class="flex-1 border-b border-dotted border-charcoal/18"
-                      />
-                      <span
-                        class="font-heading text-base font-bold text-ocean-dark"
-                      >
-                        {{ displayPrice(item) }} {{ copy.currency }}
-                      </span>
+                <article
+                  v-for="item in pagedItems"
+                  :key="item.id"
+                  class="rounded-[1.35rem] border border-charcoal/8 bg-white/70 px-5 py-4"
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-baseline gap-3">
+                        <h3 class="font-heading text-base font-bold text-deep">
+                          {{ item.name[locale] || item.name.fr }}
+                        </h3>
+                        <span
+                          v-if="item.available === false"
+                          class="shrink-0 rounded bg-red-100 px-2 py-0.5 text-[0.65rem] font-semibold text-red-600"
+                        >
+                          {{ t("menu.unavailable") }}
+                        </span>
+                        <span
+                          class="flex-1 border-b border-dotted border-charcoal/18"
+                        />
+                        <span
+                          class="font-heading text-base font-bold text-ocean-dark"
+                        >
+                          {{ displayPrice(item) }} {{ copy.currency }}
+                        </span>
+                      </div>
+                      <p class="mt-3 text-sm leading-7 text-charcoal/60">
+                        {{ item.desc[locale] || item.desc.fr }}
+                      </p>
                     </div>
-                    <p class="mt-3 text-sm leading-7 text-charcoal/60">
-                      {{ item.desc[locale] || item.desc.fr }}
-                    </p>
                   </div>
-                </div>
-              </article>
-            </div>
+                </article>
+              </div>
+            </Transition>
 
-            <button
-              v-if="hasMoreItems"
-              @click="loadMoreItems"
-              class="mt-6 w-full rounded-xl border border-charcoal/10 bg-white/60 py-3 text-sm font-heading font-semibold text-charcoal/60 hover:bg-white hover:text-charcoal transition-colors"
+            <div
+              v-if="totalCarPages > 1"
+              class="mt-6 flex items-center justify-between gap-4"
             >
-              {{
-                t("menu.showMore", {
-                  count: remainingCount,
-                })
-              }}
-            </button>
+              <button
+                @click="prevPage"
+                :disabled="carPage <= 1"
+                class="flex items-center gap-1.5 rounded-xl border border-charcoal/10 bg-white/60 px-4 py-2.5 text-sm font-heading font-semibold text-charcoal/60 hover:bg-white hover:text-charcoal transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              >
+                <svg
+                  class="h-4 w-4 rtl-flip"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+                {{ t("menu.prevPage") }}
+              </button>
+              <span
+                class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.16em] text-charcoal/40"
+              >
+                {{ carPage }} / {{ totalCarPages }}
+              </span>
+              <button
+                @click="nextPage"
+                :disabled="carPage >= totalCarPages"
+                class="flex items-center gap-1.5 rounded-xl border border-charcoal/10 bg-white/60 px-4 py-2.5 text-sm font-heading font-semibold text-charcoal/60 hover:bg-white hover:text-charcoal transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              >
+                {{ t("menu.nextPage") }}
+                <svg
+                  class="h-4 w-4 rtl-flip"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -405,7 +455,7 @@ watch(
 );
 
 watch(activeCategory, () => {
-  itemsPage.value = 1;
+  carPage.value = 1;
 });
 
 const activeCategoryData = computed(
@@ -421,23 +471,36 @@ const activeCategoryLabel = computed(
     "",
 );
 const activeItems = computed(() => activeCategoryData.value?.items || []);
-const featureItems = computed(() =>
-  visibleItems.value.filter((item) => item.image).slice(0, 4),
-);
 
-const ITEMS_PAGE_SIZE = 8;
-const itemsPage = ref(1);
-const visibleItems = computed(() => {
-  return activeItems.value.slice(0, itemsPage.value * ITEMS_PAGE_SIZE);
-});
-const hasMoreItems = computed(
-  () => visibleItems.value.length < activeItems.value.length,
+const ITEMS_PER_PAGE = 6;
+const carPage = ref(1);
+const pageDir = ref(1);
+const totalCarPages = computed(() =>
+  Math.max(1, Math.ceil(activeItems.value.length / ITEMS_PER_PAGE)),
 );
-const remainingCount = computed(
-  () => activeItems.value.length - visibleItems.value.length,
+const pagedItems = computed(() =>
+  activeItems.value.slice(
+    (carPage.value - 1) * ITEMS_PER_PAGE,
+    carPage.value * ITEMS_PER_PAGE,
+  ),
 );
-function loadMoreItems() {
-  itemsPage.value++;
+const pagedFeatureItems = computed(() =>
+  pagedItems.value.filter((item) => item.image).slice(0, 4),
+);
+const transitionName = computed(() =>
+  pageDir.value > 0 ? "slide-ltr" : "slide-rtl",
+);
+function nextPage() {
+  if (carPage.value < totalCarPages.value) {
+    pageDir.value = 1;
+    carPage.value++;
+  }
+}
+function prevPage() {
+  if (carPage.value > 1) {
+    pageDir.value = -1;
+    carPage.value--;
+  }
 }
 
 const copy = computed(
@@ -522,3 +585,31 @@ function displayPrice(item) {
   return price ?? item.priceStandard ?? "—";
 }
 </script>
+
+<style scoped>
+/* Slide left-to-right (forward page) */
+.slide-ltr-enter-active,
+.slide-ltr-leave-active,
+.slide-rtl-enter-active,
+.slide-rtl-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.slide-ltr-enter-from {
+  opacity: 0;
+  transform: translateX(40px);
+}
+.slide-ltr-leave-to {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+.slide-rtl-enter-from {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+.slide-rtl-leave-to {
+  opacity: 0;
+  transform: translateX(40px);
+}
+</style>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
@@ -31,6 +31,11 @@ const sortBy = ref("order"); // order | date | name
 // Pagination
 const page = ref(1);
 const ITEMS_PER_PAGE = 24;
+const galNextCursor = ref(null);
+const galHasMore = ref(false);
+const galLoadingMore = ref(false);
+const galSentinel = ref(null);
+let galObserver = null;
 
 // Category modal
 const showCatModal = ref(false);
@@ -102,19 +107,14 @@ async function loadCategories() {
 async function loadData() {
   loading.value = true;
   error.value = null;
+  images.value = [];
+  galNextCursor.value = null;
+  galHasMore.value = false;
   try {
-    let all = [];
-    let cursor = undefined;
-    const MAX_PAGES = 50;
-    for (let i = 0; i < MAX_PAGES; i++) {
-      const res = await api.get(
-        `/gallery?limit=50${cursor ? `&cursor=${cursor}` : ""}`,
-      );
-      all = [...all, ...res.items];
-      if (!res.nextCursor) break;
-      cursor = res.nextCursor;
-    }
-    images.value = all;
+    const res = await api.get("/gallery?limit=50");
+    images.value = res.items;
+    galNextCursor.value = res.nextCursor;
+    galHasMore.value = !!res.nextCursor;
   } catch {
     error.value = "Erreur de chargement";
     toast.error("Erreur de chargement de la galerie");
@@ -123,9 +123,37 @@ async function loadData() {
   }
 }
 
+async function loadMoreGallery() {
+  if (!galHasMore.value || galLoadingMore.value) return;
+  galLoadingMore.value = true;
+  try {
+    const res = await api.get(
+      `/gallery?limit=50&cursor=${galNextCursor.value}`,
+    );
+    images.value = [...images.value, ...res.items];
+    galNextCursor.value = res.nextCursor;
+    galHasMore.value = !!res.nextCursor;
+  } catch {
+    toast.error("Erreur de chargement");
+  } finally {
+    galLoadingMore.value = false;
+  }
+}
+
 onMounted(async () => {
   await loadCategories();
   await loadData();
+  galObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadMoreGallery();
+    },
+    { rootMargin: "300px" },
+  );
+  if (galSentinel.value) galObserver.observe(galSentinel.value);
+});
+
+onUnmounted(() => {
+  galObserver?.disconnect();
 });
 
 async function handleUpload(event) {
@@ -523,7 +551,7 @@ async function deleteCat(cat) {
       <p class="text-sm text-text-muted">Aucun résultat pour ce filtre</p>
     </div>
 
-    <!-- Pagination -->
+    <!-- Pagination (client-side within loaded images) -->
     <div v-if="totalPages > 1" class="flex items-center justify-between mt-6">
       <p class="text-xs text-text-muted">Page {{ page }} / {{ totalPages }}</p>
       <div class="flex gap-1">
@@ -542,6 +570,14 @@ async function deleteCat(cat) {
           Suivant →
         </button>
       </div>
+    </div>
+
+    <!-- Server-side progressive load sentinel -->
+    <div ref="galSentinel" class="h-2" />
+    <div v-if="galLoadingMore" class="flex justify-center py-4 mt-2">
+      <div
+        class="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+      />
     </div>
 
     <!-- Lightbox Preview -->

@@ -74,6 +74,8 @@
     },
     "viewAll": "View full menu",
     "showMore": "Show {count} more dishes",
+    "prevPage": "Previous",
+    "nextPage": "Next",
     "reserveCta": "Request a table",
     "standard": "Standard",
     "extra": "Extra",
