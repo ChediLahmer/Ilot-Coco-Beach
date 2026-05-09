@@ -11,6 +11,7 @@ import {
   ERROR_MSG_BROWSER,
   ERROR_MSG_CONTENT,
 } from "../lib/media.js";
+import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 
 export async function galleryRoutes(app) {
   // ─── Gallery Categories ───────────────────────────────────────────
@@ -208,6 +209,7 @@ export async function galleryRoutes(app) {
           },
           include: { catRef: true },
         });
+        scheduleIncomingCleanup(request.log, url);
         return reply.status(201).send(image);
       }
 
@@ -252,6 +254,7 @@ export async function galleryRoutes(app) {
         data: { url, alt: file.filename, category, categoryId, order: 0 },
         include: { catRef: true },
       });
+      scheduleIncomingCleanup(request.log, url);
       return reply.status(201).send(image);
     },
   );

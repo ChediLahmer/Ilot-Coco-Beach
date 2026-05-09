@@ -6,6 +6,26 @@ const UPLOAD_BASE =
   import.meta.env.VITE_UPLOAD_URL || import.meta.env.VITE_API_URL || "/api";
 const REQUEST_TIMEOUT_MS = 60000;
 const UPLOAD_TIMEOUT_MS = 300000;
+const VIDEO_EXTENSIONS = {
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  m4v: "video/mp4",
+  mkv: "video/x-matroska",
+  avi: "video/x-msvideo",
+};
+
+function getFileExtension(name = "") {
+  const match = /\.([^.]+)$/.exec(name);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function inferVideoContentType(file) {
+  if (file?.type?.startsWith("video/")) {
+    return file.type;
+  }
+  return VIDEO_EXTENSIONS[getFileExtension(file?.name)];
+}
 
 function xhrUpload(
   url,
@@ -63,15 +83,16 @@ function xhrUpload(
 }
 
 async function uploadVideoViaPresign(path, file, extraFields = {}, onProgress) {
+  const contentType = inferVideoContentType(file);
   const presign = await request("/upload/presign", {
     method: "POST",
-    body: JSON.stringify({ filename: file.name, contentType: file.type }),
+    body: JSON.stringify({ filename: file.name, contentType }),
   });
 
   await xhrUpload(presign.url, file, {
     method: "PUT",
     headers: {
-      "Content-Type": file.type || "application/octet-stream",
+      "Content-Type": contentType,
     },
     onProgress,
   });
@@ -168,6 +189,7 @@ export function useApi() {
     upload: (path, file, extraFields = {}, { onProgress } = {}) => {
       const { token } = useAuth();
       const MAX_SIZE = 50 * 1024 * 1024;
+      const inferredVideoType = inferVideoContentType(file);
       if (file.size > MAX_SIZE) {
         throw new Error("Fichier trop volumineux (max 50 Mo)");
       }
@@ -181,12 +203,17 @@ export function useApi() {
           "Type de fichier non supporté. Formats acceptés : images et vidéos.",
         );
       }
+      if (!file.type && !inferredVideoType) {
+        throw new Error(
+          "Type de fichier non supporte. Formats acceptes : images et videos.",
+        );
+      }
       const form = new FormData();
       form.append("file", file);
       for (const [k, v] of Object.entries(extraFields)) {
         form.append(k, v);
       }
-      const isVideo = file.type?.startsWith("video/");
+      const isVideo = Boolean(inferredVideoType);
       if (isVideo) {
         return uploadVideoViaPresign(path, file, extraFields, onProgress).catch(
           (error) => {

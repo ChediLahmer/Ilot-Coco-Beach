@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
+import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 
 export async function spacesRoutes(app) {
   app.addSchema({
@@ -147,6 +148,7 @@ export async function spacesRoutes(app) {
           visible: visible ?? true,
         },
       });
+      scheduleIncomingCleanup(request.log, image);
       return reply.status(201).send(space);
     },
   );
@@ -213,19 +215,24 @@ export async function spacesRoutes(app) {
           deleteFile(existing.image).catch(() => {});
         }
       }
-      return prisma.space.update({
-        where: { id: Number(request.params.id) },
-        data: {
-          name,
-          description,
-          image,
-          price,
-          capacity,
-          order,
-          available,
-          visible,
-        },
-      });
+      return prisma.space
+        .update({
+          where: { id: Number(request.params.id) },
+          data: {
+            name,
+            description,
+            image,
+            price,
+            capacity,
+            order,
+            available,
+            visible,
+          },
+        })
+        .then((space) => {
+          scheduleIncomingCleanup(request.log, image);
+          return space;
+        });
     },
   );
 

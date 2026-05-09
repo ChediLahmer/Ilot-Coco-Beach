@@ -13,6 +13,13 @@ import {
 
 const INCOMING_PREFIX = "incoming/";
 
+function urlToIncomingKey(url) {
+  const marker = "/incoming/";
+  const index = typeof url === "string" ? url.indexOf(marker) : -1;
+  if (index === -1) return null;
+  return url.slice(index + 1);
+}
+
 async function replaceUrlEverywhere(oldUrl, newUrl) {
   if (!oldUrl || oldUrl === newUrl) return 0;
 
@@ -88,4 +95,16 @@ export async function processIncomingUploads(logger, { limit = 10 } = {}) {
   }
 
   return processed;
+}
+
+export function scheduleIncomingCleanup(logger, url) {
+  const key = urlToIncomingKey(url);
+  if (!key) return;
+  setTimeout(async () => {
+    try {
+      await processIncomingUploads(logger, { limit: 10 });
+    } catch (err) {
+      logger.error(err, `Immediate upload cleanup failed for ${key}`);
+    }
+  }, 0);
 }

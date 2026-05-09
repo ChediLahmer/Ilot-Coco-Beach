@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
+import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 
 export async function flashSalesRoutes(app) {
   app.addSchema({
@@ -173,6 +174,7 @@ export async function flashSalesRoutes(app) {
           space: { select: { id: true, name: true, price: true } },
         },
       });
+      scheduleIncomingCleanup(request.log, image);
       return reply.status(201).send(sale);
     },
   );
@@ -252,21 +254,26 @@ export async function flashSalesRoutes(app) {
       if (endsAt) data.endsAt = new Date(endsAt);
       if (menuItemId !== undefined) data.menuItemId = menuItemId || null;
       if (spaceId !== undefined) data.spaceId = spaceId || null;
-      return prisma.flashSale.update({
-        where: { id: Number(request.params.id) },
-        data,
-        include: {
-          menuItem: {
-            select: {
-              id: true,
-              name: true,
-              priceStandard: true,
-              priceExtra: true,
+      return prisma.flashSale
+        .update({
+          where: { id: Number(request.params.id) },
+          data,
+          include: {
+            menuItem: {
+              select: {
+                id: true,
+                name: true,
+                priceStandard: true,
+                priceExtra: true,
+              },
             },
+            space: { select: { id: true, name: true, price: true } },
           },
-          space: { select: { id: true, name: true, price: true } },
-        },
-      });
+        })
+        .then((sale) => {
+          scheduleIncomingCleanup(request.log, image);
+          return sale;
+        });
     },
   );
 

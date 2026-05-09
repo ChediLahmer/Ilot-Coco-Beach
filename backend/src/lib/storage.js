@@ -121,17 +121,26 @@ export async function headObject(key) {
 export async function listObjects(prefix) {
   const objects = [];
   let ContinuationToken;
-  do {
-    const res = await s3.send(
-      new ListObjectsV2Command({
-        Bucket: BUCKET,
-        Prefix: prefix,
-        ContinuationToken,
-      }),
-    );
-    objects.push(...(res.Contents || []));
-    ContinuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
-  } while (ContinuationToken);
+  try {
+    do {
+      const res = await s3.send(
+        new ListObjectsV2Command({
+          Bucket: BUCKET,
+          Prefix: prefix,
+          ContinuationToken,
+        }),
+      );
+      objects.push(...(res.Contents || []));
+      ContinuationToken = res.IsTruncated
+        ? res.NextContinuationToken
+        : undefined;
+    } while (ContinuationToken);
+  } catch (error) {
+    if (error?.name === "NoSuchKey" || error?.Code === "NoSuchKey") {
+      return [];
+    }
+    throw error;
+  }
   return objects;
 }
 

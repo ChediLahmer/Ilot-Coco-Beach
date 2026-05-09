@@ -164,3 +164,13 @@ model Review {
   @@index([visible, id])
   @@map("reviews")
 }
+
+model ReviewStats {
+  id               Int      @id @default(1)
+  visibleCount     Int      @default(0) @map("visible_count")
+  totalRating      Int      @default(0) @map("total_rating")
+  recommendedCount Int      @default(0) @map("recommended_count")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("review_stats")
+}

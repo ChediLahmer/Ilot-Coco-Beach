@@ -8,6 +8,18 @@ export function useScrollReveal(containerRef, options = {}) {
   } = options;
 
   let observer = null;
+  let mutationObserver = null;
+  const observed = new WeakSet();
+
+  function observeElement(el) {
+    if (!el || observed.has(el)) return;
+    observed.add(el);
+    observer?.observe(el);
+  }
+
+  function observeTargets(root) {
+    root.querySelectorAll(selector).forEach((el) => observeElement(el));
+  }
 
   function init() {
     const root = containerRef?.value;
@@ -25,9 +37,17 @@ export function useScrollReveal(containerRef, options = {}) {
       { threshold, rootMargin },
     );
 
-    root.querySelectorAll(selector).forEach((el) => observer.observe(el));
+    observeTargets(root);
+
+    mutationObserver = new MutationObserver(() => {
+      observeTargets(root);
+    });
+    mutationObserver.observe(root, { childList: true, subtree: true });
   }
 
   onMounted(() => nextTick(() => setTimeout(init, 100)));
-  onUnmounted(() => observer?.disconnect());
+  onUnmounted(() => {
+    observer?.disconnect();
+    mutationObserver?.disconnect();
+  });
 }

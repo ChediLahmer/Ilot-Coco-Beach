@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
+import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 
 let configCache = null;
 
@@ -113,6 +114,9 @@ export async function configRoutes(app) {
         })
         .then((r) => {
           invalidateConfigCache();
+          if (MEDIA_KEYS.has(key)) {
+            scheduleIncomingCleanup(request.log, value);
+          }
           return r;
         });
     },
@@ -165,6 +169,9 @@ export async function configRoutes(app) {
         ),
       );
       invalidateConfigCache();
+      for (const [, value] of mediaEntries) {
+        scheduleIncomingCleanup(request.log, value);
+      }
       const configs = await prisma.siteConfig.findMany();
       return Object.fromEntries(configs.map((c) => [c.key, c.value]));
     },

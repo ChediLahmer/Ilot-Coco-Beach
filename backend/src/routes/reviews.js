@@ -1,5 +1,10 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
+import {
+  adjustReviewStatsForDelete,
+  adjustReviewStatsForVisibilityChange,
+  getStoredReviewStats,
+} from "../lib/review-stats.js";
 
 export async function reviewRoutes(app) {
   // Public stats — always based on visible reviews only
@@ -22,20 +27,7 @@ export async function reviewRoutes(app) {
       },
     },
     async () => {
-      const agg = await prisma.review.aggregate({
-        where: { visible: true },
-        _count: true,
-        _avg: { rating: true },
-      });
-      const count = agg._count;
-      const average = count
-        ? Math.round((agg._avg.rating + Number.EPSILON) * 10) / 10
-        : 0;
-      const highRated = await prisma.review.count({
-        where: { visible: true, rating: { gte: 4 } },
-      });
-      const recommendRate = count ? Math.round((highRated / count) * 100) : 0;
-      return { count, average, recommendRate };
+      return getStoredReviewStats();
     },
   );
 
@@ -126,9 +118,16 @@ export async function reviewRoutes(app) {
       },
     },
     async (request) => {
-      return prisma.review.update({
-        where: { id: Number(request.params.id) },
-        data: { visible: request.body.visible },
+      return prisma.$transaction(async (tx) => {
+        const existing = await tx.review.findUnique({
+          where: { id: Number(request.params.id) },
+        });
+        const updated = await tx.review.update({
+          where: { id: Number(request.params.id) },
+          data: { visible: request.body.visible },
+        });
+        await adjustReviewStatsForVisibilityChange(existing, updated, tx);
+        return updated;
       });
     },
   );
@@ -146,7 +145,13 @@ export async function reviewRoutes(app) {
       },
     },
     async (request, reply) => {
-      await prisma.review.delete({ where: { id: Number(request.params.id) } });
+      await prisma.$transaction(async (tx) => {
+        const existing = await tx.review.findUnique({
+          where: { id: Number(request.params.id) },
+        });
+        await tx.review.delete({ where: { id: Number(request.params.id) } });
+        await adjustReviewStatsForDelete(existing, tx);
+      });
       return reply.status(204).send();
     },
   );

@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
+import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 
 let publicMenuCache = null;
 
@@ -322,6 +323,7 @@ export async function menuRoutes(app) {
         },
       });
       invalidateMenuCache();
+      scheduleIncomingCleanup(request.log, image);
       return reply.status(201).send(item);
     },
   );
@@ -405,6 +407,7 @@ export async function menuRoutes(app) {
         },
       });
       invalidateMenuCache();
+      scheduleIncomingCleanup(request.log, image);
       return updated;
     },
   );
