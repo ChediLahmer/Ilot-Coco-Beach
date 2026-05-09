@@ -4,9 +4,7 @@ import { invalidateMenuCache } from "../routes/menu.js";
 import { processIncomingUploads } from "./upload-cleanup.js";
 
 const DEDUP_MEDIA_CRON = process.env.DEDUP_MEDIA_CRON || "0 * * * *";
-const JOB_RUN_RETENTION_DAYS = Number(
-  process.env.JOB_RUN_RETENTION_DAYS || 30,
-);
+const JOB_RUN_RETENTION_DAYS = Number(process.env.JOB_RUN_RETENTION_DAYS || 30);
 
 // Simple in-memory job locks to prevent concurrent execution of the same job
 const jobLocks = new Map();
