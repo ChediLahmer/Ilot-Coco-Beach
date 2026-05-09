@@ -249,7 +249,8 @@ function validateReview(review) {
     if (!review || typeof review !== "object") {
       throw new Error("Review is not an object");
     }
-    if (!review.id || typeof review.id !== "string") {
+    const reviewId = Number(review.id);
+    if (!Number.isInteger(reviewId) || reviewId <= 0) {
       throw new Error("Review id is missing or invalid");
     }
     if (typeof review.userName !== "string" || review.userName.length < 2) {

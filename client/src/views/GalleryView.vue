@@ -238,7 +238,8 @@ function validateGalleryImage(img) {
     if (!img || typeof img !== "object") {
       throw new Error("Image is not an object");
     }
-    if (!img.id || typeof img.id !== "string") {
+    const imageId = Number(img.id);
+    if (!Number.isInteger(imageId) || imageId <= 0) {
       throw new Error("Image id is missing or invalid");
     }
     if (
@@ -255,8 +256,12 @@ function validateGalleryImage(img) {
     ) {
       throw new Error("Image alt must be a string or null");
     }
-    if (typeof img.categoryId !== "string" && img.categoryId !== null) {
-      throw new Error("Image categoryId must be a string or null");
+    if (
+      img.categoryId !== null &&
+      img.categoryId !== undefined &&
+      (!Number.isInteger(Number(img.categoryId)) || Number(img.categoryId) <= 0)
+    ) {
+      throw new Error("Image categoryId must be an integer or null");
     }
     return true;
   } catch (error) {

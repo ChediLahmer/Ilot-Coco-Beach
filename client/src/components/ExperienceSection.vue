@@ -242,7 +242,8 @@ function validateSpace(space) {
     if (!space || typeof space !== "object") {
       throw new Error("Space is not an object");
     }
-    if (!space.id || typeof space.id !== "string") {
+    const spaceId = Number(space.id);
+    if (!Number.isInteger(spaceId) || spaceId <= 0) {
       throw new Error("Space id is missing or invalid");
     }
     if (!space.name || typeof space.name !== "object") {
@@ -251,10 +252,12 @@ function validateSpace(space) {
     if (typeof space.name.fr !== "string") {
       throw new Error("Space name must have at least a French (fr) field");
     }
-    if (typeof space.price !== "number" || space.price <= 0) {
+    const price = Number(space.price);
+    if (!Number.isFinite(price) || price <= 0) {
       throw new Error("Space price must be a number > 0");
     }
-    if (typeof space.capacity !== "number" || space.capacity <= 0) {
+    const capacity = Number(space.capacity);
+    if (!Number.isFinite(capacity) || capacity <= 0) {
       throw new Error("Space capacity must be a number > 0");
     }
     return true;

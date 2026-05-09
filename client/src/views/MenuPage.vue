@@ -438,7 +438,8 @@ function validateMenuCategory(category) {
     if (!category || typeof category !== "object") {
       throw new Error("Category is not an object");
     }
-    if (!category.id || typeof category.id !== "string") {
+    const categoryId = Number(category.id);
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
       throw new Error("Category id is missing or invalid");
     }
     if (!category.name || typeof category.name !== "object") {
@@ -464,7 +465,8 @@ function validateMenuItem(item) {
     if (!item || typeof item !== "object") {
       throw new Error("Menu item is not an object");
     }
-    if (!item.id || typeof item.id !== "string") {
+    const itemId = Number(item.id);
+    if (!Number.isInteger(itemId) || itemId <= 0) {
       throw new Error("Menu item id is missing or invalid");
     }
     if (!item.name || typeof item.name !== "object") {
@@ -476,10 +478,12 @@ function validateMenuItem(item) {
     if (item.desc && typeof item.desc !== "object") {
       throw new Error("Menu item desc must be an object or null");
     }
-    if (typeof item.priceStandard !== "number" || item.priceStandard <= 0) {
+    const priceStandard = Number(item.priceStandard);
+    if (!Number.isFinite(priceStandard) || priceStandard <= 0) {
       throw new Error("Menu item priceStandard must be a number > 0");
     }
-    if (typeof item.priceExtra !== "number" || item.priceExtra <= 0) {
+    const priceExtra = Number(item.priceExtra);
+    if (!Number.isFinite(priceExtra) || priceExtra <= 0) {
       throw new Error("Menu item priceExtra must be a number > 0");
     }
     return true;
