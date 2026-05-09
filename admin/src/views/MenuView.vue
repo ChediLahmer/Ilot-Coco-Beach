@@ -136,7 +136,9 @@ async function saveCat() {
     }
     showCatModal.value = false;
     await loadData();
-    toast.success(editingCat.value ? "Catégorie mise à jour" : "Catégorie créée");
+    toast.success(
+      editingCat.value ? "Catégorie mise à jour" : "Catégorie créée",
+    );
   } catch (e) {
     error.value = e.message || "Erreur lors de la sauvegarde";
   } finally {
@@ -631,7 +633,7 @@ onUnmounted(() => {
             :disabled="saving"
             class="px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark shadow-sm transition-colors disabled:opacity-50"
           >
-            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ saving ? "Enregistrement..." : "Enregistrer" }}
           </button>
         </div>
       </div>
@@ -810,7 +812,7 @@ onUnmounted(() => {
             :disabled="saving"
             class="px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-dark shadow-sm transition-colors disabled:opacity-50"
           >
-            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ saving ? "Enregistrement..." : "Enregistrer" }}
           </button>
         </div>
       </div>
