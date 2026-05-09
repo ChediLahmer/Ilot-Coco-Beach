@@ -150,6 +150,7 @@ export async function flashSalesRoutes(app) {
         menuItemId,
         spaceId,
       } = request.body;
+
       const sale = await prisma.flashSale.create({
         data: {
           title,

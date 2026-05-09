@@ -115,7 +115,7 @@ export async function vouchersRoutes(app) {
         data: {
           code,
           discountPercent,
-          validUntil: parseValidUntil(validUntil),
+          validUntil: new Date(validUntil),
           isActive: isActive ?? true,
           visible: visible ?? true,
         },

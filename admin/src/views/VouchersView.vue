@@ -80,15 +80,10 @@ watch(searchQuery, () => {
 });
 
 function resetForm() {
-  const defaultExpiry = new Date();
-  defaultExpiry.setDate(defaultExpiry.getDate() + 30);
-  defaultExpiry.setHours(23, 59, 0, 0);
-  const expiryIso = defaultExpiry.toISOString().slice(0, 16);
-
   return {
     code: "",
     discountPercent: 10,
-    validUntil: expiryIso,
+    validUntil: "", // Backend will apply default
     isActive: true,
     visible: true,
   };
@@ -125,6 +120,7 @@ async function save() {
     const payload = {
       ...form.value,
       discountPercent: Number(form.value.discountPercent),
+      validUntil: new Date(form.value.validUntil).toISOString(),
     };
     if (editing.value) {
       await api.put(`/vouchers/${editing.value.id}`, payload);

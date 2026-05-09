@@ -131,16 +131,11 @@ function clearImage() {
 }
 
 function resetForm() {
-  const defaultExpiry = new Date();
-  defaultExpiry.setDate(defaultExpiry.getDate() + 7);
-  defaultExpiry.setHours(23, 59, 0, 0);
-  const expiryIso = defaultExpiry.toISOString().slice(0, 16);
-
   return {
     title: { fr: "", en: "", ar: "" },
     description: { fr: "", en: "", ar: "" },
     discountPercent: 10,
-    endsAt: expiryIso,
+    endsAt: "", // Backend will apply default
     isActive: true,
     visible: true,
     imageFile: null,
