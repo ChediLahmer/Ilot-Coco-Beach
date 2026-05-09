@@ -221,6 +221,8 @@
         <div
           v-else
           class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start"
+          @mouseenter="stopAutoPaging"
+          @mouseleave="startAutoPaging"
         >
           <div class="order-2 lg:order-1">
             <Transition :name="transitionName" mode="out-in">
@@ -416,7 +418,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import FooterSection from "@/components/FooterSection.vue";
@@ -456,6 +458,7 @@ watch(
 
 watch(activeCategory, () => {
   carPage.value = 1;
+  resetAutoPaging();
 });
 
 const activeCategoryData = computed(
@@ -490,18 +493,62 @@ const pagedFeatureItems = computed(() =>
 const transitionName = computed(() =>
   pageDir.value > 0 ? "slide-ltr" : "slide-rtl",
 );
+
+const AUTO_PAGE_MS = 4200;
+let autoPageTimer = null;
+
+function stopAutoPaging() {
+  if (autoPageTimer) {
+    clearInterval(autoPageTimer);
+    autoPageTimer = null;
+  }
+}
+
+function autoAdvancePage() {
+  if (totalCarPages.value <= 1) return;
+  pageDir.value = 1;
+  carPage.value = carPage.value >= totalCarPages.value ? 1 : carPage.value + 1;
+}
+
+function startAutoPaging() {
+  stopAutoPaging();
+  if (totalCarPages.value <= 1) return;
+  autoPageTimer = setInterval(autoAdvancePage, AUTO_PAGE_MS);
+}
+
+function resetAutoPaging() {
+  startAutoPaging();
+}
+
 function nextPage() {
   if (carPage.value < totalCarPages.value) {
     pageDir.value = 1;
     carPage.value++;
+    resetAutoPaging();
   }
 }
 function prevPage() {
   if (carPage.value > 1) {
     pageDir.value = -1;
     carPage.value--;
+    resetAutoPaging();
   }
 }
+
+watch(totalCarPages, () => {
+  if (carPage.value > totalCarPages.value) {
+    carPage.value = totalCarPages.value;
+  }
+  resetAutoPaging();
+});
+
+onMounted(() => {
+  startAutoPaging();
+});
+
+onUnmounted(() => {
+  stopAutoPaging();
+});
 
 const copy = computed(
   () =>

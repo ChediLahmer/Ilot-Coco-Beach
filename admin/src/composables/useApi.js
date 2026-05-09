@@ -165,47 +165,6 @@ function uploadMultipart(path, body, token, onProgress) {
   });
 }
 
-async function uploadVideoViaPresign(path, file, extraFields = {}, onProgress) {
-  const contentType = inferVideoContentType(file);
-  const presign = await request("/upload/presign", {
-    method: "POST",
-    body: JSON.stringify({
-      filename: file.name,
-      contentType,
-      sizeBytes: file.size,
-    }),
-    timeoutMs: UPLOAD_TIMEOUT_MS,
-  });
-
-  await xhrUpload(presign.url, file, {
-    method: "PUT",
-    headers: {
-      "Content-Type": contentType,
-    },
-    onProgress,
-  });
-
-  if (path === "/gallery") {
-    try {
-      return await request(path, {
-        method: "POST",
-        body: JSON.stringify({
-          url: presign.publicUrl,
-          alt: extraFields.alt || file.name,
-          category: extraFields.category ?? null,
-          categoryId: extraFields.categoryId ?? null,
-          order: extraFields.order ?? 0,
-        }),
-      });
-    } catch (error) {
-      error.noFallback = true;
-      throw error;
-    }
-  }
-
-  return { url: presign.publicUrl };
-}
-
 async function request(path, options = {}) {
   const { token } = useAuth();
   const headers = { ...options.headers };
@@ -309,15 +268,6 @@ export function useApi() {
       form.append("file", normalizedFile);
       for (const [k, v] of Object.entries(extraFields)) {
         form.append(k, v);
-      }
-      const isVideo = Boolean(inferredVideoType);
-      if (isVideo) {
-        return uploadVideoViaPresign(path, file, extraFields, onProgress).catch(
-          (error) => {
-            if (error?.noFallback) throw error;
-            return uploadMultipart(path, form, token, onProgress);
-          },
-        );
       }
       return uploadMultipart(path, form, token, onProgress);
     },
