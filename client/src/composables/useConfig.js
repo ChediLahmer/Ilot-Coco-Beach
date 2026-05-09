@@ -26,6 +26,22 @@ const config = reactive({
   loaded: false,
 });
 
+const VIDEO_KEYS = new Set(["heroVideo", "sectionVideo"]);
+
+function unwrapVideoUrl(value) {
+  if (typeof value !== "string") return value;
+  try {
+    const url = new URL(value);
+    const nested = url.searchParams.get("url");
+    if (nested && url.pathname.endsWith("/media/proxy")) {
+      return decodeURIComponent(nested);
+    }
+  } catch {
+    // not a URL, return as-is
+  }
+  return value;
+}
+
 const KEY_MAP = {
   name: "name",
   phone: "phone",
@@ -72,7 +88,9 @@ async function loadConfig() {
           } else if (localKey === "lat" || localKey === "lng") {
             config[localKey] = toNumber(data[apiKey]);
           } else {
-            config[localKey] = data[apiKey];
+            config[localKey] = VIDEO_KEYS.has(localKey)
+              ? unwrapVideoUrl(data[apiKey])
+              : data[apiKey];
           }
         }
       }

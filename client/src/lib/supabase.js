@@ -3,14 +3,15 @@ const REQUEST_TIMEOUT_MS = Number(
   import.meta.env.VITE_REQUEST_TIMEOUT_MS || 180000,
 );
 
-const MEDIA_EXT_RE =
-  /\.(?:png|jpe?g|webp|gif|svg|mp4|webm|ogg|mov|m4v|avi|mkv)(?:$|[?#])/i;
+// Only proxy images — videos must stream directly from R2 CDN (proxying
+// through the backend causes buffering cuts due to re-streaming overhead)
+const IMAGE_EXT_RE = /\.(?:png|jpe?g|webp|gif|svg)(?:$|[?#])/i;
 
 function toProxyMediaUrl(value) {
   if (typeof value !== "string") return value;
   if (!/^https?:\/\//i.test(value)) return value;
   if (value.includes("/api/media/proxy?url=")) return value;
-  if (!MEDIA_EXT_RE.test(value)) return value;
+  if (!IMAGE_EXT_RE.test(value)) return value;
   return `${API}/media/proxy?url=${encodeURIComponent(value)}`;
 }
 
