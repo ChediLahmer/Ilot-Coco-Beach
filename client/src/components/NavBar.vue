@@ -11,7 +11,7 @@
     >
       <div class="flex items-center gap-3">
         <div
-          class="hidden sm:flex items-center gap-1.5 pr-3 border-r border-charcoal/10"
+          class="hidden sm:flex items-center gap-1.5 pe-3 border-e border-charcoal/10"
         >
           <a
             v-if="config.whatsapp"
@@ -94,7 +94,7 @@
       </div>
 
       <div class="hidden lg:flex items-center gap-4">
-        <div class="flex items-center gap-1 border-r border-charcoal/10 pr-4">
+        <div class="flex items-center gap-1 border-e border-charcoal/10 pe-4">
           <button
             v-for="lang in langs"
             :key="lang"

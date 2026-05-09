@@ -10,7 +10,7 @@
           class="inline-flex items-center gap-2 text-charcoal/40 hover:text-charcoal font-heading text-sm transition-colors"
         >
           <svg
-            class="w-4 h-4"
+            class="w-4 h-4 rtl-flip"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -70,13 +70,13 @@
 
           <!-- Discount badge -->
           <span
-            class="absolute top-4 right-4 bg-coral text-white font-heading font-bold text-sm px-3 py-1 rounded-full z-10"
+            class="absolute top-4 end-4 bg-coral text-white font-heading font-bold text-sm px-3 py-1 rounded-full z-10"
           >
             -{{ sale.discountPercent }}%
           </span>
           <span
             v-if="!sale.isActive"
-            class="absolute top-4 left-4 bg-red-500/90 text-white font-heading font-bold text-xs px-3 py-1 rounded-full z-10"
+            class="absolute top-4 start-4 bg-red-500/90 text-white font-heading font-bold text-xs px-3 py-1 rounded-full z-10"
           >
             {{ t("flash.unavailable") }}
           </span>

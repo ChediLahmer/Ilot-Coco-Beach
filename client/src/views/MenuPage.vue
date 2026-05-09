@@ -16,7 +16,7 @@
           class="inline-flex items-center gap-2 text-sm font-heading font-semibold uppercase tracking-[0.16em] text-charcoal/45 hover:text-coral"
         >
           <svg
-            class="h-4 w-4"
+            class="h-4 w-4 rtl-flip"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -127,7 +127,7 @@
                 <button
                   v-if="canScrollLeft"
                   @click="scrollByStep(-1)"
-                  class="absolute -left-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md text-charcoal/60 hover:text-charcoal transition-colors"
+                  class="absolute -start-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md text-charcoal/60 hover:text-charcoal transition-colors"
                   aria-label="Scroll left"
                 >
                   <svg
@@ -167,7 +167,7 @@
                 <button
                   v-if="canScrollRight"
                   @click="scrollByStep(1)"
-                  class="absolute -right-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md text-charcoal/60 hover:text-charcoal transition-colors"
+                  class="absolute -end-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md text-charcoal/60 hover:text-charcoal transition-colors"
                   aria-label="Scroll right"
                 >
                   <svg

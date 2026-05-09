@@ -31,7 +31,7 @@
               class="flex h-16 w-16 items-center justify-center rounded-full bg-ocean text-white shadow-lg transition-transform hover:scale-105"
             >
               <svg
-                class="ml-0.5 h-6 w-6"
+                class="ms-0.5 h-6 w-6"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >

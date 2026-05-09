@@ -21,7 +21,7 @@
           >
             {{ t("about.cta") }}
             <svg
-              class="h-4 w-4"
+              class="h-4 w-4 rtl-flip"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

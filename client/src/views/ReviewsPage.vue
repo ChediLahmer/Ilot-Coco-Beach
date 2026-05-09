@@ -16,7 +16,7 @@
           class="inline-flex items-center gap-2 text-sm font-heading font-semibold uppercase tracking-[0.16em] text-charcoal/45 hover:text-coral"
         >
           <svg
-            class="h-4 w-4"
+            class="h-4 w-4 rtl-flip"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

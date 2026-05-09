@@ -219,7 +219,7 @@ onUnmounted(() => {
               </svg>
             </div>
             <div
-              class="absolute top-3 right-3 bg-ocean/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-heading font-bold shadow-md"
+              class="absolute top-3 end-3 bg-ocean/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-heading font-bold shadow-md"
             >
               {{ emp.price }} {{ l("currency") }} {{ l("perPerson") }}
             </div>

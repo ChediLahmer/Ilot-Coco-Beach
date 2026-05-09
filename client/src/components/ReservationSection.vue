@@ -14,7 +14,7 @@
         {{ t("reservation.responseTime") }}
       </p>
 
-      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <a
           :href="whatsappUrl"
           target="_blank"
@@ -103,6 +103,29 @@
             </svg>
           </div>
           <span class="text-sm font-medium text-deep">Messenger</span>
+        </a>
+
+        <a
+          v-if="config.tiktok"
+          :href="config.tiktok"
+          target="_blank"
+          rel="noopener"
+          class="flex flex-col items-center gap-3 rounded-lg border border-charcoal/8 bg-white px-5 py-6 transition-shadow hover:shadow-md"
+        >
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-full bg-black/8"
+          >
+            <svg
+              class="h-5 w-5 text-black"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V9.05a8.27 8.27 0 0 0 4.76 1.5V7.12a4.83 4.83 0 0 1-1-.43Z"
+              />
+            </svg>
+          </div>
+          <span class="text-sm font-medium text-deep">TikTok</span>
         </a>
       </div>
 

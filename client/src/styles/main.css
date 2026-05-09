@@ -395,6 +395,19 @@ html[dir="rtl"] .swiper-slide > * {
   direction: rtl;
 }
 
+/* Flip data-reveal slide directions in RTL */
+html[dir="rtl"] [data-reveal="left"] {
+  transform: translateX(24px) translateY(0);
+}
+html[dir="rtl"] [data-reveal="right"] {
+  transform: translateX(-24px) translateY(0);
+}
+
+/* Flip inline directional arrows (back links, CTA arrows) */
+html[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

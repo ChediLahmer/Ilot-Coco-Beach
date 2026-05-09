@@ -90,7 +90,7 @@
           />
           <div
             v-if="isVideo(img.src)"
-            class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
+            class="absolute top-2 start-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
           >
             Vidéo
           </div>
@@ -122,13 +122,13 @@
           @click.self="closeLightbox"
         >
           <button
-            class="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 text-4xl leading-none z-10"
+            class="absolute top-4 end-4 w-11 h-11 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 text-4xl leading-none z-10"
             @click="closeLightbox"
           >
             &times;
           </button>
           <button
-            class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 text-4xl z-10"
+            class="absolute start-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 text-4xl z-10"
             @click="prevImage"
           >
             &#8249;
@@ -150,7 +150,7 @@
             class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
           />
           <button
-            class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 text-4xl z-10"
+            class="absolute end-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 text-4xl z-10"
             @click="nextImage"
           >
             &#8250;
@@ -171,7 +171,7 @@
         class="inline-flex items-center gap-2 text-charcoal/40 hover:text-charcoal font-heading text-sm transition-colors"
       >
         <svg
-          class="w-4 h-4"
+          class="w-4 h-4 rtl-flip"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
