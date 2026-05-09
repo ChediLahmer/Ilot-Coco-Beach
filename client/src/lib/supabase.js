@@ -34,6 +34,7 @@ export const api = {
   getConfig: () => request("/config"),
   getReviews: (cursor) =>
     request(`/reviews?limit=20${cursor ? `&cursor=${cursor}` : ""}`),
+  getReviewStats: () => request("/reviews/stats"),
   postReview: (data) =>
     request("/reviews", {
       method: "POST",

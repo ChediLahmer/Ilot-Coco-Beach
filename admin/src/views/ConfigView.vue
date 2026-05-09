@@ -118,18 +118,19 @@ async function loadData() {
     }
     showReviews.value = config.value.show_reviews === "true";
     try {
-      const res = await api.get("/reviews?limit=50");
-      const items = res.items || [];
-      const total = items.length;
-      const avg = total
-        ? (items.reduce((s, r) => s + r.rating, 0) / total).toFixed(1)
-        : "0.0";
-      const approved = items.filter((r) => r.visible).length;
-      const pending = items.filter((r) => !r.visible).length;
-      const recommend = total
-        ? Math.round((items.filter((r) => r.rating >= 4).length / total) * 100)
-        : 0;
-      reviewStats.value = { total, avg, approved, pending, recommend };
+      const [statsRes, allRes] = await Promise.all([
+        api.get("/reviews/stats"),
+        api.get("/reviews?limit=50"),
+      ]);
+      const allItems = allRes.items || [];
+      const pending = allItems.filter((r) => !r.visible).length;
+      reviewStats.value = {
+        total: statsRes.count,
+        avg: statsRes.count ? statsRes.average.toFixed(1) : "0.0",
+        approved: statsRes.count,
+        pending,
+        recommend: statsRes.recommendRate,
+      };
     } catch {
       reviewStats.value = null;
     }
@@ -325,12 +326,12 @@ async function save() {
           <p
             class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3"
           >
-            Aperçu des avis
+            Aperçu des avis (visibles uniquement)
           </p>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="text-center">
               <p class="text-lg font-bold text-text">{{ reviewStats.total }}</p>
-              <p class="text-[0.65rem] text-text-muted">Total</p>
+              <p class="text-[0.65rem] text-text-muted">Visibles</p>
             </div>
             <div class="text-center">
               <p class="text-lg font-bold text-text">{{ reviewStats.avg }}</p>
@@ -353,7 +354,10 @@ async function save() {
             </div>
           </div>
           <p class="mt-2 text-xs text-text-muted text-center">
-            {{ reviewStats.recommend }}% de recommandation
+            Recommandation calculée : {{ reviewStats.recommend }}%
+            <template v-if="config.satisfaction_rate">
+              · Valeur affichée : {{ config.satisfaction_rate }}% (manuelle)
+            </template>
           </p>
         </div>
       </div>

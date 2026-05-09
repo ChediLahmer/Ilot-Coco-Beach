@@ -4,6 +4,7 @@ import { api } from "@/lib/supabase";
 const reviews = ref([]);
 const nextCursor = ref(null);
 const loading = ref(false);
+const stats = ref({ count: 0, average: 0, recommendRate: 0 });
 let initialLoaded = false;
 
 function getDeviceId() {
@@ -34,26 +35,29 @@ async function fetchReviews(cursor) {
   }
 }
 
+async function fetchStats() {
+  try {
+    stats.value = await api.getReviewStats();
+  } catch {
+    /* keep defaults */
+  }
+}
+
 function ensureLoaded() {
   if (!initialLoaded) {
     initialLoaded = true;
     fetchReviews();
+    fetchStats();
   }
 }
 
-const averageRating = computed(() => {
-  const total = reviews.value.reduce((sum, r) => sum + r.rating, 0);
-  return reviews.value.length
-    ? (total / reviews.value.length).toFixed(1)
-    : "0.0";
-});
+const averageRating = computed(() =>
+  stats.value.count ? stats.value.average.toFixed(1) : "0.0",
+);
 
-const recommendationRate = computed(() => {
-  const recommended = reviews.value.filter((r) => r.rating >= 4).length;
-  return reviews.value.length
-    ? Math.round((recommended / reviews.value.length) * 100)
-    : 0;
-});
+const reviewCount = computed(() => stats.value.count);
+
+const recommendationRate = computed(() => stats.value.recommendRate);
 
 export function useReviews() {
   ensureLoaded();
@@ -66,6 +70,7 @@ export function useReviews() {
       rating,
       deviceId,
     });
+    fetchStats();
   }
 
   async function loadMore() {
@@ -77,6 +82,7 @@ export function useReviews() {
   return {
     reviews,
     averageRating,
+    reviewCount,
     recommendationRate,
     addReview,
     loadMore,

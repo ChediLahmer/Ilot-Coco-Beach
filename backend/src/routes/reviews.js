@@ -2,6 +2,43 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 
 export async function reviewRoutes(app) {
+  // Public stats — always based on visible reviews only
+  app.get(
+    "/stats",
+    {
+      schema: {
+        tags: ["Reviews"],
+        summary: "Get review stats (visible reviews only)",
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              count: { type: "integer" },
+              average: { type: "number" },
+              recommendRate: { type: "integer" },
+            },
+          },
+        },
+      },
+    },
+    async () => {
+      const agg = await prisma.review.aggregate({
+        where: { visible: true },
+        _count: true,
+        _avg: { rating: true },
+      });
+      const count = agg._count;
+      const average = count
+        ? Math.round((agg._avg.rating + Number.EPSILON) * 10) / 10
+        : 0;
+      const highRated = await prisma.review.count({
+        where: { visible: true, rating: { gte: 4 } },
+      });
+      const recommendRate = count ? Math.round((highRated / count) * 100) : 0;
+      return { count, average, recommendRate };
+    },
+  );
+
   app.get(
     "/",
     {

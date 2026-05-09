@@ -59,7 +59,7 @@
               {{ averageRating }}
             </p>
             <p class="mt-1 sm:mt-2 text-[0.65rem] sm:text-sm text-charcoal/60">
-              {{ reviews.length }} {{ t("reviews.reviewsLabel") }}
+              {{ reviewCount }} {{ t("reviews.reviewsLabel") }}
             </p>
           </article>
 
@@ -186,7 +186,8 @@ import { useReviews } from "@/composables/useReviews";
 
 const { t, locale } = useI18n();
 const config = useConfig();
-const { reviews, averageRating, recommendationRate, loading } = useReviews();
+const { reviews, averageRating, recommendationRate, reviewCount, loading } =
+  useReviews();
 
 const displayedRate = computed(() => {
   const manual = parseInt(config.satisfactionRate, 10);
