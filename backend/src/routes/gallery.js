@@ -192,6 +192,25 @@ export async function galleryRoutes(app) {
       },
     },
     async (request, reply) => {
+      if (!request.isMultipart || !request.isMultipart()) {
+        const { url, alt, category, categoryId, order } = request.body || {};
+        if (!url) return reply.status(400).send({ error: "No file uploaded" });
+        const image = await prisma.galleryImage.create({
+          data: {
+            url,
+            alt: alt || null,
+            category: category || null,
+            categoryId:
+              categoryId !== undefined && categoryId !== null
+                ? Number(categoryId)
+                : null,
+            order: order ?? 0,
+          },
+          include: { catRef: true },
+        });
+        return reply.status(201).send(image);
+      }
+
       const file = await request.file();
       if (!file) return reply.status(400).send({ error: "No file uploaded" });
 

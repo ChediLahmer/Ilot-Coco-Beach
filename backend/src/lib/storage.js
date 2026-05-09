@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3 = new S3Client({
   region: process.env.S3_REGION || "us-east-1",
@@ -17,9 +18,31 @@ const s3 = new S3Client({
 
 const BUCKET = process.env.S3_BUCKET || "cocobeach";
 
-function buildPublicUrl(key) {
+function sanitizeFilename(filename) {
+  return filename
+    .replace(/^.*[\\/]/, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/^\.+/, "_");
+}
+
+export function buildPublicUrl(key) {
   const baseUrl = process.env.S3_PUBLIC_URL || "http://localhost:9100";
   return `${baseUrl}/${BUCKET}/${key}`;
+}
+
+export function createStorageKey(filename) {
+  return `${Date.now()}-${sanitizeFilename(filename)}`;
+}
+
+export async function createPresignedUpload({ filename, contentType }) {
+  const key = createStorageKey(filename);
+  const command = new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    ContentType: contentType,
+  });
+  const url = await getSignedUrl(s3, command, { expiresIn: 900 });
+  return { key, url, publicUrl: buildPublicUrl(key) };
 }
 
 export async function findExistingByHash(hash) {
@@ -37,11 +60,7 @@ export async function findExistingByHash(hash) {
 }
 
 export async function uploadFile(buffer, filename, contentType, hash) {
-  const basename = filename
-    .replace(/^.*[\\/]/, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_")
-    .replace(/^\.+/, "_");
-  const key = `${Date.now()}-${basename}`;
+  const key = createStorageKey(filename);
   await s3.send(
     new PutObjectCommand({
       Bucket: BUCKET,
