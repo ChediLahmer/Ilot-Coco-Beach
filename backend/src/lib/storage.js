@@ -53,7 +53,7 @@ export function createStorageKeyWithPrefix(filename, prefix = "") {
 }
 
 export async function createPresignedUpload({ filename, contentType }) {
-  const key = createStorageKeyWithPrefix(filename, "incoming/");
+  const key = createStorageKeyWithPrefix(filename, "");
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
