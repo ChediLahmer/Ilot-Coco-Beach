@@ -29,16 +29,21 @@ let debounceTimer = null;
 const displayPage = ref(1);
 const DISPLAY_PAGE_SIZE = 10;
 
-const pendingCount = computed(() => reviews.value.filter((r) => !r.visible).length);
+const pendingCount = computed(
+  () => reviews.value.filter((r) => !r.visible).length,
+);
 
 const filteredReviews = computed(() => {
   let list = reviews.value;
   if (filterStatus.value === "pending") list = list.filter((r) => !r.visible);
-  else if (filterStatus.value === "approved") list = list.filter((r) => r.visible);
+  else if (filterStatus.value === "approved")
+    list = list.filter((r) => r.visible);
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
     list = list.filter(
-      (r) => r.userName.toLowerCase().includes(q) || r.comment.toLowerCase().includes(q),
+      (r) =>
+        r.userName.toLowerCase().includes(q) ||
+        r.comment.toLowerCase().includes(q),
     );
   }
   if (filterRating.value !== "all")
@@ -54,7 +59,9 @@ const pagedReviews = computed(() => {
   return filteredReviews.value.slice(start, start + DISPLAY_PAGE_SIZE);
 });
 
-watch([searchQuery, filterRating, filterStatus], () => { displayPage.value = 1; });
+watch([searchQuery, filterRating, filterStatus], () => {
+  displayPage.value = 1;
+});
 
 async function goToPage(n) {
   displayPage.value = n;
@@ -128,7 +135,8 @@ async function toggleVisible(r) {
   try {
     await api.put(`/reviews/${r.id}`, { visible: !r.visible });
     const idx = reviews.value.findIndex((x) => x.id === r.id);
-    if (idx !== -1) reviews.value[idx] = { ...reviews.value[idx], visible: !r.visible };
+    if (idx !== -1)
+      reviews.value[idx] = { ...reviews.value[idx], visible: !r.visible };
     toast.success(r.visible ? "Avis masqué" : "Avis rendu visible");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la mise à jour");
