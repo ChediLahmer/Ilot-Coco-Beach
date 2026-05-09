@@ -36,8 +36,6 @@ const updateDateTime = (emit, modelValue) => (type, value) => {
     emit("update:modelValue", date ? `${date}T${value}` : "");
   }
 };
-
-const { date, time } = formatDateTime(defineModel?.modelValue || "");
 </script>
 
 <template>

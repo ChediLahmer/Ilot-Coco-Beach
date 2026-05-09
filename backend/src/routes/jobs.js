@@ -102,7 +102,7 @@ export async function jobsRoutes(app) {
                     successCount: { type: "integer" },
                     errorCount: { type: "integer" },
                     lastRun: { type: ["string", "null"], format: "date-time" },
-                    avgDurationMs: { type: ["integer", "null"] },
+                    avgDurationMs: { type: ["number", "null"] },
                     totalItemsProcessed: { type: "integer" },
                   },
                 },
@@ -165,7 +165,7 @@ export async function jobsRoutes(app) {
               successCount,
               errorCount,
               lastRun: lastRun?.startedAt || null,
-              avgDurationMs: avgDuration._avg.durationMs || null,
+              avgDurationMs: avgDuration._avg.durationMs ?? 0,
               totalItemsProcessed: totalItems._sum.itemsCount || 0,
             };
           }),
