@@ -24,9 +24,8 @@
         loop
         playsinline
         preload="auto"
-        crossorigin="anonymous"
         @canplay="videoCanPlay = true"
-        @error="videoError = true"
+        @error="handleVideoError"
       />
       <div
         class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"
@@ -95,6 +94,23 @@ const videoEl = ref(null);
 const videoSrc = ref("");
 const videoCanPlay = ref(false);
 const videoError = ref(false);
+const proxyFallbackTried = ref(false);
+
+function toProxyVideoUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("/api/media/proxy?url=")) return url;
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  return `${apiBase}/media/proxy?url=${encodeURIComponent(url)}`;
+}
+
+function handleVideoError() {
+  if (!proxyFallbackTried.value && heroVideo.value) {
+    proxyFallbackTried.value = true;
+    videoSrc.value = toProxyVideoUrl(heroVideo.value);
+    return;
+  }
+  videoError.value = true;
+}
 
 async function scrollTo(id) {
   if (id === "reservation") await trackReserveClick();
@@ -106,6 +122,7 @@ function deferVideo() {
   if (!heroVideo.value) return;
   videoCanPlay.value = false;
   videoError.value = false;
+  proxyFallbackTried.value = false;
   if ("requestIdleCallback" in window) {
     requestIdleCallback(() => {
       videoSrc.value = heroVideo.value;

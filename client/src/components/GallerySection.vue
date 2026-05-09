@@ -76,7 +76,7 @@
           />
           <video
             v-if="images[0].video"
-            :src="images[0].src"
+            :src="getVideoSrc(images[0].src)"
             class="absolute inset-0 h-full w-full object-cover"
             :class="{
               'opacity-0':
@@ -87,7 +87,6 @@
             loop
             playsinline
             preload="auto"
-            crossorigin="anonymous"
             @loadeddata="markVideoReady(images[0].src)"
             @error="markVideoError(images[0].src)"
           />
@@ -126,7 +125,7 @@
           />
           <video
             v-if="image.video"
-            :src="image.src"
+            :src="getVideoSrc(image.src)"
             class="absolute inset-0 h-full w-full object-cover"
             :class="{
               'opacity-0': !isVideoReady(image.src) || hasVideoError(image.src),
@@ -136,7 +135,6 @@
             loop
             playsinline
             preload="auto"
-            crossorigin="anonymous"
             @loadeddata="markVideoReady(image.src)"
             @error="markVideoError(image.src)"
           />
@@ -197,12 +195,20 @@ const {
 } = useData();
 const readyVideos = ref({});
 const erroredVideos = ref({});
+const fallbackVideos = ref({});
 
 function markVideoReady(src) {
   readyVideos.value = { ...readyVideos.value, [src]: true };
 }
 
 function markVideoError(src) {
+  if (!fallbackVideos.value[src]) {
+    fallbackVideos.value = {
+      ...fallbackVideos.value,
+      [src]: toProxyVideoUrl(src),
+    };
+    return;
+  }
   erroredVideos.value = { ...erroredVideos.value, [src]: true };
 }
 
@@ -212,6 +218,17 @@ function isVideoReady(src) {
 
 function hasVideoError(src) {
   return !!erroredVideos.value[src];
+}
+
+function toProxyVideoUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("/api/media/proxy?url=")) return url;
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  return `${apiBase}/media/proxy?url=${encodeURIComponent(url)}`;
+}
+
+function getVideoSrc(src) {
+  return fallbackVideos.value[src] || src;
 }
 
 function isVideo(url) {

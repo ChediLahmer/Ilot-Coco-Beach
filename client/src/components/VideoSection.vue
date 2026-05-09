@@ -16,17 +16,16 @@
           class="w-full aspect-video object-cover"
           playsinline
           preload="auto"
-          crossorigin="anonymous"
           @click="togglePlay"
           @ended="isPlaying = false"
           @canplay="videoReady = true"
           @waiting="videoBuffering = true"
           @playing="videoBuffering = false"
-          @error="videoError = true"
+          @error="handleVideoError"
         >
           <source
-            :src="sectionVideo"
-            :type="sectionVideo?.endsWith('.webm') ? 'video/webm' : 'video/mp4'"
+            :src="videoSrc"
+            :type="videoSrc?.endsWith('.webm') ? 'video/webm' : 'video/mp4'"
           />
         </video>
 
@@ -133,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfig } from "@/composables/useConfig";
 
@@ -148,11 +147,40 @@ const isPlaying = ref(false);
 const videoReady = ref(false);
 const videoBuffering = ref(false);
 const videoError = ref(false);
+const proxyFallbackTried = ref(false);
+const videoSrc = ref(sectionVideo.value);
+
+function toProxyVideoUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("/api/media/proxy?url=")) return url;
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  return `${apiBase}/media/proxy?url=${encodeURIComponent(url)}`;
+}
+
+function handleVideoError() {
+  if (!proxyFallbackTried.value && sectionVideo.value) {
+    proxyFallbackTried.value = true;
+    videoSrc.value = toProxyVideoUrl(sectionVideo.value);
+    videoError.value = false;
+    return;
+  }
+  videoError.value = true;
+}
 
 function retryVideo() {
   videoError.value = false;
   videoReady.value = false;
+  proxyFallbackTried.value = false;
+  videoSrc.value = sectionVideo.value;
 }
+
+watch(sectionVideo, (v) => {
+  videoSrc.value = v;
+  videoError.value = false;
+  videoReady.value = false;
+  videoBuffering.value = false;
+  proxyFallbackTried.value = false;
+});
 
 function togglePlay() {
   if (!videoEl.value) return;

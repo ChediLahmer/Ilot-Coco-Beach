@@ -24,6 +24,7 @@ const saving = ref(false);
 const saved = ref(false);
 const uploading = ref({});
 const uploadProgress = ref({});
+const videoFallback = ref({});
 const loading = ref(false);
 const error = ref(null);
 let savedTimer = null;
@@ -131,6 +132,22 @@ function isUploading(key) {
 
 function getUploadProgress(key) {
   return uploadProgress.value[key] ?? 0;
+}
+
+function toProxyVideoUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("/api/media/proxy?url=")) return url;
+  const apiBase = import.meta.env.VITE_API_URL || "/api";
+  return `${apiBase}/media/proxy?url=${encodeURIComponent(url)}`;
+}
+
+function getVideoDisplayUrl(url) {
+  return videoFallback.value[url] || url;
+}
+
+function handleVideoPreviewError(url) {
+  if (!url || videoFallback.value[url]) return;
+  videoFallback.value[url] = toProxyVideoUrl(url);
 }
 
 async function removeMedia(key) {
@@ -583,12 +600,13 @@ async function save() {
               class="mt-3"
             >
               <video
-                :src="config[mf.key]"
+                :src="getVideoDisplayUrl(config[mf.key])"
                 class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
                 controls
                 muted
                 preload="metadata"
                 playsinline
+                @error="handleVideoPreviewError(config[mf.key])"
               />
             </div>
             <div

@@ -27,6 +27,7 @@ const previewUrl = ref(null);
 const loading = ref(false);
 const error = ref(null);
 const busy = ref(new Set());
+const videoFallback = ref({});
 
 // Filters
 const searchQuery = ref("");
@@ -49,6 +50,22 @@ const catForm = ref({ name: { fr: "", en: "", ar: "" }, order: 0 });
 
 function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+function toProxyVideoUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("/api/media/proxy?url=")) return url;
+  const apiBase = import.meta.env.VITE_API_URL || "/api";
+  return `${apiBase}/media/proxy?url=${encodeURIComponent(url)}`;
+}
+
+function getVideoDisplayUrl(url) {
+  return videoFallback.value[url] || url;
+}
+
+function handleVideoError(url) {
+  if (!url || videoFallback.value[url]) return;
+  videoFallback.value[url] = toProxyVideoUrl(url);
 }
 
 function openPreview(img) {
@@ -493,11 +510,12 @@ async function deleteCat(cat) {
         >
           <video
             v-if="isVideo(img.url)"
-            :src="img.url"
+            :src="getVideoDisplayUrl(img.url)"
             class="w-full h-full object-cover"
             muted
             preload="metadata"
             playsinline
+            @error="handleVideoError(img.url)"
           />
           <img
             v-else
@@ -649,13 +667,14 @@ async function deleteCat(cat) {
         <video
           v-if="isVideo(previewUrl)"
           :key="previewUrl"
-          :src="previewUrl"
+          :src="getVideoDisplayUrl(previewUrl)"
           controls
           autoplay
           muted
           playsinline
           preload="metadata"
           class="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+          @error="handleVideoError(previewUrl)"
         />
         <img
           v-else
