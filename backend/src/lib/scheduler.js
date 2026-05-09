@@ -218,48 +218,6 @@ export function startScheduler(logger) {
     }
   });
 
-  // Test job: every 2 minutes (for testing/verification)
-  // Can be disabled in production via env variable
-  const enableTestJob = process.env.ENABLE_TEST_JOB === "true";
-  if (enableTestJob) {
-    cron.schedule("*/2 * * * *", async () => {
-      const jobName = "test-job-2min";
-      if (!acquireJobLock(jobName)) {
-        logger.debug(`Job ${jobName} already running, skipping`);
-        return;
-      }
-
-      const jobStart = Date.now();
-      try {
-        const count = await prisma.jobRun.count();
-        logger.info(`Test job executed: ${count} total job runs recorded`);
-        const durationMs = Date.now() - jobStart;
-        await logJobRunWithRetry(
-          jobName,
-          "success",
-          count,
-          null,
-          durationMs,
-          logger,
-        );
-      } catch (err) {
-        logger.error(err, "Test job failed");
-        const durationMs = Date.now() - jobStart;
-        await logJobRunWithRetry(
-          jobName,
-          "error",
-          0,
-          err.message,
-          durationMs,
-          logger,
-        );
-      } finally {
-        releaseJobLock(jobName);
-      }
-    });
-    logger.info("Test job (2-min interval) enabled via ENABLE_TEST_JOB");
-  }
-
   logger.info(
     "Scheduler started: expiry checks every minute, daily cleanup at 03:00",
   );
