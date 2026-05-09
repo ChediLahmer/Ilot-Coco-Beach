@@ -3,6 +3,11 @@ import { prisma } from "./prisma.js";
 import { invalidateMenuCache } from "../routes/menu.js";
 import { processIncomingUploads } from "./upload-cleanup.js";
 
+const DEDUP_MEDIA_CRON = process.env.DEDUP_MEDIA_CRON || "0 * * * *";
+const JOB_RUN_RETENTION_DAYS = Number(
+  process.env.JOB_RUN_RETENTION_DAYS || 30,
+);
+
 // Simple in-memory job locks to prevent concurrent execution of the same job
 const jobLocks = new Map();
 
@@ -97,15 +102,18 @@ export function startScheduler(logger) {
         );
       }
 
-      const durationMs = Date.now() - jobStart;
-      await logJobRunWithRetry(
-        jobName,
-        "success",
-        sales.count + vouchers.count,
-        null,
-        durationMs,
-        logger,
-      );
+      const itemsChanged = sales.count + vouchers.count;
+      if (itemsChanged > 0) {
+        const durationMs = Date.now() - jobStart;
+        await logJobRunWithRetry(
+          jobName,
+          "success",
+          itemsChanged,
+          null,
+          durationMs,
+          logger,
+        );
+      }
     } catch (err) {
       logger.error(err, "Scheduler: failed to deactivate expired items");
       const durationMs = Date.now() - jobStart;
@@ -122,8 +130,8 @@ export function startScheduler(logger) {
     }
   });
 
-  // Every minute: reconcile incoming direct-uploaded media and remove duplicates
-  cron.schedule("* * * * *", async () => {
+  // Fallback reconciliation for incoming uploads (primary path is immediate cleanup on upload)
+  cron.schedule(DEDUP_MEDIA_CRON, async () => {
     const jobName = "dedup-media";
     if (!acquireJobLock(jobName)) {
       logger.debug(`Job ${jobName} already running, skipping`);
@@ -136,15 +144,17 @@ export function startScheduler(logger) {
       if (processed > 0) {
         logger.info(`Scheduler: processed ${processed} incoming upload(s)`);
       }
-      const durationMs = Date.now() - jobStart;
-      await logJobRunWithRetry(
-        jobName,
-        "success",
-        processed,
-        null,
-        durationMs,
-        logger,
-      );
+      if (processed > 0) {
+        const durationMs = Date.now() - jobStart;
+        await logJobRunWithRetry(
+          jobName,
+          "success",
+          processed,
+          null,
+          durationMs,
+          logger,
+        );
+      }
     } catch (err) {
       logger.error(err, "Scheduler: incoming upload cleanup failed");
       const durationMs = Date.now() - jobStart;
@@ -193,11 +203,23 @@ export function startScheduler(logger) {
         );
       }
 
+      const retentionCutoff = new Date(
+        Date.now() - JOB_RUN_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+      );
+      const oldJobRuns = await prisma.jobRun.deleteMany({
+        where: { startedAt: { lt: retentionCutoff } },
+      });
+      if (oldJobRuns.count > 0) {
+        logger.info(
+          `Scheduler: pruned ${oldJobRuns.count} job run log(s) older than ${JOB_RUN_RETENTION_DAYS} day(s)`,
+        );
+      }
+
       const durationMs = Date.now() - jobStart;
       await logJobRunWithRetry(
         jobName,
         "success",
-        tokens.count + events.count,
+        tokens.count + events.count + oldJobRuns.count,
         null,
         durationMs,
         logger,
@@ -219,6 +241,6 @@ export function startScheduler(logger) {
   });
 
   logger.info(
-    "Scheduler started: expiry checks every minute, daily cleanup at 03:00",
+    `Scheduler started: expiry checks every minute, dedup fallback at ${DEDUP_MEDIA_CRON}, daily cleanup at 03:00`,
   );
 }
