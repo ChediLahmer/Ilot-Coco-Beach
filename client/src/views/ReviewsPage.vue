@@ -184,10 +184,7 @@
 
           <!-- Infinite scroll sentinel -->
           <div ref="sentinelRef" class="h-1" />
-          <div
-            v-if="loading"
-            class="flex justify-center py-8"
-          >
+          <div v-if="loading" class="flex justify-center py-8">
             <div
               class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
             />
@@ -211,8 +208,16 @@ import { useReviews } from "@/composables/useReviews";
 
 const { locale, t } = useI18n();
 const config = useConfig();
-const { reviews, averageRating, recommendationRate, reviewCount, addReview, loadMore, hasMore, loading } =
-  useReviews();
+const {
+  reviews,
+  averageRating,
+  recommendationRate,
+  reviewCount,
+  addReview,
+  loadMore,
+  hasMore,
+  loading,
+} = useReviews();
 
 const sentinelRef = ref(null);
 let observer = null;
