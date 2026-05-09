@@ -96,11 +96,16 @@ export async function configRoutes(app) {
         return reply.status(400).send({ error: `Invalid config key: ${key}` });
       }
       const { value } = request.body;
-      return prisma.siteConfig.upsert({
-        where: { key: request.params.key },
-        update: { value },
-        create: { key: request.params.key, value },
-      }).then((r) => { invalidateConfigCache(); return r; });
+      return prisma.siteConfig
+        .upsert({
+          where: { key: request.params.key },
+          update: { value },
+          create: { key: request.params.key, value },
+        })
+        .then((r) => {
+          invalidateConfigCache();
+          return r;
+        });
     },
   );
 
@@ -123,11 +128,9 @@ export async function configRoutes(app) {
       const entries = Object.entries(request.body);
       const invalid = entries.filter(([k]) => !ALLOWED_CONFIG_KEYS.has(k));
       if (invalid.length) {
-        return reply
-          .status(400)
-          .send({
-            error: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
-          });
+        return reply.status(400).send({
+          error: `Invalid config key(s): ${invalid.map(([k]) => k).join(", ")}`,
+        });
       }
       await prisma.$transaction(
         entries.map(([key, value]) =>
