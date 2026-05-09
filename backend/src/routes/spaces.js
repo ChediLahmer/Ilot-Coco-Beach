@@ -254,13 +254,28 @@ export async function spacesRoutes(app) {
       },
     },
     async (request, reply) => {
-      const space = await prisma.space.findUnique({
-        where: { id: Number(request.params.id) },
-        select: { image: true },
-      });
-      await prisma.space.delete({ where: { id: Number(request.params.id) } });
-      if (space?.image) deleteFile(space.image).catch(() => {});
-      return reply.status(204).send();
+      try {
+        const id = Number(request.params.id);
+        const space = await prisma.space.findUnique({
+          where: { id },
+          select: { image: true },
+        });
+        if (!space) {
+          return reply.status(404).send({
+            error: "Not Found",
+            message: "Space not found",
+          });
+        }
+        await prisma.space.delete({ where: { id } });
+        if (space?.image) deleteFile(space.image).catch(() => {});
+        return reply.status(204).send();
+      } catch (error) {
+        request.log.error(error, "Error deleting space");
+        return reply.status(500).send({
+          error: "Internal Server Error",
+          message: "Failed to delete space",
+        });
+      }
     },
   );
 }

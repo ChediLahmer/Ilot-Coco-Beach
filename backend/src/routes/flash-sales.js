@@ -343,15 +343,24 @@ export async function flashSalesRoutes(app) {
       },
     },
     async (request, reply) => {
-      const sale = await prisma.flashSale.findUnique({
-        where: { id: Number(request.params.id) },
-        select: { image: true },
-      });
-      await prisma.flashSale.delete({
-        where: { id: Number(request.params.id) },
-      });
-      if (sale?.image) deleteFile(sale.image).catch(() => {});
-      return reply.status(204).send();
+      try {
+        const id = Number(request.params.id);
+        const sale = await prisma.flashSale.findUnique({
+          where: { id },
+          select: { image: true },
+        });
+        if (!sale) {
+          return reply.status(404).send({
+            error: "Not Found",
+            message: "Flash sale not found",
+          });
+        }
+        await prisma.flashSale.delete({ where: { id } });
+        if (sale?.image) deleteFile(sale.image).catch(() => {});
+        return reply.status(204).send();
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 }

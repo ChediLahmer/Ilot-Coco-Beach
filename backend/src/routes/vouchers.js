@@ -206,8 +206,20 @@ export async function vouchersRoutes(app) {
       },
     },
     async (request, reply) => {
-      await prisma.voucher.delete({ where: { id: Number(request.params.id) } });
-      return reply.status(204).send();
+      try {
+        const id = Number(request.params.id);
+        const voucher = await prisma.voucher.findUnique({ where: { id } });
+        if (!voucher) {
+          return reply.status(404).send({
+            error: "Not Found",
+            message: "Voucher not found",
+          });
+        }
+        await prisma.voucher.delete({ where: { id } });
+        return reply.status(204).send();
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 }

@@ -310,16 +310,27 @@ export async function galleryRoutes(app) {
       },
     },
     async (request, reply) => {
-      const image = await prisma.galleryImage.findUnique({
-        where: { id: Number(request.params.id) },
-      });
-      if (image) {
-        await prisma.galleryImage.delete({ where: { id: image.id } });
+      try {
+        const id = Number(request.params.id);
+        const image = await prisma.galleryImage.findUnique({ where: { id } });
+        if (!image) {
+          return reply.status(404).send({
+            error: "Not Found",
+            message: "Gallery image not found",
+          });
+        }
+        await prisma.galleryImage.delete({ where: { id } });
         deleteFile(image.url).catch((err) =>
           request.log.error(err, "Failed to delete S3 file"),
         );
+        return reply.status(204).send();
+      } catch (error) {
+        request.log.error(error, "Error deleting gallery image");
+        return reply.status(500).send({
+          error: "Internal Server Error",
+          message: "Failed to delete gallery image",
+        });
       }
-      return reply.status(204).send();
     },
   );
 }

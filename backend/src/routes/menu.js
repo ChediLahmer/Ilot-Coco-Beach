@@ -430,16 +430,25 @@ export async function menuRoutes(app) {
       },
     },
     async (request, reply) => {
-      const item = await prisma.menuItem.findUnique({
-        where: { id: Number(request.params.id) },
-        select: { image: true },
-      });
-      await prisma.menuItem.delete({
-        where: { id: Number(request.params.id) },
-      });
-      if (item?.image) deleteFile(item.image).catch(() => {});
-      invalidateMenuCache();
-      return reply.status(204).send();
+      try {
+        const id = Number(request.params.id);
+        const item = await prisma.menuItem.findUnique({
+          where: { id },
+          select: { image: true },
+        });
+        if (!item) {
+          return reply.status(404).send({
+            error: "Not Found",
+            message: "Menu item not found",
+          });
+        }
+        await prisma.menuItem.delete({ where: { id } });
+        if (item?.image) deleteFile(item.image).catch(() => {});
+        invalidateMenuCache();
+        return reply.status(204).send();
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 }

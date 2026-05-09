@@ -145,14 +145,27 @@ export async function reviewRoutes(app) {
       },
     },
     async (request, reply) => {
-      await prisma.$transaction(async (tx) => {
-        const existing = await tx.review.findUnique({
-          where: { id: Number(request.params.id) },
+      try {
+        const id = Number(request.params.id);
+        const existing = await prisma.review.findUnique({ where: { id } });
+        if (!existing) {
+          return reply.status(404).send({
+            error: "Not Found",
+            message: "Review not found",
+          });
+        }
+        await prisma.$transaction(async (tx) => {
+          await tx.review.delete({ where: { id } });
+          await adjustReviewStatsForDelete(existing, tx);
         });
-        await tx.review.delete({ where: { id: Number(request.params.id) } });
-        await adjustReviewStatsForDelete(existing, tx);
-      });
-      return reply.status(204).send();
+        return reply.status(204).send();
+      } catch (error) {
+        request.log.error(error, "Error deleting review");
+        return reply.status(500).send({
+          error: "Internal Server Error",
+          message: "Failed to delete review",
+        });
+      }
     },
   );
 }

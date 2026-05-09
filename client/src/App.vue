@@ -26,10 +26,10 @@ watch(locale, (lang) => {
 
 <style>
 .page-shell-enter-active {
-  transition: opacity 0.18s ease;
+  transition: opacity 0.32s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .page-shell-leave-active {
-  transition: opacity 0.12s ease;
+  transition: opacity 0.24s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 .page-shell-enter-from,
 .page-shell-leave-to {
