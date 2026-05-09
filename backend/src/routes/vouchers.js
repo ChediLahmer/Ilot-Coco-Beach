@@ -2,6 +2,12 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 
 export async function vouchersRoutes(app) {
+  function parseValidUntil(val) {
+    if (!val) return undefined;
+    // Date-only "YYYY-MM-DD" → end of that day (23:59:59.999 UTC)
+    if (!val.includes("T")) return new Date(val + "T23:59:59.999Z");
+    return new Date(val);
+  }
   app.addSchema({
     $id: "Voucher",
     type: "object",
@@ -109,7 +115,7 @@ export async function vouchersRoutes(app) {
         data: {
           code,
           discountPercent,
-          validUntil: new Date(validUntil),
+          validUntil: parseValidUntil(validUntil),
           isActive: isActive ?? true,
           visible: visible ?? true,
         },
@@ -149,7 +155,7 @@ export async function vouchersRoutes(app) {
       const { code, discountPercent, validUntil, isActive, visible } =
         request.body;
       const data = { code, discountPercent, isActive, visible };
-      if (validUntil) data.validUntil = new Date(validUntil);
+      if (validUntil) data.validUntil = parseValidUntil(validUntil);
       return prisma.voucher.update({
         where: { id: Number(request.params.id) },
         data,

@@ -1,7 +1,8 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
-import { uploadFile, deleteFile } from "../lib/storage.js";
+import { uploadFile, findExistingByHash, deleteFile } from "../lib/storage.js";
 import { fileTypeFromBuffer } from "file-type";
+import { createHash } from "crypto";
 
 export async function galleryRoutes(app) {
   // ─── Gallery Categories ───────────────────────────────────────────
@@ -186,28 +187,66 @@ export async function galleryRoutes(app) {
       const file = await request.file();
       if (!file) return reply.status(400).send({ error: "No file uploaded" });
 
-      const allowed = [
+      const allowedImages = [
         "image/jpeg",
         "image/png",
         "image/webp",
         "image/gif",
+        "image/avif",
+        "image/heic",
+        "image/heif",
+        "image/tiff",
+        "image/bmp",
+        "image/svg+xml",
+      ];
+      const allowedVideos = [
         "video/mp4",
         "video/webm",
+        "video/quicktime",
+        "video/x-m4v",
+        "video/x-msvideo",
+        "video/x-matroska",
+        "video/3gpp",
+        "video/ogg",
       ];
-      if (!allowed.includes(file.mimetype)) {
-        return reply.status(400).send({ error: "File type not allowed" });
+      const allowed = [...allowedImages, ...allowedVideos];
+      const allowedBrowser = [...allowed, "application/octet-stream"];
+
+      if (!allowedBrowser.includes(file.mimetype)) {
+        return reply.status(400).send({
+          error: `Type de fichier non supporté (${file.mimetype}). Formats acceptés : JPEG, PNG, WebP, GIF, AVIF, HEIC, TIFF, BMP, SVG, MP4, WebM, MOV, AVI, MKV, 3GP.`,
+        });
       }
 
       const buffer = await file.toBuffer();
 
-      const detected = await fileTypeFromBuffer(buffer);
-      if (!detected || !allowed.includes(detected.mime)) {
-        return reply
-          .status(400)
-          .send({ error: "File content does not match an allowed type" });
+      const isSvg =
+        file.mimetype === "image/svg+xml" &&
+        buffer.length < 1_000_000 &&
+        buffer
+          .toString("utf8", 0, Math.min(buffer.length, 500))
+          .includes("<svg");
+
+      let detectedMime;
+      if (isSvg) {
+        detectedMime = "image/svg+xml";
+      } else {
+        const detected = await fileTypeFromBuffer(buffer);
+        if (!detected || !allowed.includes(detected.mime)) {
+          return reply.status(400).send({
+            error:
+              "Le contenu du fichier ne correspond pas à un format supporté.",
+          });
+        }
+        detectedMime = detected.mime;
       }
 
-      const url = await uploadFile(buffer, file.filename, detected.mime);
+      const hash = createHash("sha256").update(buffer).digest("hex");
+      const existing = await findExistingByHash(hash);
+      const url =
+        existing ||
+        (await uploadFile(buffer, file.filename, detectedMime, hash));
+
       const category = file.fields?.category?.value || null;
       const categoryId = file.fields?.categoryId?.value
         ? Number(file.fields.categoryId.value)

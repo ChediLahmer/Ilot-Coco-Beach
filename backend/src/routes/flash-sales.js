@@ -136,7 +136,7 @@ export async function flashSalesRoutes(app) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const {
         title,
         description,
