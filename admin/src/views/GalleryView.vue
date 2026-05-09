@@ -435,10 +435,10 @@ async function deleteCat(cat) {
     </div>
 
     <!-- Search, Filter, Sort bar -->
-    <div class="mb-5 flex flex-wrap gap-3 items-center">
-      <div class="relative flex-1 min-w-[200px] max-w-xs">
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2">
+      <div class="relative flex-1 min-w-0">
         <svg
-          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted shrink-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -453,33 +453,35 @@ async function deleteCat(cat) {
         <input
           v-model="searchQuery"
           placeholder="Rechercher..."
-          class="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+          class="w-full pl-9 pr-3 py-2.5 sm:py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
         />
       </div>
-      <select
-        v-model="filterCategory"
-        class="text-sm px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white"
-      >
-        <option value="">Toutes catégories</option>
-        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-          {{ cat.name.fr }}
-        </option>
-      </select>
-      <select
-        v-model="sortBy"
-        class="text-sm px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white"
-      >
-        <option value="order">Tri: Ordre</option>
-        <option value="date">Tri: Plus récent</option>
-        <option value="name">Tri: Nom</option>
-      </select>
-      <span class="text-xs text-text-muted ml-auto"
+      <div class="flex gap-2 w-full sm:w-auto">
+        <select
+          v-model="filterCategory"
+          class="flex-1 text-sm px-3 py-2.5 sm:py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white"
+        >
+          <option value="">Toutes catégories</option>
+          <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+            {{ cat.name.fr }}
+          </option>
+        </select>
+        <select
+          v-model="sortBy"
+          class="flex-1 text-sm px-3 py-2.5 sm:py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white"
+        >
+          <option value="order">Tri: Ordre</option>
+          <option value="date">Tri: Plus récent</option>
+          <option value="name">Tri: Nom</option>
+        </select>
+      </div>
+      <span class="text-xs text-text-muted"
         >{{ filteredImages.length }} média(s)</span
       >
     </div>
 
     <div
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5"
     >
       <div
         v-for="img in paginatedImages"
