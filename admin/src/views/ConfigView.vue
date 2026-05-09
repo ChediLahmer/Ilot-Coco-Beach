@@ -22,8 +22,8 @@ const showReviews = ref(false);
 const reviewStats = ref(null);
 const saving = ref(false);
 const saved = ref(false);
-const uploading = ref("");
-const uploadProgress = ref(0);
+const uploading = ref({});
+const uploadProgress = ref({});
 const loading = ref(false);
 const error = ref(null);
 let savedTimer = null;
@@ -92,8 +92,8 @@ const mediaFields = [
 async function uploadMedia(key, event) {
   const file = event.target.files?.[0];
   if (!file) return;
-  uploading.value = key;
-  uploadProgress.value = 0;
+  uploading.value[key] = true;
+  uploadProgress.value[key] = 0;
   let uploadedUrl = null;
   try {
     const { url } = await api.upload(
@@ -102,7 +102,7 @@ async function uploadMedia(key, event) {
       {},
       {
         onProgress: (pct) => {
-          uploadProgress.value = pct;
+          uploadProgress.value[key] = pct;
         },
       },
     );
@@ -119,9 +119,18 @@ async function uploadMedia(key, event) {
     toast.error(
       e.response?.data?.message || e.message || "Erreur lors de l'upload",
     );
+  } finally {
+    uploading.value[key] = false;
+    delete uploadProgress.value[key];
   }
-  uploading.value = "";
-  uploadProgress.value = 0;
+}
+
+function isUploading(key) {
+  return Boolean(uploading.value[key]);
+}
+
+function getUploadProgress(key) {
+  return uploadProgress.value[key] ?? 0;
 }
 
 async function removeMedia(key) {
@@ -524,13 +533,13 @@ async function save() {
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
                   />
                 </svg>
-                {{ uploading === mf.key ? "Upload..." : "Choisir un fichier" }}
+                {{ isUploading(mf.key) ? "Upload..." : "Choisir un fichier" }}
                 <input
                   type="file"
                   :accept="mf.accept"
                   class="hidden"
                   @change="uploadMedia(mf.key, $event)"
-                  :disabled="uploading === mf.key"
+                  :disabled="isUploading(mf.key)"
                 />
               </label>
               <span
@@ -556,16 +565,16 @@ async function save() {
               <span v-else class="text-xs text-text-muted">Aucun fichier</span>
             </div>
             <!-- Upload progress bar -->
-            <div v-if="uploading === mf.key" class="mt-2 max-w-md">
+            <div v-if="isUploading(mf.key)" class="mt-2 max-w-md">
               <div class="flex items-center gap-2">
                 <div class="flex-1 h-2 bg-border rounded-full overflow-hidden">
                   <div
                     class="h-full bg-primary rounded-full transition-all duration-300 ease-out"
-                    :style="{ width: uploadProgress + '%' }"
+                    :style="{ width: getUploadProgress(mf.key) + '%' }"
                   />
                 </div>
                 <span class="text-xs font-medium text-text-muted tabular-nums"
-                  >{{ uploadProgress }}%</span
+                  >{{ getUploadProgress(mf.key) }}%</span
                 >
               </div>
             </div>
