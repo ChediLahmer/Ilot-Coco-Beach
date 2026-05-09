@@ -5,6 +5,11 @@ import { processIncomingUploads } from "./upload-cleanup.js";
 
 const DEDUP_MEDIA_CRON = process.env.DEDUP_MEDIA_CRON || "0 * * * *";
 const JOB_RUN_RETENTION_DAYS = Number(process.env.JOB_RUN_RETENTION_DAYS || 30);
+const MAX_TIMER_DELAY_MS = 2147483647;
+const RESCHEDULE_RETRY_MS = 60000;
+
+let schedulerLogger = null;
+let nextExpiryTimer = null;
 
 // Simple in-memory job locks to prevent concurrent execution of the same job
 const jobLocks = new Map();
@@ -67,65 +72,137 @@ async function logJobRunWithRetry(
   );
 }
 
-export function startScheduler(logger) {
-  // Every minute: deactivate expired flash sales and vouchers
-  cron.schedule("* * * * *", async () => {
-    const jobName = "deactivate-expired-items";
-    if (!acquireJobLock(jobName)) {
-      logger.debug(`Job ${jobName} already running, skipping`);
-      return;
+function getLogger(logger) {
+  return logger || schedulerLogger || console;
+}
+
+async function runDeactivateExpiredItems(logger) {
+  const jobName = "deactivate-expired-items";
+  if (!acquireJobLock(jobName)) {
+    logger.debug(`Job ${jobName} already running, skipping`);
+    return;
+  }
+
+  const jobStart = Date.now();
+  const now = new Date();
+  try {
+    const sales = await prisma.flashSale.updateMany({
+      where: { isActive: true, endsAt: { lt: now } },
+      data: { isActive: false },
+    });
+    if (sales.count > 0) {
+      logger.info(
+        `Scheduler: deactivated ${sales.count} expired flash sale(s)`,
+      );
+      invalidateMenuCache();
     }
 
-    const jobStart = Date.now();
-    const now = new Date();
-    try {
-      const sales = await prisma.flashSale.updateMany({
-        where: { isActive: true, endsAt: { lt: now } },
-        data: { isActive: false },
-      });
-      if (sales.count > 0) {
-        logger.info(
-          `Scheduler: deactivated ${sales.count} expired flash sale(s)`,
-        );
-        invalidateMenuCache();
-      }
+    const vouchers = await prisma.voucher.updateMany({
+      where: { isActive: true, validUntil: { lt: now } },
+      data: { isActive: false },
+    });
+    if (vouchers.count > 0) {
+      logger.info(
+        `Scheduler: deactivated ${vouchers.count} expired voucher(s)`,
+      );
+    }
 
-      const vouchers = await prisma.voucher.updateMany({
-        where: { isActive: true, validUntil: { lt: now } },
-        data: { isActive: false },
-      });
-      if (vouchers.count > 0) {
-        logger.info(
-          `Scheduler: deactivated ${vouchers.count} expired voucher(s)`,
-        );
-      }
-
-      const itemsChanged = sales.count + vouchers.count;
-      if (itemsChanged > 0) {
-        const durationMs = Date.now() - jobStart;
-        await logJobRunWithRetry(
-          jobName,
-          "success",
-          itemsChanged,
-          null,
-          durationMs,
-          logger,
-        );
-      }
-    } catch (err) {
-      logger.error(err, "Scheduler: failed to deactivate expired items");
+    const itemsChanged = sales.count + vouchers.count;
+    if (itemsChanged > 0) {
       const durationMs = Date.now() - jobStart;
       await logJobRunWithRetry(
         jobName,
-        "error",
-        0,
-        err.message,
+        "success",
+        itemsChanged,
+        null,
         durationMs,
         logger,
       );
-    } finally {
-      releaseJobLock(jobName);
     }
+  } catch (err) {
+    logger.error(err, "Scheduler: failed to deactivate expired items");
+    const durationMs = Date.now() - jobStart;
+    await logJobRunWithRetry(
+      jobName,
+      "error",
+      0,
+      err.message,
+      durationMs,
+      logger,
+    );
+  } finally {
+    releaseJobLock(jobName);
+  }
+}
+
+export async function rescheduleExpiryDeactivation(logger) {
+  const activeLogger = getLogger(logger);
+  schedulerLogger = activeLogger;
+
+  if (nextExpiryTimer) {
+    clearTimeout(nextExpiryTimer);
+    nextExpiryTimer = null;
+  }
+
+  try {
+    const [nextSale, nextVoucher] = await Promise.all([
+      prisma.flashSale.findFirst({
+        where: { isActive: true },
+        orderBy: { endsAt: "asc" },
+        select: { endsAt: true },
+      }),
+      prisma.voucher.findFirst({
+        where: { isActive: true },
+        orderBy: { validUntil: "asc" },
+        select: { validUntil: true },
+      }),
+    ]);
+
+    const timestamps = [
+      nextSale?.endsAt ? new Date(nextSale.endsAt).getTime() : null,
+      nextVoucher?.validUntil
+        ? new Date(nextVoucher.validUntil).getTime()
+        : null,
+    ].filter((value) => Number.isFinite(value));
+
+    if (!timestamps.length) {
+      activeLogger.debug("Scheduler: no upcoming expirations to schedule");
+      return;
+    }
+
+    const now = Date.now();
+    const nextExpiryAtMs = Math.min(...timestamps);
+    const delayMs = Math.max(0, nextExpiryAtMs - now);
+    const safeDelayMs = Math.min(delayMs, MAX_TIMER_DELAY_MS);
+
+    nextExpiryTimer = setTimeout(async () => {
+      nextExpiryTimer = null;
+      await runDeactivateExpiredItems(activeLogger);
+      await rescheduleExpiryDeactivation(activeLogger);
+    }, safeDelayMs);
+
+    activeLogger.debug(
+      `Scheduler: next expiry check scheduled in ${safeDelayMs}ms`,
+    );
+  } catch (err) {
+    activeLogger.error(
+      err,
+      "Scheduler: failed to reschedule expiry deactivation",
+    );
+    nextExpiryTimer = setTimeout(async () => {
+      nextExpiryTimer = null;
+      await rescheduleExpiryDeactivation(activeLogger);
+    }, RESCHEDULE_RETRY_MS);
+  }
+}
+
+export function startScheduler(logger) {
+  schedulerLogger = logger;
+  rescheduleExpiryDeactivation(logger).catch((err) => {
+    logger.error(
+      err,
+      "Scheduler: failed to initialize expiry deactivation timer",
+    );
   });
 
   // Fallback reconciliation for incoming uploads (primary path is immediate cleanup on upload)
@@ -239,6 +316,6 @@ export function startScheduler(logger) {
   });
 
   logger.info(
-    `Scheduler started: expiry checks every minute, dedup fallback at ${DEDUP_MEDIA_CRON}, daily cleanup at 03:00`,
+    `Scheduler started: dynamic expiry timer enabled, dedup fallback at ${DEDUP_MEDIA_CRON}, daily cleanup at 03:00`,
   );
 }

@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
+import { rescheduleExpiryDeactivation } from "../lib/scheduler.js";
 import {
   ValidationError,
   validateDateTime,
@@ -269,6 +270,7 @@ export async function flashSalesRoutes(app) {
           },
         });
         scheduleIncomingCleanup(request.log, image);
+        await rescheduleExpiryDeactivation(request.log);
         return reply.status(201).send(sale);
       } catch (error) {
         return handleValidationError(error, reply, request.log);
@@ -427,6 +429,7 @@ export async function flashSalesRoutes(app) {
           deleteFile(oldImage).catch(() => {});
         }
         scheduleIncomingCleanup(request.log, image);
+        await rescheduleExpiryDeactivation(request.log);
         request.log.info({ id: saleId }, "Flash sale updated");
         return reply.status(200).send(updated);
       } catch (error) {
@@ -462,6 +465,7 @@ export async function flashSalesRoutes(app) {
         }
         await prisma.flashSale.delete({ where: { id } });
         if (sale?.image) deleteFile(sale.image).catch(() => {});
+        await rescheduleExpiryDeactivation(request.log);
         return reply.status(204).send();
       } catch (error) {
         return handleValidationError(error, reply, request.log);

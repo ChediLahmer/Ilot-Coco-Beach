@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
+import { rescheduleExpiryDeactivation } from "../lib/scheduler.js";
 import {
   ValidationError,
   validateDateTime,
@@ -201,6 +202,7 @@ export async function vouchersRoutes(app) {
             visible: visible ?? true,
           },
         });
+        await rescheduleExpiryDeactivation(request.log);
         return reply.status(201).send(voucher);
       } catch (error) {
         return handleValidationError(error, reply, request.log);
@@ -268,6 +270,7 @@ export async function vouchersRoutes(app) {
           where: { id: voucherId },
           data,
         });
+        await rescheduleExpiryDeactivation(request.log);
         request.log.info({ id: voucherId }, "Voucher updated");
         return reply.status(200).send(updated);
       } catch (error) {
@@ -299,6 +302,7 @@ export async function vouchersRoutes(app) {
           });
         }
         await prisma.voucher.delete({ where: { id } });
+        await rescheduleExpiryDeactivation(request.log);
         return reply.status(204).send();
       } catch (error) {
         return handleValidationError(error, reply, request.log);
