@@ -10,7 +10,7 @@
       <div data-reveal><GallerySection /></div>
       <div data-reveal><VoucherSection /></div>
       <div v-if="config.showReviews" data-reveal><ReviewsSection /></div>
-      <div data-reveal><VideoSection /></div>
+      <div v-if="config.sectionVideo" data-reveal><VideoSection /></div>
       <div data-reveal><ReservationSection /></div>
       <div data-reveal><LocationSection /></div>
     </main>
