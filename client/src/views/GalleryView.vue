@@ -157,6 +157,7 @@
             autoplay
             muted
             playsinline
+            preload="metadata"
           />
           <img
             v-else
