@@ -169,7 +169,7 @@ onUnmounted(() => {
             </p>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
           <div class="p-2 bg-success/10 rounded">
             <p class="text-xs text-text-muted">Réussites</p>
             <p class="text-lg font-bold text-success">{{ job.successCount }}</p>

@@ -46,32 +46,32 @@ const updateDateTime = (emit, modelValue) => (type, value) => {
 
 <template>
   <div>
-    <label class="block text-xs font-medium text-text-muted mb-2"
+    <label class="block text-xs font-medium text-text-muted mb-1.5"
       >{{ label }}
       <span v-if="required" class="text-danger">*</span>
     </label>
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
       <div>
-        <span class="text-[0.7rem] text-text-muted/70 mb-1 block">Date</span>
         <input
           :value="formatDateTime(modelValue).date"
           @input="
             updateDateTime($emit, modelValue)('date', $event.target.value)
           "
           type="date"
-          class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+          placeholder="DD/MM/YYYY"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
           :class="error ? 'border-danger' : 'border-border'"
         />
       </div>
       <div>
-        <span class="text-[0.7rem] text-text-muted/70 mb-1 block">Heure</span>
         <input
           :value="formatDateTime(modelValue).time"
           @input="
             updateDateTime($emit, modelValue)('time', $event.target.value)
           "
           type="time"
-          class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+          placeholder="HH:MM"
+          class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
           :class="error ? 'border-danger' : 'border-border'"
         />
       </div>

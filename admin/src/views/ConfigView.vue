@@ -405,7 +405,7 @@ async function save() {
           >
             Aperçu des avis (visibles uniquement)
           </p>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="text-center">
               <p class="text-lg font-bold text-text">{{ reviewStats.total }}</p>
               <p class="text-[0.65rem] text-text-muted">Visibles</p>
