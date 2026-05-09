@@ -2,10 +2,12 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export function trackEvent(event, path) {
   try {
-    navigator.sendBeacon(
-      `${API_BASE}/analytics/event`,
-      new Blob([JSON.stringify({ event, path })], { type: "application/json" }),
-    );
+    fetch(`${API_BASE}/analytics/event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event, path }),
+      keepalive: true,
+    }).catch(() => {});
   } catch {
     // silently fail — analytics should never break the app
   }

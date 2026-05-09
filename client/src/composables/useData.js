@@ -39,13 +39,21 @@ async function loadAll() {
   loading.value = true;
   error.value = false;
 
-  const results = await Promise.allSettled([
-    api.getMenuCategories(),
-    api.getSpaces(1, ITEMS_PER_PAGE),
-    api.getFlashSales(1, ITEMS_PER_PAGE),
-    api.getVouchers(1, ITEMS_PER_PAGE),
-    api.getGallery(),
-  ]);
+  let attempts = 0;
+  let results;
+  while (attempts < 2) {
+    results = await Promise.allSettled([
+      api.getMenuCategories(),
+      api.getSpaces(1, ITEMS_PER_PAGE),
+      api.getFlashSales(1, ITEMS_PER_PAGE),
+      api.getVouchers(1, ITEMS_PER_PAGE),
+      api.getGallery(),
+    ]);
+    const allFailed = results.every((r) => r.status === "rejected");
+    if (!allFailed) break;
+    attempts++;
+    if (attempts < 2) await new Promise((r) => setTimeout(r, 2000));
+  }
 
   const [cats, sp, fs, v, g] = results;
 
@@ -160,6 +168,11 @@ async function loadMoreGallery() {
   }
 }
 
+function retryAll() {
+  loaded.value = false;
+  return loadAll();
+}
+
 export function useData() {
   onMounted(loadAll);
   return {
@@ -185,6 +198,6 @@ export function useData() {
     loadMoreGallery,
     loading,
     error,
-    retry: loadAll,
+    retry: retryAll,
   };
 }
