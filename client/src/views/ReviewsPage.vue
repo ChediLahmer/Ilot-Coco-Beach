@@ -181,6 +181,17 @@
               </div>
             </article>
           </div>
+
+          <!-- Infinite scroll sentinel -->
+          <div ref="sentinelRef" class="h-1" />
+          <div
+            v-if="loading"
+            class="flex justify-center py-8"
+          >
+            <div
+              class="w-8 h-8 border-2 border-ocean/20 border-t-ocean rounded-full animate-spin"
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -190,7 +201,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import FooterSection from "@/components/FooterSection.vue";
@@ -200,8 +211,27 @@ import { useReviews } from "@/composables/useReviews";
 
 const { locale, t } = useI18n();
 const config = useConfig();
-const { reviews, averageRating, recommendationRate, reviewCount, addReview } =
+const { reviews, averageRating, recommendationRate, reviewCount, addReview, loadMore, hasMore, loading } =
   useReviews();
+
+const sentinelRef = ref(null);
+let observer = null;
+
+onMounted(() => {
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasMore.value && !loading.value) {
+        loadMore();
+      }
+    },
+    { rootMargin: "300px" },
+  );
+  if (sentinelRef.value) observer.observe(sentinelRef.value);
+});
+
+onUnmounted(() => {
+  observer?.disconnect();
+});
 
 const displayedRate = computed(() => {
   const manual = parseInt(config.satisfactionRate, 10);
