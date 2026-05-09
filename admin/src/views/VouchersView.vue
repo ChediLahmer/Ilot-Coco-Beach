@@ -136,7 +136,9 @@ async function save() {
     await loadData();
     toast.success(editing.value ? "Voucher mis à jour" : "Voucher créé");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde",
+    );
   } finally {
     saving.value = false;
   }
@@ -154,7 +156,9 @@ async function remove(v) {
     await loadData();
     toast.success("Voucher supprimé");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   } finally {
     busy.value.delete(v.id);
   }
@@ -167,7 +171,9 @@ async function toggleActive(v) {
     await loadData();
     toast.success(v.isActive ? "Désactivé" : "Activé");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(v.id);
   }
@@ -180,7 +186,9 @@ async function toggleVisible(v) {
     await loadData();
     toast.success(v.visible ? "Masqué" : "Rendu visible");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(v.id);
   }

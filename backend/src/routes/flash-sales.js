@@ -3,6 +3,7 @@ import { authenticate, optionalAuth } from "../lib/auth.js";
 import { deleteFile } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 import {
+  ValidationError,
   validateDateTime,
   validateDiscount,
   validateMultilingual,
@@ -48,58 +49,106 @@ export async function flashSalesRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const { page, limit: rawLimit, active, search, sort } = request.query;
-      const where = {};
-      if (request.admin) {
-        if (active !== undefined) where.isActive = active === "true";
-      } else {
-        where.visible = true;
-        where.isActive = true;
-        where.endsAt = { gte: new Date() };
-      }
-      if (search) {
-        where.title = { path: ["fr"], string_contains: search };
-      }
-      let orderBy;
-      switch (sort) {
-        case "title":
-          orderBy = [{ createdAt: "asc" }, { id: "asc" }];
-          break;
-        case "discount":
-          orderBy = [{ discountPercent: "desc" }, { id: "asc" }];
-          break;
-        default:
-          orderBy = [{ createdAt: "desc" }, { id: "asc" }];
-      }
-      const limit = Math.min(Number(rawLimit) || 20, 100);
-      const offset = page ? (Number(page) - 1) * limit : 0;
-      const [items, total] = await Promise.all([
-        prisma.flashSale.findMany({
-          where,
-          orderBy,
-          take: limit,
-          skip: offset,
-          include: {
-            menuItem: {
-              select: {
-                id: true,
-                name: true,
-                priceStandard: true,
-                priceExtra: true,
+    async (request, reply) => {
+      try {
+        const { page, limit: rawLimit, active, search, sort } = request.query;
+
+        // Validate page >= 1
+        let pageNum = 1;
+        if (page) {
+          pageNum = Number(page);
+          if (!Number.isInteger(pageNum) || pageNum <= 0) {
+            request.log.warn({ page }, "Invalid page parameter");
+            throw new ValidationError(
+              "page",
+              "page doit être un entier positif",
+            );
+          }
+        }
+
+        // Validate limit <= 100
+        let limitNum = Number(rawLimit) || 20;
+        if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          request.log.warn({ limit: rawLimit }, "Invalid limit parameter");
+          throw new ValidationError(
+            "limit",
+            "limit doit être un entier positif",
+          );
+        }
+        limitNum = Math.min(limitNum, 100);
+
+        // Validate active filter is in allowed list
+        if (active && !["true", "false"].includes(active)) {
+          request.log.warn({ active }, "Invalid active filter");
+          throw new ValidationError("active", "active doit être true ou false");
+        }
+
+        // Validate sort is in allowed list
+        const allowedSorts = ["date", "title", "discount"];
+        if (sort && !allowedSorts.includes(sort)) {
+          request.log.warn(
+            { sort, allowed: allowedSorts },
+            "Invalid sort parameter",
+          );
+          throw new ValidationError(
+            "sort",
+            `sort doit être parmi: ${allowedSorts.join(", ")}`,
+          );
+        }
+
+        const where = {};
+        if (request.admin) {
+          if (active !== undefined) where.isActive = active === "true";
+        } else {
+          where.visible = true;
+          where.isActive = true;
+          where.endsAt = { gte: new Date() };
+        }
+        if (search) {
+          where.title = { path: ["fr"], string_contains: search };
+        }
+        let orderBy;
+        switch (sort) {
+          case "title":
+            orderBy = [{ createdAt: "asc" }, { id: "asc" }];
+            break;
+          case "discount":
+            orderBy = [{ discountPercent: "desc" }, { id: "asc" }];
+            break;
+          default:
+            orderBy = [{ createdAt: "desc" }, { id: "asc" }];
+        }
+        const limit = limitNum;
+        const offset = (pageNum - 1) * limit;
+        const [items, total] = await Promise.all([
+          prisma.flashSale.findMany({
+            where,
+            orderBy,
+            take: limit,
+            skip: offset,
+            include: {
+              menuItem: {
+                select: {
+                  id: true,
+                  name: true,
+                  priceStandard: true,
+                  priceExtra: true,
+                },
               },
+              space: { select: { id: true, name: true, price: true } },
             },
-            space: { select: { id: true, name: true, price: true } },
-          },
-        }),
-        prisma.flashSale.count({ where }),
-      ]);
-      return {
-        items,
-        total,
-        page: Number(page) || 1,
-        totalPages: Math.ceil(total / limit),
-      };
+          }),
+          prisma.flashSale.count({ where }),
+        ]);
+        return {
+          items,
+          total,
+          page: pageNum,
+          totalPages: Math.ceil(total / limit),
+        };
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 
@@ -270,42 +319,95 @@ export async function flashSalesRoutes(app) {
         },
       },
     },
-    async (request) => {
-      const {
-        title,
-        description,
-        discountPercent,
-        image,
-        endsAt,
-        isActive,
-        visible,
-        menuItemId,
-        spaceId,
-      } = request.body;
-      const saleId = Number(request.params.id);
-      let oldImage = null;
-      if (image !== undefined) {
+    async (request, reply) => {
+      try {
+        const {
+          title,
+          description,
+          discountPercent,
+          image,
+          endsAt,
+          isActive,
+          visible,
+          menuItemId,
+          spaceId,
+        } = request.body;
+
+        // Validate ID
+        const saleId = validateIntegerId(Number(request.params.id), "id");
         const existing = await prisma.flashSale.findUnique({
           where: { id: saleId },
-          select: { image: true },
         });
-        if (existing?.image && existing.image !== image) {
-          oldImage = existing.image;
+        if (!existing) {
+          request.log.warn({ id: saleId }, "Flash sale not found");
+          throw new ValidationError("id", "Flash sale non trouvé(e)");
         }
-      }
-      const data = {
-        title,
-        description,
-        discountPercent,
-        image,
-        isActive,
-        visible,
-      };
-      if (endsAt) data.endsAt = new Date(endsAt);
-      if (menuItemId !== undefined) data.menuItemId = menuItemId || null;
-      if (spaceId !== undefined) data.spaceId = spaceId || null;
-      return prisma.flashSale
-        .update({
+
+        // Validate inputs if provided
+        if (title) validateMultilingual(title, "title", { maxLength: 200 });
+        if (description)
+          validateMultilingual(description, "description", { maxLength: 2000 });
+        if (discountPercent !== undefined) validateDiscount(discountPercent);
+        if (endsAt) validateDateTime(endsAt, "endsAt", { mustBeFuture: true });
+
+        // Validate foreign key references if provided
+        if (menuItemId !== undefined && menuItemId !== null) {
+          const validatedMenuItemId = validateIntegerId(
+            menuItemId,
+            "menuItemId",
+          );
+          const menuItem = await prisma.menuItem.findUnique({
+            where: { id: validatedMenuItemId },
+          });
+          if (!menuItem) {
+            request.log.warn({ id: validatedMenuItemId }, "MenuItem not found");
+            throw new ValidationError("menuItemId", "Article non trouvé(e)");
+          }
+        }
+
+        if (spaceId !== undefined && spaceId !== null) {
+          const validatedSpaceId = validateIntegerId(spaceId, "spaceId");
+          const space = await prisma.space.findUnique({
+            where: { id: validatedSpaceId },
+          });
+          if (!space) {
+            request.log.warn({ id: validatedSpaceId }, "Space not found");
+            throw new ValidationError("spaceId", "Espace non trouvé(e)");
+          }
+        }
+
+        // Cannot target both
+        if (menuItemId && spaceId) {
+          throw new ValidationError(
+            "target",
+            "Une flash sale ne peut cibler qu'un article ou un espace, pas les deux",
+          );
+        }
+
+        let oldImage = null;
+        if (image !== undefined) {
+          const curr = await prisma.flashSale.findUnique({
+            where: { id: saleId },
+            select: { image: true },
+          });
+          if (curr?.image && curr.image !== image) {
+            oldImage = curr.image;
+          }
+        }
+
+        const data = {};
+        if (title !== undefined) data.title = title;
+        if (description !== undefined) data.description = description;
+        if (discountPercent !== undefined)
+          data.discountPercent = discountPercent;
+        if (image !== undefined) data.image = image;
+        if (isActive !== undefined) data.isActive = isActive;
+        if (visible !== undefined) data.visible = visible;
+        if (endsAt) data.endsAt = new Date(endsAt);
+        if (menuItemId !== undefined) data.menuItemId = menuItemId || null;
+        if (spaceId !== undefined) data.spaceId = spaceId || null;
+
+        const updated = await prisma.flashSale.update({
           where: { id: saleId },
           data,
           include: {
@@ -319,14 +421,17 @@ export async function flashSalesRoutes(app) {
             },
             space: { select: { id: true, name: true, price: true } },
           },
-        })
-        .then((sale) => {
-          if (oldImage) {
-            deleteFile(oldImage).catch(() => {});
-          }
-          scheduleIncomingCleanup(request.log, image);
-          return sale;
         });
+
+        if (oldImage) {
+          deleteFile(oldImage).catch(() => {});
+        }
+        scheduleIncomingCleanup(request.log, image);
+        request.log.info({ id: saleId }, "Flash sale updated");
+        return reply.status(200).send(updated);
+      } catch (error) {
+        return handleValidationError(error, reply, request.log);
+      }
     },
   );
 

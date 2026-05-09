@@ -3,12 +3,179 @@
  */
 
 export class ValidationError extends Error {
-  constructor(field, message) {
+  constructor(field, message, code = "VALIDATION_ERROR") {
     super(message);
     this.name = "ValidationError";
     this.field = field;
+    this.code = code;
     this.statusCode = 400;
   }
+}
+
+// Prisma error code mappings to user-friendly messages
+const PRISMA_ERROR_CODES = {
+  P2002: {
+    error: "DUPLICATE_ERROR",
+    status: 409,
+    getMessage: (field) => `Un enregistrement avec ce ${field} existe déjà`,
+  },
+  P2003: {
+    error: "FOREIGN_KEY_ERROR",
+    status: 400,
+    getMessage: (field) => `La référence ${field} n'existe pas`,
+  },
+  P2011: {
+    error: "NOT_NULL_ERROR",
+    status: 400,
+    getMessage: (field) => `${field} est requis`,
+  },
+  P2025: {
+    error: "NOT_FOUND_ERROR",
+    status: 404,
+    getMessage: () => `Enregistrement non trouvé`,
+  },
+};
+
+/**
+ * Validate array input
+ * @param {*} value - Value to validate
+ * @param {string} fieldName - Field name for error reporting
+ * @param {Object} options - { required: boolean, minItems: number, maxItems: number, itemType: string }
+ * @returns {Array} Validated array
+ * @throws {ValidationError}
+ */
+export function validateArray(value, fieldName, options = {}) {
+  if (value === undefined || value === null) {
+    if (options.required) {
+      throw new ValidationError(fieldName, `${fieldName} est requis`);
+    }
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new ValidationError(fieldName, `${fieldName} doit être un tableau`);
+  }
+
+  if (options.minItems !== undefined && value.length < options.minItems) {
+    throw new ValidationError(
+      fieldName,
+      `${fieldName} doit avoir au moins ${options.minItems} éléments`,
+    );
+  }
+
+  if (options.maxItems !== undefined && value.length > options.maxItems) {
+    throw new ValidationError(
+      fieldName,
+      `${fieldName} doit avoir au maximum ${options.maxItems} éléments`,
+    );
+  }
+
+  return value;
+}
+
+/**
+ * Validate object structure against schema
+ * @param {*} value - Value to validate
+ * @param {string} fieldName - Field name for error reporting
+ * @param {Object} schema - Schema with required keys and types
+ * @returns {Object} Validated object
+ * @throws {ValidationError}
+ */
+export function validateObject(value, fieldName, schema = {}) {
+  if (value === undefined || value === null) {
+    if (schema.required) {
+      throw new ValidationError(fieldName, `${fieldName} est requis`);
+    }
+    return {};
+  }
+
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new ValidationError(fieldName, `${fieldName} doit être un objet`);
+  }
+
+  // Validate required keys
+  for (const key of schema.requiredKeys || []) {
+    if (!(key in value)) {
+      throw new ValidationError(fieldName, `${fieldName}.${key} est requis`);
+    }
+  }
+
+  return value;
+}
+
+/**
+ * Validate email format
+ * @param {string} value - Email to validate
+ * @param {string} fieldName - Field name for error reporting
+ * @returns {string} Normalized email (lowercased, trimmed)
+ * @throws {ValidationError}
+ */
+export function validateEmail(value, fieldName = "email") {
+  if (!value || typeof value !== "string") {
+    throw new ValidationError(fieldName, `${fieldName} est requis`);
+  }
+
+  const normalized = value.trim().toLowerCase();
+  // RFC 5322 simplified pattern
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(normalized)) {
+    throw new ValidationError(
+      fieldName,
+      `${fieldName} doit être une adresse email valide`,
+    );
+  }
+
+  return normalized;
+}
+
+/**
+ * Validate phone number format
+ * @param {string} value - Phone number to validate
+ * @param {string} fieldName - Field name for error reporting
+ * @returns {string} Normalized phone number (trimmed, digits only)
+ * @throws {ValidationError}
+ */
+export function validatePhoneNumber(value, fieldName = "phone") {
+  if (!value || typeof value !== "string") {
+    throw new ValidationError(fieldName, `${fieldName} est requis`);
+  }
+
+  const normalized = value.trim().replace(/\D/g, "");
+
+  // Accept 8-15 digits (international standard)
+  if (normalized.length < 8 || normalized.length > 15) {
+    throw new ValidationError(
+      fieldName,
+      `${fieldName} doit contenir entre 8 et 15 chiffres`,
+    );
+  }
+
+  return normalized;
+}
+
+/**
+ * Validate rating value
+ * @param {number} value - Rating value
+ * @param {string} fieldName - Field name for error reporting
+ * @returns {number} Validated rating
+ * @throws {ValidationError}
+ */
+export function validateRating(value, fieldName = "rating") {
+  if (value === undefined || value === null) {
+    throw new ValidationError(fieldName, `${fieldName} est requis`);
+  }
+
+  const num = Number(value);
+  if (!Number.isInteger(num)) {
+    throw new ValidationError(fieldName, `${fieldName} doit être un entier`);
+  }
+
+  if (num < 1 || num > 5) {
+    throw new ValidationError(fieldName, `${fieldName} doit être entre 1 et 5`);
+  }
+
+  return num;
 }
 
 /**
@@ -169,7 +336,7 @@ export function validateEntityExists(entity, fieldName, entityType) {
 }
 
 /**
- * Error handler for route endpoints
+ * Error handler for route endpoints with Prisma error code mapping
  * @param {Error} error - Error to handle
  * @param {Object} reply - Fastify reply object
  * @param {Object} logger - Logger instance
@@ -177,13 +344,61 @@ export function validateEntityExists(entity, fieldName, entityType) {
 export async function handleValidationError(error, reply, logger) {
   if (error instanceof ValidationError) {
     logger.warn(
-      { field: error.field, message: error.message },
+      { field: error.field, code: error.code, message: error.message },
       "Validation error",
     );
     return reply.status(400).send({
-      error: "Validation Error",
+      error: error.code,
       message: error.message,
       field: error.field,
+    });
+  }
+
+  // Handle Prisma CHECK constraint violations (P2011 or custom constraint message)
+  if (
+    error.code === "P2011" ||
+    (error.message && error.message.includes("check"))
+  ) {
+    const mapping = PRISMA_ERROR_CODES.P2011;
+    logger.warn({ error: error.message }, "CHECK constraint violation");
+    return reply.status(mapping.status).send({
+      error: mapping.error,
+      message: extractConstraintFieldFromError(error),
+    });
+  }
+
+  // Handle Prisma unique constraint violations
+  if (error.code === "P2002") {
+    const field = error.meta?.target?.[0] || "field";
+    const mapping = PRISMA_ERROR_CODES.P2002;
+    logger.warn({ field, code: "P2002" }, "Unique constraint violation");
+    return reply.status(mapping.status).send({
+      error: mapping.error,
+      message: mapping.getMessage(field),
+      field,
+    });
+  }
+
+  // Handle Prisma foreign key constraint violations
+  if (error.code === "P2003") {
+    const mapping = PRISMA_ERROR_CODES.P2003;
+    logger.warn(
+      { error: error.message, code: "P2003" },
+      "Foreign key constraint violation",
+    );
+    return reply.status(mapping.status).send({
+      error: mapping.error,
+      message: "Une référence requise n'existe pas",
+    });
+  }
+
+  // Handle Prisma not found
+  if (error.code === "P2025") {
+    const mapping = PRISMA_ERROR_CODES.P2025;
+    logger.warn({ code: "P2025" }, "Record not found");
+    return reply.status(mapping.status).send({
+      error: mapping.error,
+      message: mapping.getMessage(),
     });
   }
 
@@ -191,35 +406,36 @@ export async function handleValidationError(error, reply, logger) {
   if (error.message && error.message.includes("Invalid")) {
     logger.warn({ message: error.message }, "Invalid input");
     return reply.status(400).send({
-      error: "Invalid Input",
-      message: "Provided values are invalid",
-    });
-  }
-
-  // Handle Prisma unique constraint violations
-  if (error.code === "P2002") {
-    const field = error.meta?.target?.[0] || "field";
-    logger.warn({ field }, "Unique constraint violation");
-    return reply.status(400).send({
-      error: "Duplicate Entry",
-      message: `A record with this ${field} already exists`,
-      field,
-    });
-  }
-
-  // Handle Prisma not found
-  if (error.code === "P2025") {
-    logger.warn({ message: error.message }, "Record not found");
-    return reply.status(404).send({
-      error: "Not Found",
-      message: "Record not found",
+      error: "VALIDATION_ERROR",
+      message: "Les valeurs fournies sont invalides",
     });
   }
 
   // Unknown error - don't expose internals
   logger.error(error, "Unhandled error");
   return reply.status(500).send({
-    error: "Internal Server Error",
-    message: "An unexpected error occurred",
+    error: "INTERNAL_ERROR",
+    message: "Une erreur inattendue s'est produite",
   });
+}
+
+/**
+ * Extract constraint field from Prisma error message
+ * @param {Error} error - Prisma error
+ * @returns {string} User-friendly error message
+ */
+function extractConstraintFieldFromError(error) {
+  if (error.message.includes("discount")) {
+    return "Le pourcentage de remise doit être entre 1 et 100";
+  }
+  if (error.message.includes("rating")) {
+    return "La note doit être entre 1 et 5";
+  }
+  if (error.message.includes("capacity")) {
+    return "La capacité doit être supérieure à 0";
+  }
+  if (error.message.includes("price")) {
+    return "Le prix doit être supérieur à 0";
+  }
+  return "Les données ne respectent pas les contraintes requises";
 }

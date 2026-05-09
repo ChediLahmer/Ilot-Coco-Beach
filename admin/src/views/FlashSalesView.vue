@@ -61,26 +61,34 @@ function buildQuery() {
 }
 
 async function loadData() {
+  if (loading.value) return; // Prevent race conditions
   loading.value = true;
   error.value = null;
   try {
     const res = await api.get(`/flash-sales?${buildQuery()}`);
-    sales.value = res.items;
-    totalItems.value = res.total;
-  } catch {
-    error.value = "Erreur de chargement";
-    toast.error("Erreur de chargement des ventes flash");
+    sales.value = Array.isArray(res.items) ? res.items : [];
+    totalItems.value = res.total || 0;
+  } catch (e) {
+    error.value =
+      e.response?.data?.message || e.message || "Erreur de chargement";
+    toast.error(
+      e.response?.data?.message ||
+        e.message ||
+        "Erreur de chargement des ventes flash",
+    );
   } finally {
     loading.value = false;
   }
 }
 
-watch([filterStatus, sortBy, page], loadData);
+watch([filterStatus, sortBy, page], () => {
+  if (!loading.value) loadData();
+});
 watch(searchQuery, () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     page.value = 1;
-    loadData();
+    if (!loading.value) loadData();
   }, 300);
 });
 
@@ -95,14 +103,15 @@ async function loadTargets() {
       api.get("/menu/categories"),
       api.get("/spaces?limit=100"),
     ]);
-    menuItems.value = menuRes.flatMap((cat) =>
-      (cat.items || []).map((item) => ({
+    menuItems.value = (Array.isArray(menuRes) ? menuRes : []).flatMap((cat) =>
+      (Array.isArray(cat.items) ? cat.items : []).map((item) => ({
         ...item,
         categoryName: cat.name?.fr || "",
       })),
     );
-    spaces.value = spacesRes.items || [];
-  } catch {
+    spaces.value = Array.isArray(spacesRes?.items) ? spacesRes.items : [];
+  } catch (e) {
+    console.error("Error loading targets:", e);
     /* non-blocking */
   }
 }
@@ -145,6 +154,7 @@ function resetForm() {
 }
 
 function openModal(sale = null) {
+  if (loading.value) return; // Prevent opening modal during loading
   editing.value = sale;
   imagePreview.value = null;
   removeImage.value = false;
@@ -228,9 +238,13 @@ async function save() {
     if (uploadedImageUrl) {
       await api
         .post("/upload/cleanup", { url: uploadedImageUrl })
-        .catch(() => {});
+        .catch((err) => {
+          console.error("Upload cleanup failed:", err);
+        });
     }
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde",
+    );
   } finally {
     saving.value = false;
   }
@@ -248,7 +262,9 @@ async function remove(sale) {
     await loadData();
     toast.success("Vente flash supprimée");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   } finally {
     busy.value.delete(sale.id);
   }
@@ -261,7 +277,9 @@ async function toggleActive(sale) {
     await loadData();
     toast.success(sale.isActive ? "Désactivée" : "Activée");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(sale.id);
   }
@@ -274,7 +292,9 @@ async function toggleVisible(sale) {
     await loadData();
     toast.success(sale.visible ? "Masquée" : "Rendue visible");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(sale.id);
   }

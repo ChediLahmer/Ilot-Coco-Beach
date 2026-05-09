@@ -73,6 +73,7 @@ async function goToPage(n) {
 
 // ── Data fetching ──────────────────────────────────────────────────────────────
 async function loadData() {
+  if (loading.value) return; // Prevent race conditions
   loading.value = true;
   error.value = null;
   reviews.value = [];
@@ -81,12 +82,16 @@ async function loadData() {
   displayPage.value = 1;
   try {
     const res = await api.get(`/reviews?limit=${FETCH_LIMIT}`);
-    reviews.value = res.items;
+    reviews.value = Array.isArray(res.items) ? res.items : [];
     nextCursor.value = res.nextCursor;
     hasServerMore.value = !!res.nextCursor;
   } catch (e) {
     error.value = "Impossible de charger les avis";
-    toast.error("Impossible de charger les avis");
+    toast.error(
+      e.response?.data?.message ||
+        e.message ||
+        "Impossible de charger les avis",
+    );
   } finally {
     loading.value = false;
   }
@@ -103,7 +108,9 @@ async function loadMore() {
     nextCursor.value = res.nextCursor;
     hasServerMore.value = !!res.nextCursor;
   } catch (e) {
-    toast.error(e.message || "Erreur de chargement");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de chargement",
+    );
   } finally {
     loadingMore.value = false;
   }
@@ -124,7 +131,9 @@ async function remove(r) {
     await loadData();
     toast.success("Avis supprimé");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   } finally {
     busy.value.delete(r.id);
   }
@@ -139,7 +148,9 @@ async function toggleVisible(r) {
       reviews.value[idx] = { ...reviews.value[idx], visible: !r.visible };
     toast.success(r.visible ? "Avis masqué" : "Avis rendu visible");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la mise à jour",
+    );
   } finally {
     busy.value.delete(r.id);
   }

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
@@ -26,6 +26,7 @@ const uploading = ref("");
 const uploadProgress = ref(0);
 const loading = ref(false);
 const error = ref(null);
+let savedTimer = null;
 
 const fields = [
   { key: "name", label: "Nom du site", type: "text" },
@@ -111,9 +112,13 @@ async function uploadMedia(key, event) {
     toast.success("Fichier téléversé");
   } catch (e) {
     if (uploadedUrl) {
-      await api.post("/upload/cleanup", { url: uploadedUrl }).catch(() => {});
+      await api.post("/upload/cleanup", { url: uploadedUrl }).catch((err) => {
+        console.error("Upload cleanup failed:", err);
+      });
     }
-    toast.error(e.message || "Erreur lors de l'upload");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de l'upload",
+    );
   }
   uploading.value = "";
   uploadProgress.value = 0;
@@ -125,7 +130,9 @@ async function removeMedia(key) {
     await api.put(`/config/${key}`, { value: "" });
     toast.success("Média supprimé");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   }
 }
 
@@ -176,6 +183,10 @@ async function loadData() {
 
 onMounted(loadData);
 
+onUnmounted(() => {
+  clearTimeout(savedTimer);
+});
+
 async function save() {
   clearErrors();
   saving.value = true;
@@ -224,10 +235,14 @@ async function save() {
     await api.put("/config", payload);
     saved.value = true;
     toast.success("Configuration enregistrée");
-    setTimeout(() => (saved.value = false), 2000);
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => (saved.value = false), 2000);
   } catch (e) {
-    error.value = e.message || "Erreur lors de la sauvegarde";
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    error.value =
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde";
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde",
+    );
   } finally {
     saving.value = false;
   }

@@ -102,14 +102,16 @@ watch([searchQuery, filterCategory, sortBy], () => {
 
 async function loadCategories() {
   try {
-    categories.value = await api.get("/gallery/categories");
-  } catch {
-    error.value = "Erreur de chargement des catégories";
-    toast.error("Erreur de chargement des catégories");
+    const res = await api.get("/gallery/categories");
+    categories.value = Array.isArray(res) ? res : [];
+  } catch (e) {
+    error.value = e.response?.data?.message || e.message || "Erreur de chargement des catégories";
+    toast.error(e.response?.data?.message || e.message || "Erreur de chargement des catégories");
   }
 }
 
 async function loadData() {
+  if (loading.value) return; // Prevent race conditions
   loading.value = true;
   error.value = null;
   images.value = [];
@@ -117,28 +119,28 @@ async function loadData() {
   galHasMore.value = false;
   try {
     const res = await api.get("/gallery?limit=50");
-    images.value = res.items;
+    images.value = Array.isArray(res.items) ? res.items : [];
     galNextCursor.value = res.nextCursor;
     galHasMore.value = !!res.nextCursor;
-  } catch {
-    error.value = "Erreur de chargement";
-    toast.error("Erreur de chargement de la galerie");
+  } catch (e) {
+    error.value = e.response?.data?.message || e.message || "Erreur de chargement";
+    toast.error(e.response?.data?.message || e.message || "Erreur de chargement de la galerie");
   } finally {
     loading.value = false;
   }
 }
 
-async function loadMoreGallery() {
-  if (!galHasMore.value || galLoadingMore.value) return;
+async function loadMoreGallery() { || loading.value) return;
   galLoadingMore.value = true;
   try {
     const res = await api.get(
       `/gallery?limit=50&cursor=${galNextCursor.value}`,
     );
-    images.value = [...images.value, ...res.items];
+    images.value = [...images.value, ...(Array.isArray(res.items) ? res.items : [])];
     galNextCursor.value = res.nextCursor;
     galHasMore.value = !!res.nextCursor;
-  } catch {
+  } catch (e) {
+    toast.error(e.response?.data?.message || e.message ||
     toast.error("Erreur de chargement");
   } finally {
     galLoadingMore.value = false;
@@ -187,7 +189,7 @@ async function handleUpload(event) {
         succeeded++;
       } catch (e) {
         failed++;
-        toast.error(`${file.name} : ${e.message || "Erreur"}`);
+        toast.error(`${file.name} : ${e.response?.data?.message || e.message || "Erreur"}`);
       }
       uploadDone.value++;
     }
@@ -209,7 +211,7 @@ async function updateImage(img, data) {
     await loadData();
     toast.success("Image mise à jour");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(e.response?.data?.message || e.message || "Erreur de mise à jour");
   }
 }
 
@@ -226,7 +228,7 @@ async function remove(img) {
     await loadData();
     toast.success("Image supprimée");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(e.response?.data?.message || e.message || "Erreur lors de la suppression");
   } finally {
     busy.value.delete(img.id);
   }
@@ -239,7 +241,7 @@ async function toggleVisible(img) {
     await loadData();
     toast.success(img.visible ? "Image masquée" : "Image rendue visible");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(e.response?.data?.message || e.message || "Erreur de mise à jour");
   } finally {
     busy.value.delete(img.id);
   }
@@ -276,7 +278,7 @@ async function saveCat() {
       editingCat.value ? "Catégorie mise à jour" : "Catégorie créée",
     );
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    toast.error(e.response?.data?.message || e.message || "Erreur lors de la sauvegarde");
   }
 }
 
@@ -291,7 +293,7 @@ async function deleteCat(cat) {
     await loadCategories();
     toast.success("Catégorie supprimée");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(e.response?.data?.message || e.message || "Erreur lors de la suppression");
   }
 }
 </script>

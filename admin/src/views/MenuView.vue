@@ -37,6 +37,8 @@ const itemSort = ref("order");
 const itemPage = ref(1);
 const ITEMS_PER_PAGE = 10;
 
+let debounceTimer = null;
+
 const catForm = ref({ name: { fr: "", en: "", ar: "" }, order: 0 });
 const itemForm = ref({
   name: { fr: "", en: "", ar: "" },
@@ -103,17 +105,22 @@ const paginatedItems = computed(() => {
 });
 
 async function loadData() {
+  if (loading.value) return; // Prevent race conditions
   loading.value = true;
   error.value = null;
   try {
     const sort = itemSort.value !== "order" ? `?sort=${itemSort.value}` : "";
     categories.value = await api.get(`/menu/categories${sort}`);
+    if (!Array.isArray(categories.value)) categories.value = [];
     if (!activeCategory.value && categories.value.length) {
       activeCategory.value = categories.value[0].id;
     }
-  } catch {
-    error.value = "Erreur de chargement";
-    toast.error("Erreur de chargement du menu");
+  } catch (e) {
+    error.value =
+      e.response?.data?.message || e.message || "Erreur de chargement";
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de chargement du menu",
+    );
   } finally {
     loading.value = false;
   }
@@ -121,6 +128,12 @@ async function loadData() {
 
 onMounted(loadData);
 watch(itemSort, loadData);
+watch(itemSearch, () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    itemPage.value = 1;
+  }, 300);
+});
 
 function openCatModal(cat = null) {
   editingCat.value = cat;
@@ -153,7 +166,9 @@ async function saveCat() {
       editingCat.value ? "Catégorie mise à jour" : "Catégorie créée",
     );
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde",
+    );
   } finally {
     saving.value = false;
   }
@@ -172,13 +187,19 @@ async function deleteCat(cat) {
     await loadData();
     toast.success("Catégorie supprimée");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   } finally {
     busy.value.delete(cat.id);
   }
 }
 
 function openItemModal(item = null) {
+  if (!activeCategory.value) {
+    toast.error("Veuillez sélectionner une catégorie");
+    return;
+  }
   editingItem.value = item;
   itemImagePreview.value = null;
   removeItemImage.value = false;
@@ -282,9 +303,13 @@ async function saveItem() {
     if (uploadedImageUrl) {
       await api
         .post("/upload/cleanup", { url: uploadedImageUrl })
-        .catch(() => {});
+        .catch((err) => {
+          console.error("Upload cleanup failed:", err);
+        });
     }
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde",
+    );
   } finally {
     saving.value = false;
   }
@@ -302,7 +327,9 @@ async function deleteItem(item) {
     await loadData();
     toast.success("Plat supprimé");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   } finally {
     busy.value.delete(item.id);
   }
@@ -315,7 +342,9 @@ async function toggleAvailability(item) {
     await loadData();
     toast.success(item.available ? "Marqué indisponible" : "Marqué disponible");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(item.id);
   }
@@ -328,13 +357,16 @@ async function toggleVisible(item) {
     await loadData();
     toast.success(item.visible ? "Masqué" : "Rendu visible");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(item.id);
   }
 }
 
 onUnmounted(() => {
+  clearTimeout(debounceTimer);
   if (itemImagePreview.value) URL.revokeObjectURL(itemImagePreview.value);
 });
 </script>

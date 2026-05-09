@@ -70,11 +70,16 @@ export async function menuRoutes(app) {
       try {
         const { search, sort } = request.query;
 
-        // Validate sort parameter
-        if (sort && !["order", "name", "price"].includes(sort)) {
+        // Validate sort parameter against allowed values
+        const allowedSorts = ["order", "name", "price"];
+        if (sort && !allowedSorts.includes(sort)) {
+          request.log.warn(
+            { sort, allowed: allowedSorts },
+            "Invalid sort parameter",
+          );
           throw new ValidationError(
             "sort",
-            "sort must be one of: order, name, price",
+            `sort doit être parmi: ${allowedSorts.join(", ")}`,
           );
         }
 
@@ -265,44 +270,49 @@ export async function menuRoutes(app) {
       try {
         const { categoryId, page, limit: rawLimit } = request.query;
 
-        // Validate categoryId
+        // Validate categoryId reference
         if (categoryId) {
-          const catId = Number(categoryId);
-          if (!Number.isInteger(catId) || catId <= 0) {
-            throw new ValidationError(
-              "categoryId",
-              "categoryId must be a positive integer",
-            );
+          const catId = validateIntegerId(categoryId, "categoryId");
+          const category = await prisma.menuCategory.findUnique({
+            where: { id: catId },
+          });
+          if (!category) {
+            request.log.warn({ categoryId: catId }, "Category not found");
+            throw new ValidationError("categoryId", "Catégorie non trouvée");
           }
         }
 
-        // Validate page
+        // Validate page >= 1
+        let pageNum = 1;
         if (page) {
-          const pageNum = Number(page);
+          pageNum = Number(page);
           if (!Number.isInteger(pageNum) || pageNum <= 0) {
+            request.log.warn({ page }, "Invalid page parameter");
             throw new ValidationError(
               "page",
-              "page must be a positive integer",
+              "page doit être un entier positif",
             );
           }
         }
 
-        // Validate and apply limit
+        // Validate and apply limit <= 100
         let limitNum = Number(rawLimit) || 20;
         if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          request.log.warn({ limit: rawLimit }, "Invalid limit parameter");
           throw new ValidationError(
             "limit",
-            "limit must be a positive integer",
+            "limit doit être un entier positif",
           );
         }
         limitNum = Math.min(limitNum, 100);
 
         const where = request.admin ? {} : { visible: true, available: true };
-        if (categoryId) where.categoryId = Number(categoryId);
+        if (categoryId)
+          where.categoryId = validateIntegerId(categoryId, "categoryId");
 
         if (page) {
           const limit = limitNum;
-          const offset = (Number(page) - 1) * limit;
+          const offset = (pageNum - 1) * limit;
           const [items, total] = await Promise.all([
             prisma.menuItem.findMany({
               where,
@@ -315,7 +325,7 @@ export async function menuRoutes(app) {
           return {
             items,
             total,
-            page: Number(page),
+            page: pageNum,
             totalPages: Math.ceil(total / limit),
           };
         }

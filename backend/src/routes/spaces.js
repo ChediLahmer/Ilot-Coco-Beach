@@ -60,56 +60,67 @@ export async function spacesRoutes(app) {
           sort,
         } = request.query;
 
-        // Validate page
+        // Validate page >= 1
+        let pageNum = 1;
         if (page) {
-          const pageNum = Number(page);
+          pageNum = Number(page);
           if (!Number.isInteger(pageNum) || pageNum <= 0) {
+            request.log.warn({ page }, "Invalid page parameter");
             throw new ValidationError(
               "page",
-              "page must be a positive integer",
+              "page doit être un entier positif",
             );
           }
         }
 
-        // Validate limit
+        // Validate limit <= 100
         let limitNum = Number(rawLimit) || 20;
         if (!Number.isInteger(limitNum) || limitNum <= 0) {
+          request.log.warn({ limit: rawLimit }, "Invalid limit parameter");
           throw new ValidationError(
             "limit",
-            "limit must be a positive integer",
+            "limit doit être un entier positif",
           );
         }
         limitNum = Math.min(limitNum, 100);
 
-        // Validate available enum
-        if (available && !["true", "false"].includes(available)) {
+        // Validate available filter is in allowed list
+        const allowedAvailableValues = ["true", "false"];
+        if (available && !allowedAvailableValues.includes(available)) {
+          request.log.warn({ available }, "Invalid available filter");
           throw new ValidationError(
             "available",
-            'available must be "true" or "false"',
+            "available doit être true ou false",
           );
         }
 
-        // Validate sort enum
-        if (sort && !["order", "name", "price", "capacity"].includes(sort)) {
+        // Validate sort is in allowed list
+        const allowedSorts = ["order", "name", "price", "capacity"];
+        if (sort && !allowedSorts.includes(sort)) {
+          request.log.warn({ sort, allowed: allowedSorts }, "Invalid sort parameter");
           throw new ValidationError(
             "sort",
-            "sort must be one of: order, name, price, capacity",
+            `sort doit être parmi: ${allowedSorts.join(", ")}`,
           );
         }
 
+        // Build where clause
         const where = {};
         if (request.admin) {
           if (available !== undefined) where.available = available === "true";
         } else {
+          where.available = true;
           where.visible = true;
         }
         if (search) {
           where.name = { path: ["fr"], string_contains: search };
         }
+
+        // Build order by
         let orderBy;
         switch (sort) {
           case "name":
-            orderBy = [{ order: "asc" }, { id: "asc" }];
+            orderBy = [{ name: "asc" }, { id: "asc" }];
             break;
           case "price":
             orderBy = [{ price: "asc" }, { id: "asc" }];
@@ -120,21 +131,32 @@ export async function spacesRoutes(app) {
           default:
             orderBy = [{ order: "asc" }, { id: "asc" }];
         }
+
         const limit = limitNum;
-        const offset = page ? (Number(page) - 1) * limit : 0;
+        const offset = (pageNum - 1) * limit;
         const [items, total] = await Promise.all([
-          prisma.space.findMany({ where, orderBy, take: limit, skip: offset }),
+          prisma.space.findMany({
+            where,
+            orderBy,
+            take: limit,
+            skip: offset,
+          }),
           prisma.space.count({ where }),
         ]);
+
         return {
           items,
           total,
-          page: Number(page) || 1,
+          page: pageNum,
           totalPages: Math.ceil(total / limit),
         };
       } catch (error) {
         return handleValidationError(error, reply, request.log);
       }
+    },
+        }
+        limitNum = Math.min(limitNum, 100);
+
     },
   );
 

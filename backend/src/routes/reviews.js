@@ -7,6 +7,7 @@ import {
 } from "../lib/review-stats.js";
 import {
   ValidationError,
+  validateRating,
   validateIntegerId,
   validateEntityExists,
   handleValidationError,
@@ -119,44 +120,55 @@ export async function reviewRoutes(app) {
     async (request, reply) => {
       try {
         const { userName, comment, rating, deviceId } = request.body;
+        const clientIp = request.ip;
 
-        // Validate input
+        // Validate user name
         if (!userName || userName.trim().length < 2) {
-          return reply.status(400).send({
-            error: "Bad Request",
-            message: "User name must be at least 2 characters",
-            field: "userName",
-          });
+          request.log.warn({ field: "userName", value: userName }, "Invalid userName");
+          throw new ValidationError(
+            "userName",
+            "Le nom d'utilisateur doit faire au moins 2 caractères",
+          );
         }
 
+        // Validate comment
         if (!comment || comment.trim().length < 10) {
-          return reply.status(400).send({
-            error: "Bad Request",
-            message: "Comment must be at least 10 characters",
-            field: "comment",
-          });
+          request.log.warn({ field: "comment", length: comment?.length }, "Invalid comment");
+          throw new ValidationError(
+            "comment",
+            "Le commentaire doit faire au moins 10 caractères",
+          );
         }
 
-        if (!rating || rating < 1 || rating > 5) {
-          return reply.status(400).send({
-            error: "Bad Request",
-            message: "Rating must be between 1 and 5",
-            field: "rating",
-          });
-        }
+        // Validate rating using new validator
+        const validatedRating = validateRating(rating, "rating");
+
+        // Log successful rate limit pass for tracking
+        request.log.info(
+          { clientIp, endpoint: "/reviews" },
+          "Rate limit check passed",
+        );
 
         const review = await prisma.review.create({
           data: {
             userName: userName.trim(),
             comment: comment.trim(),
-            rating,
+            rating: validatedRating,
             deviceId: deviceId || null,
             visible: false,
           },
         });
+        request.log.info({ reviewId: review.id, rating: validatedRating }, "Review created");
         return reply.status(201).send(review);
       } catch (error) {
+        // Log rate limit exceeded if it's a 429
+        if (error.statusCode === 429) {
+          request.log.warn({ clientIp: request.ip }, "Rate limit exceeded");
+        }
         return handleValidationError(error, reply, request.log);
+      }
+    },
+  );
       }
     },
   );

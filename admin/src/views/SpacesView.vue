@@ -75,12 +75,14 @@ async function loadData() {
   }
 }
 
-watch([filterStatus, sortBy, page], loadData);
+watch([filterStatus, sortBy, page], () => {
+  if (!loading.value) loadData();
+});
 watch(searchQuery, () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     page.value = 1;
-    loadData();
+    if (!loading.value) loadData();
   }, 300);
 });
 
@@ -123,6 +125,7 @@ function resetForm() {
 }
 
 function openModal(space = null) {
+  if (loading.value) return; // Prevent opening modal during loading
   editing.value = space;
   imagePreview.value = null;
   removeImage.value = false;
@@ -211,9 +214,13 @@ async function save() {
     if (uploadedImageUrl) {
       await api
         .post("/upload/cleanup", { url: uploadedImageUrl })
-        .catch(() => {});
+        .catch((err) => {
+          console.error("Upload cleanup failed:", err);
+        });
     }
-    toast.error(e.message || "Erreur lors de la sauvegarde");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la sauvegarde",
+    );
   } finally {
     saving.value = false;
   }
@@ -231,7 +238,9 @@ async function remove(space) {
     await loadData();
     toast.success("Espace supprimé");
   } catch (e) {
-    toast.error(e.message || "Erreur lors de la suppression");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur lors de la suppression",
+    );
   } finally {
     busy.value.delete(space.id);
   }
@@ -246,7 +255,9 @@ async function toggleAvailability(space) {
       space.available ? "Marqué indisponible" : "Marqué disponible",
     );
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(space.id);
   }
@@ -259,7 +270,9 @@ async function toggleVisible(space) {
     await loadData();
     toast.success(space.visible ? "Masqué" : "Rendu visible");
   } catch (e) {
-    toast.error(e.message || "Erreur de mise à jour");
+    toast.error(
+      e.response?.data?.message || e.message || "Erreur de mise à jour",
+    );
   } finally {
     busy.value.delete(space.id);
   }
