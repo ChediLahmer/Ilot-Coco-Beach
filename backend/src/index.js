@@ -20,7 +20,6 @@ import { reviewRoutes } from "./routes/reviews.js";
 import { mediaRoutes } from "./routes/media.js";
 import { jobsRoutes } from "./routes/jobs.js";
 import { startScheduler } from "./lib/scheduler.js";
-import { migrateCorsHeaders } from "./lib/storage.js";
 import helmet from "@fastify/helmet";
 
 const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 600000);
@@ -155,15 +154,6 @@ const port = process.env.PORT || 3000;
 try {
   await app.listen({ port, host: "0.0.0.0" });
   startScheduler(app.log);
-
-  // Run one-time CORS migration for existing media files
-  if (process.env.RUN_CORS_MIGRATION === "true") {
-    try {
-      await migrateCorsHeaders();
-    } catch (err) {
-      app.log.error("CORS migration failed:", err);
-    }
-  }
 } catch (err) {
   app.log.error(err);
   process.exit(1);
