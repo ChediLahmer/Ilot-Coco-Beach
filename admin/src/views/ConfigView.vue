@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
+import { useVideoPreload } from "@/composables/useVideoPreload.js";
 import AppToggle from "@/components/AppToggle.vue";
 import FieldError from "@/components/FieldError.vue";
 
@@ -16,6 +17,7 @@ const {
 } = useFormValidation();
 const api = useApi();
 const toast = useToast();
+const { preloadVideoMetadata } = useVideoPreload();
 const config = ref({});
 const hours = ref({ fr: "", en: "", ar: "" });
 const showReviews = ref(false);
@@ -109,6 +111,12 @@ async function uploadMedia(key, event) {
     );
     uploadedUrl = url;
     config.value[key] = url;
+
+    // Preload video if it's a video file
+    if (isVideoUrl(url)) {
+      preloadVideoMetadata(url, "high");
+    }
+
     await api.put(`/config/${key}`, { value: url });
     toast.success("Fichier téléversé");
   } catch (e) {
@@ -167,6 +175,13 @@ async function loadData() {
   error.value = null;
   try {
     config.value = await api.get("/config");
+
+    // Preload video metadata
+    if (config.value.hero_video_url)
+      preloadVideoMetadata(config.value.hero_video_url, "high");
+    if (config.value.section_video_url)
+      preloadVideoMetadata(config.value.section_video_url, "high");
+
     try {
       const parsed = JSON.parse(config.value.hours || "{}");
       if (typeof parsed === "object" && parsed !== null) {

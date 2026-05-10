@@ -4,6 +4,7 @@ import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
 import { useConfirm } from "@/composables/useConfirm.js";
+import { useVideoPreload } from "@/composables/useVideoPreload.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 
@@ -17,6 +18,7 @@ const {
 const api = useApi();
 const toast = useToast();
 const { confirm } = useConfirm();
+const { preloadVideoMetadata } = useVideoPreload();
 const images = ref([]);
 const categories = ref([]);
 const uploading = ref(false);
@@ -146,6 +148,13 @@ async function loadData() {
     images.value = Array.isArray(res.items) ? res.items : [];
     galNextCursor.value = res.nextCursor;
     galHasMore.value = !!res.nextCursor;
+
+    // Preload all video metadata
+    images.value.forEach((img) => {
+      if (isVideo(img.url)) {
+        preloadVideoMetadata(img.url, "low");
+      }
+    });
   } catch (e) {
     error.value =
       e.response?.data?.message || e.message || "Erreur de chargement";
@@ -166,12 +175,17 @@ async function loadMoreGallery() {
     const res = await api.get(
       `/gallery?limit=50&cursor=${galNextCursor.value}`,
     );
-    images.value = [
-      ...images.value,
-      ...(Array.isArray(res.items) ? res.items : []),
-    ];
+    const newItems = Array.isArray(res.items) ? res.items : [];
+    images.value = [...images.value, ...newItems];
     galNextCursor.value = res.nextCursor;
     galHasMore.value = !!res.nextCursor;
+
+    // Preload new video metadata
+    newItems.forEach((img) => {
+      if (isVideo(img.url)) {
+        preloadVideoMetadata(img.url, "low");
+      }
+    });
   } catch (e) {
     toast.error(
       e.response?.data?.message || e.message || "Erreur de chargement",
