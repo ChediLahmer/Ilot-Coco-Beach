@@ -32,7 +32,7 @@
         </router-link>
 
         <div
-          class="mt-8 grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start"
+          class="mt-8 grid gap-6 md:gap-10 md:grid-cols-[1fr] lg:grid-cols-[0.85fr_1.15fr] lg:items-start"
         >
           <div>
             <p class="section-kicker">{{ t("menu.eyebrow") }}</p>
@@ -80,43 +80,49 @@
             </div>
           </div>
 
-          <div class="grid gap-4 sm:grid-cols-3">
+          <div
+            class="order-2 lg:order-1 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          >
             <article
-              class="premium-card rounded-[1.75rem] p-6 sm:col-span-1 overflow-hidden"
+              class="premium-card rounded-[1.75rem] p-4 sm:p-6 overflow-hidden"
             >
               <p
-                class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
+                class="font-heading text-[0.6rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
               >
                 {{ copy.activeCategory }}
               </p>
-              <p class="mt-4 font-brand text-2xl text-deep truncate">
+              <p
+                class="mt-3 sm:mt-4 font-brand text-xl sm:text-2xl text-deep truncate"
+              >
                 {{ activeCategoryLabel }}
               </p>
             </article>
 
-            <article class="premium-card rounded-[1.75rem] p-6 sm:col-span-1">
+            <article class="premium-card rounded-[1.75rem] p-4 sm:p-6">
               <p
-                class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
+                class="font-heading text-[0.6rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
               >
                 {{ copy.itemCount }}
               </p>
-              <p class="mt-4 font-brand text-3xl text-deep">
+              <p class="mt-3 sm:mt-4 font-brand text-2xl sm:text-3xl text-deep">
                 {{ activeItems.length }}
               </p>
             </article>
 
-            <article class="premium-card rounded-[1.75rem] p-6 sm:col-span-1">
+            <article class="premium-card rounded-[1.75rem] p-4 sm:p-6">
               <p
-                class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
+                class="font-heading text-[0.6rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.2em] text-coral/80"
               >
                 {{ copy.priceMode }}
               </p>
-              <p class="mt-4 font-brand text-3xl text-deep">
+              <p class="mt-3 sm:mt-4 font-brand text-2xl sm:text-3xl text-deep">
                 {{ t(`menu.${priceMode}`) }}
               </p>
             </article>
 
-            <div class="premium-card rounded-[1.75rem] p-4 sm:col-span-3">
+            <div
+              class="premium-card rounded-[1.75rem] p-3 sm:p-4 col-span-1 sm:col-span-2 lg:col-span-3"
+            >
               <div
                 class="relative"
                 @mouseenter="pause"
@@ -224,11 +230,11 @@
 
         <div
           v-else
-          class="mt-12 grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start"
+          class="mt-8 sm:mt-12 grid gap-6 md:gap-8 grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] lg:items-start"
           @mouseenter="stopAutoPaging"
           @mouseleave="startAutoPaging"
         >
-          <div class="order-2 lg:order-1">
+          <div class="order-2 lg:order-1 w-full">
             <Transition :name="transitionName" mode="out-in">
               <div :key="String(activeCategory) + '-' + carPage">
                 <div
@@ -302,16 +308,18 @@
           </div>
 
           <div
-            class="order-1 rounded-[1.75rem] premium-card p-6 sm:p-8 lg:order-2 lg:sticky lg:top-28"
+            class="order-1 rounded-[1.75rem] premium-card p-4 sm:p-6 md:p-8 lg:order-2 lg:sticky lg:top-28"
           >
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center justify-between gap-3 sm:gap-4">
               <div>
                 <p
-                  class="font-heading text-[0.68rem] font-bold uppercase tracking-[0.2em] text-ocean/70"
+                  class="font-heading text-[0.6rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.2em] text-ocean/70"
                 >
                   {{ copy.fullList }}
                 </p>
-                <h2 class="mt-4 font-brand text-3xl text-deep">
+                <h2
+                  class="mt-3 sm:mt-4 font-brand text-2xl sm:text-3xl text-deep"
+                >
                   {{ activeCategoryLabel }}
                 </h2>
               </div>
