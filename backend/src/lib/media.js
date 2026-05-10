@@ -1,5 +1,4 @@
 import sharp from "sharp";
-import { remuxVideoWithFaststart } from "./video-utils.js";
 
 const WEB_SAFE_IMAGES = new Set([
   "image/jpeg",
@@ -70,34 +69,14 @@ export async function processMedia(buffer, detectedMime, filename) {
 
   if (detectedMime === "video/quicktime" || detectedMime === "video/x-m4v") {
     const baseName = filename.replace(/\.[^.]+$/, "");
-    try {
-      const remuxedBuffer = await remuxVideoWithFaststart(buffer);
-      return { buffer: remuxedBuffer, mime: "video/mp4", ext: "mp4", baseName };
-    } catch (err) {
-      console.error("Video remux failed, using original:", err.message);
-      return { buffer, mime: "video/mp4", ext: "mp4", baseName };
-    }
+    return { buffer, mime: "video/mp4", ext: "mp4", baseName };
   }
 
   if (CONVERTIBLE_VIDEOS.has(detectedMime)) {
-    try {
-      const remuxedBuffer = await remuxVideoWithFaststart(buffer);
-      return { buffer: remuxedBuffer, mime: "video/mp4", ext: "mp4" };
-    } catch (err) {
-      console.error("Video remux failed, using original:", err.message);
-      return { buffer, mime: detectedMime, ext: null };
-    }
+    return { buffer, mime: detectedMime, ext: null };
   }
 
-  if (WEB_SAFE_VIDEOS.has(detectedMime)) {
-    try {
-      const remuxedBuffer = await remuxVideoWithFaststart(buffer);
-      return { buffer: remuxedBuffer, mime: detectedMime, ext: null };
-    } catch (err) {
-      console.error("Video remux failed, using original:", err.message);
-      return { buffer, mime: detectedMime, ext: null };
-    }
-  }
+  return { buffer, mime: detectedMime, ext: null };
 }
 
 export function isSvgBuffer(mimetype, buffer) {
