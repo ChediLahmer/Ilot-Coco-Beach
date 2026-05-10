@@ -42,6 +42,8 @@ services:
         value: "20.19.0"
       - key: SEED_DB
         value: "true"
+      - key: RUN_CORS_MIGRATION
+        value: "true"
 
   # ─── Client (public website) ────────────────────────────
   - type: web

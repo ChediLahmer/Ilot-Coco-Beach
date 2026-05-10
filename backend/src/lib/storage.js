@@ -20,6 +20,17 @@ const s3 = new S3Client({
 
 const BUCKET = process.env.S3_BUCKET || "cocobeach";
 
+function getS3Metadata() {
+  return {
+    CacheControl: "public, max-age=31536000, immutable",
+    Metadata: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "Range, Content-Type",
+    },
+  };
+}
+
 function sanitizeFilename(filename) {
   return filename
     .replace(/^.*[\\/]/, "")
@@ -58,6 +69,7 @@ export async function createPresignedUpload({ filename, contentType }) {
     Bucket: BUCKET,
     Key: key,
     ContentType: contentType,
+    ...getS3Metadata(),
   });
   let url = await getSignedUrl(s3, command, { expiresIn: 900 });
 
@@ -99,6 +111,7 @@ export async function uploadFile(buffer, filename, contentType, hash) {
       Key: key,
       Body: buffer,
       ContentType: contentType,
+      ...getS3Metadata(),
     }),
   );
 
@@ -136,6 +149,7 @@ export async function uploadBufferToKey(key, buffer, contentType) {
       Key: key,
       Body: buffer,
       ContentType: contentType,
+      ...getS3Metadata(),
     }),
   );
 }
@@ -200,4 +214,68 @@ export async function deleteFile(url) {
     return;
   }
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+export async function migrateCorsHeaders() {
+  console.log("[CORS Migration] Starting migration of existing media files...");
+  let processed = 0;
+  let updated = 0;
+  let failed = 0;
+
+  try {
+    let ContinuationToken;
+    const prefix = "cocobeach/"; // Skip dedup/ folder
+
+    do {
+      const list = await s3.send(
+        new ListObjectsV2Command({
+          Bucket: BUCKET,
+          Prefix: prefix,
+          ContinuationToken,
+        }),
+      );
+
+      if (!list.Contents || list.Contents.length === 0) break;
+
+      for (const obj of list.Contents) {
+        try {
+          // Copy object with new CORS metadata
+          await s3.send(
+            new PutObjectCommand({
+              Bucket: BUCKET,
+              Key: obj.Key,
+              Body: await s3
+                .send(new GetObjectCommand({ Bucket: BUCKET, Key: obj.Key }))
+                .then((res) => res.Body),
+              ContentType: obj.ContentType || "application/octet-stream",
+              ...getS3Metadata(),
+            }),
+          );
+          updated++;
+        } catch (err) {
+          console.error(
+            `[CORS Migration] Failed to update ${obj.Key}:`,
+            err.message,
+          );
+          failed++;
+        }
+        processed++;
+        if (processed % 10 === 0) {
+          console.log(
+            `[CORS Migration] Processed ${processed} files (${updated} updated, ${failed} failed)`,
+          );
+        }
+      }
+
+      ContinuationToken = list.NextContinuationToken;
+    } while (ContinuationToken);
+
+    console.log(
+      `[CORS Migration] Complete! Processed: ${processed}, Updated: ${updated}, Failed: ${failed}`,
+    );
+    return { processed, updated, failed };
+  } catch (err) {
+    console.error("[CORS Migration] Migration failed:", err);
+    throw err;
+  }
 }

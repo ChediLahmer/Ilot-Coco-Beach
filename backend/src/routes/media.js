@@ -91,6 +91,9 @@ export async function mediaRoutes(app) {
           reply.header("Content-Length", String(length));
           reply.header("Cache-Control", "public, max-age=31536000, immutable");
           reply.header("Connection", "keep-alive");
+          reply.header("Access-Control-Allow-Origin", "*");
+          reply.header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+          reply.header("Access-Control-Allow-Headers", "Range, Content-Type");
           return reply.status(206).send(partial.Body);
         }
 
@@ -107,6 +110,9 @@ export async function mediaRoutes(app) {
         reply.header("Accept-Ranges", "bytes");
         reply.header("Cache-Control", "public, max-age=31536000, immutable");
         reply.header("Connection", "keep-alive");
+        reply.header("Access-Control-Allow-Origin", "*");
+        reply.header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        reply.header("Access-Control-Allow-Headers", "Range, Content-Type");
         return reply.send(full.Body);
       } catch (error) {
         if (
