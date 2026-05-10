@@ -2,9 +2,6 @@ import { spawn } from "child_process";
 import { writeFileSync, readFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
-
-const FFMPEG_BIN = process.env.FFMPEG_PATH || ffmpegInstaller?.path || "ffmpeg";
 
 export async function remuxVideoWithFaststart(buffer) {
   const tmpDir = tmpdir();
@@ -21,7 +18,7 @@ export async function remuxVideoWithFaststart(buffer) {
     writeFileSync(inputFile, buffer);
 
     await new Promise((resolve, reject) => {
-      const ffmpeg = spawn(FFMPEG_BIN, [
+      const ffmpeg = spawn("ffmpeg", [
         "-i",
         inputFile,
         "-c",

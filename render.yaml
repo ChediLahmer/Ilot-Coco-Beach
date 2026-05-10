@@ -11,7 +11,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: rm -f package-lock.json && npm install --include=dev && npm run validate && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate reset --force --skip-seed && node prisma/seed.js
+    buildCommand: apt-get update && apt-get install -y ffmpeg && rm -f package-lock.json && npm install --include=dev && npm run validate && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate reset --force --skip-seed && node prisma/seed.js
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
