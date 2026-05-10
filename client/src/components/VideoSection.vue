@@ -135,9 +135,11 @@
 import { ref, computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfig } from "@/composables/useConfig";
+import { useVideoPreload } from "@/composables/useVideoPreload";
 
 const { t } = useI18n();
 const config = useConfig();
+const { preloadVideoMetadata } = useVideoPreload();
 
 const sectionVideo = computed(() => config.sectionVideo || "");
 const sectionPoster = computed(() => config.sectionPoster || "");
@@ -175,6 +177,9 @@ function retryVideo() {
 }
 
 watch(sectionVideo, (v) => {
+  if (v) {
+    preloadVideoMetadata(v, "high");
+  }
   videoSrc.value = v;
   videoError.value = false;
   videoReady.value = false;

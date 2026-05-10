@@ -82,9 +82,11 @@ import { useI18n } from "vue-i18n";
 import gsap from "gsap";
 import { trackReserveClick } from "@/composables/useAnalytics";
 import { useConfig } from "@/composables/useConfig";
+import { useVideoPreload } from "@/composables/useVideoPreload";
 
 const { t } = useI18n();
 const config = useConfig();
+const { preloadVideoMetadata } = useVideoPreload();
 
 const heroVideo = computed(() => config.heroVideo || "");
 const heroPoster = computed(() => config.heroPoster || "");
@@ -135,11 +137,17 @@ function deferVideo() {
 }
 
 watch(heroVideo, (v) => {
-  if (v) deferVideo();
+  if (v) {
+    preloadVideoMetadata(v, "high");
+    deferVideo();
+  }
 });
 
 onMounted(() => {
-  if (heroVideo.value) deferVideo();
+  if (heroVideo.value) {
+    preloadVideoMetadata(heroVideo.value, "high");
+    deferVideo();
+  }
 
   const els = contentEl.value
     ? Array.from(contentEl.value.querySelectorAll("[data-animate]"))

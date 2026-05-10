@@ -182,9 +182,10 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useData } from "@/composables/useData";
+import { useVideoPreload } from "@/composables/useVideoPreload";
 
 const { t } = useI18n();
 const {
@@ -193,9 +194,23 @@ const {
   loading: dataLoading,
   retryGallery,
 } = useData();
+const { preloadVideoMetadata } = useVideoPreload();
 const readyVideos = ref({});
 const erroredVideos = ref({});
 const fallbackVideos = ref({});
+
+// Preload all visible gallery videos
+watch(
+  galleryImages,
+  (newImages) => {
+    newImages.forEach((img) => {
+      if (isVideo(img.url)) {
+        preloadVideoMetadata(img.url, "low");
+      }
+    });
+  },
+  { deep: false },
+);
 
 function markVideoReady(src) {
   readyVideos.value = { ...readyVideos.value, [src]: true };
