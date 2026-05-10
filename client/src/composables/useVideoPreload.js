@@ -14,8 +14,8 @@ function toProxyUrl(url) {
 export function useVideoPreload() {
   /**
    * Preload video metadata using HTTP Range requests
-   * Tries direct R2 fetch first (fastest if CORS enabled)
-   * Falls back to backend proxy on CORS errors
+   * Routes all R2 URLs through backend proxy (CORS-enabled)
+   * Routes other URLs directly if possible
    * Fetches first ~512KB which typically contains full moov atom
    * Allows browser to start playback immediately
    */
@@ -29,8 +29,9 @@ export function useVideoPreload() {
 
     preloadProgress.value.set(url, 0);
 
-    // Use proxy if direct fetch previously failed for this URL
-    const useProxy = failedDirectFetch.value.has(url);
+    // Always use proxy for R2 URLs (bucket doesn't have direct CORS enabled)
+    const isR2Url = url.includes(".r2.dev") || url.includes("cdn.example.com");
+    const useProxy = isR2Url || failedDirectFetch.value.has(url);
 
     try {
       const fetchUrl = useProxy ? toProxyUrl(url) : url;
