@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-sand flex flex-col">
+  <div class="min-h-screen bg-transparent flex flex-col">
     <NavBar />
     <div class="flex-1 flex items-center justify-center px-6 py-20">
       <div class="text-center max-w-md">

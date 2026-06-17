@@ -48,7 +48,7 @@ async function loadMore() {
   sections.forEach((section, idx) => {
     section.classList.add("animated");
     const isReversed = idx % 2 !== 0;
-    gsap.from(section, {
+    const tween = gsap.from(section, {
       x: isReversed ? 80 : -80,
       opacity: 0,
       duration: 0.8,
@@ -57,9 +57,9 @@ async function loadMore() {
         trigger: section,
         start: "top 80%",
         once: true,
-        onEnter: ({ self }) => myScrollTriggers.push(self),
       },
     });
+    if (tween.scrollTrigger) myScrollTriggers.push(tween.scrollTrigger);
   });
 }
 
@@ -130,7 +130,7 @@ onMounted(async () => {
   );
   if (sentinel.value) observer.observe(sentinel.value);
 
-  gsap.from(".emp-cta", {
+  const ctaTween = gsap.from(".emp-cta", {
     y: 50,
     opacity: 0,
     duration: 0.7,
@@ -141,16 +141,17 @@ onMounted(async () => {
       once: true,
     },
   });
+  if (ctaTween.scrollTrigger) myScrollTriggers.push(ctaTween.scrollTrigger);
 });
 
 onUnmounted(() => {
   observer?.disconnect();
-  myScrollTriggers.forEach((st) => st.kill());
+  myScrollTriggers.forEach((st) => st?.kill());
 });
 </script>
 
 <template>
-  <div class="min-h-screen bg-sand">
+  <div class="min-h-screen bg-transparent">
     <NavBar />
 
     <!-- Hero Section -->
@@ -188,14 +189,14 @@ onUnmounted(() => {
         >
           <path
             d="M0,64 C240,100 480,20 720,64 C960,108 1200,28 1440,64 L1440,120 L0,120 Z"
-            fill="white"
+            fill="#fef6ec"
           />
         </svg>
       </div>
     </section>
 
     <!-- Spaces Grid -->
-    <div class="bg-white py-12 md:py-16 px-6 md:px-16">
+    <div class="py-12 md:py-16 px-6 md:px-16">
       <!-- Loading skeleton -->
       <div
         v-if="loading && !emplacements.length"

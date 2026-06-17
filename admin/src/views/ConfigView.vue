@@ -50,6 +50,22 @@ const fields = [
   },
 ];
 
+const seoFields = [
+  {
+    key: "seo_title",
+    label: "Titre SEO (balise <title> de l'accueil)",
+    type: "text",
+    placeholder: "Ilot Coco Beach — Restaurant & Cabanes à Ghar El Melh",
+  },
+  {
+    key: "seo_description",
+    label: "Meta description (résumé affiché par Google)",
+    type: "textarea",
+    placeholder:
+      "Restaurant fruits de mer sur une île à Ghar El Melh. Cabanes sur l'eau, paillotes, parasols et balades en mer.",
+  },
+];
+
 function isVideoUrl(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 }
@@ -88,6 +104,11 @@ const mediaFields = [
   {
     key: "about_image_2",
     label: "Image À propos 2 (petite, droite)",
+    accept: "image/*",
+  },
+  {
+    key: "og_image",
+    label: "Image de partage social (Open Graph — 1200×630)",
     accept: "image/*",
   },
 ];
@@ -242,6 +263,14 @@ async function save() {
     }
   }
 
+  // Validate SEO text fields
+  for (const field of seoFields) {
+    const value = config.value[field.key];
+    if (value) {
+      validateMaxLength(String(value), field.key, field.label, 10000);
+    }
+  }
+
   // Validate media URLs
   for (const mediaField of mediaFields) {
     const url = config.value[mediaField.key];
@@ -267,6 +296,11 @@ async function save() {
   try {
     const payload = {};
     for (const field of fields) {
+      if (config.value[field.key] !== undefined) {
+        payload[field.key] = String(config.value[field.key]);
+      }
+    }
+    for (const field of seoFields) {
       if (config.value[field.key] !== undefined) {
         payload[field.key] = String(config.value[field.key]);
       }
@@ -432,6 +466,50 @@ async function save() {
                 >{{ reviewStats.recommend }}%</span
               >
               — Laissez vide pour utiliser la valeur calculée automatiquement.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEO & Référencement -->
+      <h3 class="text-lg font-bold text-text mt-8 mb-1">SEO & Référencement</h3>
+      <p class="text-sm text-text-muted mb-4">
+        Optimisez l'apparence du site dans Google et lors du partage sur les
+        réseaux (WhatsApp, Messenger, Facebook, Instagram).
+      </p>
+      <div
+        class="bg-surface rounded-xl border border-border shadow-sm overflow-hidden max-w-2xl"
+      >
+        <div class="divide-y divide-border">
+          <div v-for="field in seoFields" :key="field.key" class="px-6 py-4">
+            <label class="block text-sm font-medium text-text mb-1.5">{{
+              field.label
+            }}</label>
+            <textarea
+              v-if="field.type === 'textarea'"
+              v-model="config[field.key]"
+              :placeholder="field.placeholder"
+              rows="3"
+              maxlength="10000"
+              class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+              :class="
+                fieldErrors[field.key] ? 'border-danger' : 'border-border'
+              "
+            ></textarea>
+            <input
+              v-else
+              v-model="config[field.key]"
+              :type="field.type"
+              :placeholder="field.placeholder"
+              maxlength="10000"
+              class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors bg-surface"
+              :class="
+                fieldErrors[field.key] ? 'border-danger' : 'border-border'
+              "
+            />
+            <FieldError :message="fieldErrors[field.key]" />
+            <p class="mt-1.5 text-xs text-text-muted">
+              Laissez vide pour utiliser le texte par défaut.
             </p>
           </div>
         </div>

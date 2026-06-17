@@ -22,6 +22,22 @@ services:
         generateValue: true
       - key: CORS_ORIGIN
         sync: false
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: DEDUP_MEDIA_CRON
+        value: "0 3 * * 0"
+      - key: JOB_RUN_RETENTION_DAYS
+        value: "30"
+      - key: PRESIGN_MAX_VIDEO_BYTES
+        value: "209715200"
+      - key: S3_REGION
+        value: "us-east-1"
       - key: S3_ENDPOINT
         sync: false
       - key: S3_ACCESS_KEY
@@ -90,9 +106,15 @@ services:
     envVars:
       - key: VITE_API_URL
         sync: false
+      - key: VITE_UPLOAD_URL
+        sync: false
       - key: VITE_REQUEST_TIMEOUT_MS
         value: "180000"
       - key: VITE_UPLOAD_TIMEOUT_MS
         value: "600000"
+      - key: VITE_IMAGE_UPLOAD_MAX_DIMENSION
+        value: "2200"
+      - key: VITE_IMAGE_UPLOAD_QUALITY
+        value: "0.82"
       - key: NODE_VERSION
         value: "20.19.0"

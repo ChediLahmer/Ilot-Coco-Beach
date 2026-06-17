@@ -1,5 +1,5 @@
 <template>
-  <div ref="homeRef" class="min-h-screen bg-sand">
+  <div ref="homeRef" class="min-h-screen bg-transparent">
     <NavBar />
     <main>
       <div
@@ -70,26 +70,30 @@
     <FooterSection />
     <FloatingSocial />
 
-    <div
-      v-if="showStickyBar"
-      class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-4 border-t border-charcoal/10 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden"
-    >
-      <div class="min-w-0">
-        <p class="truncate font-brand text-base text-deep">{{ config.name }}</p>
-        <p
-          class="mt-1 truncate font-heading text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-charcoal/55"
-        >
-          {{ t("hero.tagline") }}
-        </p>
-      </div>
-      <a
-        href="#reservation"
-        class="shrink-0 rounded-full bg-ocean px-5 py-2.5 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white shadow-[0_14px_28px_rgba(32,178,170,0.24)]"
-        @click.prevent="scrollToRes"
+    <Transition name="sticky-bar">
+      <div
+        v-if="showStickyBar"
+        class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-4 border-t border-charcoal/10 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden"
       >
-        {{ t("nav.reservation") }}
-      </a>
-    </div>
+        <div class="min-w-0">
+          <p class="truncate font-brand text-base text-deep">
+            {{ config.name }}
+          </p>
+          <p
+            class="mt-1 truncate font-heading text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-charcoal/55"
+          >
+            {{ t("hero.tagline") }}
+          </p>
+        </div>
+        <a
+          href="#reservation"
+          class="shrink-0 rounded-full bg-ocean px-5 py-2.5 font-heading text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white shadow-[0_14px_28px_rgba(32,178,170,0.24)]"
+          @click.prevent="scrollToRes"
+        >
+          {{ t("nav.reservation") }}
+        </a>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -216,9 +220,31 @@ const isValidConfig = computed(() => {
 
 useScrollReveal(homeRef);
 
+let lastScrollY = 0;
+
 function onScroll() {
-  const scrollTop = window.scrollY;
-  showStickyBar.value = scrollTop > window.innerHeight * 0.8;
+  const y = window.scrollY;
+  const delta = y - lastScrollY;
+
+  // Ignore tiny scroll jitters to avoid flicker.
+  if (Math.abs(delta) < 6) return;
+
+  const pastHero = y > window.innerHeight * 0.6;
+  const nearBottom =
+    window.innerHeight + y >= document.documentElement.scrollHeight - 120;
+
+  if (!pastHero || nearBottom) {
+    // Hidden over the hero (it has its own CTA) and at the very bottom.
+    showStickyBar.value = false;
+  } else if (delta < 0) {
+    // Scrolling up → reveal.
+    showStickyBar.value = true;
+  } else {
+    // Scrolling down → hide.
+    showStickyBar.value = false;
+  }
+
+  lastScrollY = y;
 }
 
 function scrollToRes() {
@@ -305,6 +331,7 @@ function applyHead() {
 }
 
 onMounted(() => {
+  lastScrollY = window.scrollY;
   window.addEventListener("scroll", onScroll, { passive: true });
 
   applyHead();
@@ -318,3 +345,17 @@ onUnmounted(() => {
   window.removeEventListener("scroll", onScroll);
 });
 </script>
+
+<style scoped>
+.sticky-bar-enter-active,
+.sticky-bar-leave-active {
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease;
+}
+.sticky-bar-enter-from,
+.sticky-bar-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+</style>

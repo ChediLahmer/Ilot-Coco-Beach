@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-sand">
+  <div class="min-h-screen bg-transparent">
     <NavBar />
 
     <!-- Page header -->

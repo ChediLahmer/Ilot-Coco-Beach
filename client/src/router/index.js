@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { trackPageView } from "@/composables/useAnalytics";
 import { useConfig, configReady } from "@/composables/useConfig";
+import { applyRouteSeo } from "@/composables/useSeo";
 
 const routes = [
   {
@@ -64,6 +65,7 @@ router.beforeEach(async (to) => {
 });
 
 router.afterEach((to) => {
+  applyRouteSeo(to.name, to.fullPath);
   trackPageView(to.fullPath);
 });
 

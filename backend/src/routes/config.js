@@ -22,6 +22,7 @@ const MEDIA_KEYS = new Set([
   "section_poster_url",
   "about_image_1",
   "about_image_2",
+  "og_image",
 ]);
 
 const ALLOWED_CONFIG_KEYS = new Set([
@@ -46,6 +47,9 @@ const ALLOWED_CONFIG_KEYS = new Set([
   "show_reviews",
   "about_image_1",
   "about_image_2",
+  "seo_title",
+  "seo_description",
+  "og_image",
 ]);
 
 export async function configRoutes(app) {

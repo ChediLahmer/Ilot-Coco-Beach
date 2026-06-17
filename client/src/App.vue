@@ -1,4 +1,5 @@
 <template>
+  <TropicalBackdrop />
   <router-view v-slot="{ Component, route }">
     <Transition name="page-shell" mode="out-in" appear>
       <component :is="Component" :key="route.path" />
@@ -9,6 +10,7 @@
 <script setup>
 import { watch } from "vue";
 import { useI18n } from "vue-i18n";
+import TropicalBackdrop from "@/components/TropicalBackdrop.vue";
 
 const { locale } = useI18n();
 

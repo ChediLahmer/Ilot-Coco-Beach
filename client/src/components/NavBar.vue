@@ -71,7 +71,7 @@
           </a>
         </div>
         <a href="/" class="shrink-0" @click.prevent="goHome">
-          <p class="font-brand text-xl text-deep">{{ config.name }}</p>
+          <p class="font-brand text-xl text-deep italic">{{ config.name }}</p>
           <p
             v-if="config.phone"
             class="text-[0.7rem] text-charcoal/50 font-medium"
@@ -144,7 +144,9 @@
           <div class="mx-auto flex h-full max-w-md flex-col">
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-brand text-xl text-deep">{{ config.name }}</p>
+                <p class="font-brand text-xl text-deep italic">
+                  {{ config.name }}
+                </p>
                 <p
                   v-if="config.phone"
                   class="text-xs text-charcoal/50 font-medium"

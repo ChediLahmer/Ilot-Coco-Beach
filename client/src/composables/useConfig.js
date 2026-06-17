@@ -23,6 +23,9 @@ const config = reactive({
   satisfactionRate: "",
   aboutImage1: "",
   aboutImage2: "",
+  seoTitle: "",
+  seoDescription: "",
+  ogImage: "",
   loaded: false,
 });
 
@@ -67,6 +70,9 @@ const KEY_MAP = {
   satisfaction_rate: "satisfactionRate",
   about_image_1: "aboutImage1",
   about_image_2: "aboutImage2",
+  seo_title: "seoTitle",
+  seo_description: "seoDescription",
+  og_image: "ogImage",
 };
 
 let loaded = false;
