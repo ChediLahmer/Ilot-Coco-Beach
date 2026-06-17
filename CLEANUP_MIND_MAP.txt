@@ -1,0 +1,105 @@
+Production Cleanup - Quick Reference Mind Map
+==============================================
+
+UAT CLEANUP BEFORE PRODUCTION
+│
+├─ 1. CODE REMOVAL
+│  ├─ backend/src/lib/scheduler.js
+│  │  ├─ Remove: Test job cron (*/2 * * * *)
+│  │  ├─ Remove: Test job async function block
+│  │  ├─ Remove: ENABLE_TEST_JOB env check
+│  │  └─ Keep: Job locks + retry logic ✅
+│  │
+│  └─ backend/src/lib/scheduler.js (Logging)
+│     ├─ Change: logger.debug → remove or trace-level
+│     ├─ Keep: logger.info (success/failure stats)
+│     └─ Keep: logger.error (critical errors)
+│
+├─ 2. FILES TO DELETE
+│  ├─ backend/test-scheduler.sh
+│  ├─ backend/TEST_SCHEDULER_INFO.txt
+│  └─ Optional: SCHEDULER_ENHANCEMENTS.md → Keep as reference ✅
+│
+├─ 3. ENVIRONMENT VARIABLES
+│  ├─ .env (local)
+│  │  └─ Remove: ENABLE_TEST_JOB=true line
+│  │
+│  ├─ .env.production (if exists)
+│  │  └─ Remove: ENABLE_TEST_JOB=true line
+│  │
+│  └─ Render Dashboard
+│     └─ Verify: ENABLE_TEST_JOB not set
+│
+├─ 4. DATABASE (NO CHANGES NEEDED)
+│  ├─ JobRun table → Keep (tracking all jobs)
+│  ├─ Test entries → Can delete with SQL if desired:
+│  │  │  DELETE FROM job_runs WHERE job_name = 'test-job-2min';
+│  │  └─ But not required
+│  └─ Prisma migration → Keep ✅
+│
+├─ 5. ADMIN UI (NO CHANGES NEEDED)
+│  └─ JobsView.vue → Keep ✅ (still shows real job history)
+│     └─ test-job-2min just won't appear in grid after removal
+│
+├─ 6. GIT MANAGEMENT (OPTIONAL)
+│  ├─ Option A: Keep test code in history (simpler)
+│  │  └─ Just remove from runtime (ENABLE_TEST_JOB=false)
+│  │
+│  └─ Option B: Rebase & clean history (more polished)
+│     ├─ Create branch: cleanup/remove-test-job
+│     ├─ Remove test code
+│     ├─ Commit: "Remove UAT test job"
+│     └─ Merge to main
+│
+├─ 7. PRE-DEPLOYMENT CHECKS
+│  ├─ Build verification
+│  │  └─ npm run build (if applicable)
+│  │
+│  ├─ Startup test
+│  │  ├─ Unset ENABLE_TEST_JOB
+│  │  └─ npm run dev → starts without test job ✅
+│  │
+│  ├─ Dashboard verification
+│  │  └─ Admin JobsView → no test-job-2min in grid
+│  │
+│  ├─ Real jobs verification
+│  │  ├─ deactivate-expired-items (every 1 min) ✅
+│  │  ├─ dedup-media (every 1 min) ✅
+│  │  └─ cleanup-tokens-analytics (daily 3 AM) ✅
+│  │
+│  └─ Database check
+│     └─ Verify job_runs table getting real entries (no test)
+│
+├─ 8. DEPLOYMENT
+│  ├─ Tag version: git tag v1.0.0-prod
+│  ├─ Push tags: git push --tags
+│  ├─ Deploy to Render
+│  ├─ Verify in production
+│  │  ├─ Admin dashboard loads
+│  │  ├─ No errors in logs
+│  │  └─ Jobs executing normally
+│  └─ Monitor first 24 hours
+│
+└─ 9. ROLLBACK PLAN (If needed)
+   ├─ Quick: git revert <commit-hash>
+   ├─ Manual: Copy test job code back from git history
+   └─ Re-enable: ENABLE_TEST_JOB=true in .env
+
+========================================
+
+CRITICAL ITEMS TO KEEP (DO NOT REMOVE):
+✅ Job lock mechanism (prevents concurrent runs)
+✅ Retry wrapper + exponential backoff
+✅ JobRun Prisma model and migrations
+✅ All 3 production jobs (deactivate, dedup, cleanup)
+✅ JobsView admin dashboard
+
+SAFE TO REMOVE (NO REGRESSION RISK):
+❌ Test job cron & logic
+❌ ENABLE_TEST_JOB env variable
+❌ test-scheduler.sh script
+❌ TEST_SCHEDULER_INFO.txt file
+
+ESTIMATED TIME: 30-45 minutes
+
+DEPLOYMENT CONFIDENCE: 99.9% (test removal is purely cosmetic)

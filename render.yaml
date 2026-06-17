@@ -1,0 +1,120 @@
+databases:
+  - name: cocobeach-db
+    plan: free
+    databaseName: cocobeach
+    user: cocobeach
+
+services:
+  # ─── Backend API ────────────────────────────────────────
+  - type: web
+    name: cocobeach-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: rm -f package-lock.json && npm install --include=dev && npm run validate && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate reset --force --skip-seed && node prisma/seed.js
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cocobeach-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: DEDUP_MEDIA_CRON
+        value: "0 3 * * 0"
+      - key: JOB_RUN_RETENTION_DAYS
+        value: "30"
+      - key: PRESIGN_MAX_VIDEO_BYTES
+        value: "209715200"
+      - key: S3_REGION
+        value: "us-east-1"
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_BUCKET
+        value: cocobeach
+      - key: S3_PUBLIC_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: REQUEST_TIMEOUT_MS
+        value: "600000"
+      - key: CONNECTION_TIMEOUT_MS
+        value: "600000"
+      - key: NODE_VERSION
+        value: "20.19.0"
+      - key: SEED_DB
+        value: "true"
+
+  # ─── Client (public website) ────────────────────────────
+  - type: web
+    name: cocobeach-client
+    runtime: static
+    rootDir: client
+    buildCommand: rm -f package-lock.json && npm install && npm run validate
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_REQUEST_TIMEOUT_MS
+        value: "180000"
+      - key: NODE_VERSION
+        value: "20.19.0"
+
+  # ─── Admin panel ────────────────────────────────────────
+  - type: web
+    name: cocobeach-admin
+    runtime: static
+    rootDir: admin
+    buildCommand: rm -f package-lock.json && npm install && npm run validate
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_UPLOAD_URL
+        sync: false
+      - key: VITE_REQUEST_TIMEOUT_MS
+        value: "180000"
+      - key: VITE_UPLOAD_TIMEOUT_MS
+        value: "600000"
+      - key: VITE_IMAGE_UPLOAD_MAX_DIMENSION
+        value: "2200"
+      - key: VITE_IMAGE_UPLOAD_QUALITY
+        value: "0.82"
+      - key: NODE_VERSION
+        value: "20.19.0"

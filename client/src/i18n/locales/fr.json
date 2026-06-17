@@ -1,0 +1,231 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "gallery": "Galerie",
+    "menu": "Carte",
+    "experience": "Espaces",
+    "reservation": "Réserver",
+    "contact": "Accès"
+  },
+  "hero": {
+    "welcome": "Adresse marine signature",
+    "tagline": "Table privée, cadre marin, arrivée en barque",
+    "description": "Réservez une cabane sur l'eau, un déjeuner fruits de mer, une balade en mer ou une sortie en groupe depuis Ghar El Melh, Bizerte. Restaurant accessible en bateau.",
+    "cta": "Voir la carte",
+    "panelTitle": "Planifier votre venue",
+    "panelText": "Réservez rapidement votre table, votre cabane ou votre moment de groupe.",
+    "notes": {
+      "locationLabel": "Destination",
+      "locationValue": "Ghar El Melh · Bizerte",
+      "arrivalLabel": "Arrivée",
+      "arrivalValue": "Courte traversée en barque jusqu'à l'îlot",
+      "occasionLabel": "Formats",
+      "occasionValue": "Tables privées, groupes et moments signature"
+    }
+  },
+  "about": {
+    "eyebrow": "Positionnement",
+    "title": "Une destination conçue pour des journées soignées face à la mer",
+    "description": "Le restaurant Coco Beach réunit cabanes sur sable, paillotes sur mer, parasols et service attentionné dans un décor côtier singulier à Ghar El Melh.",
+    "story": "Du premier embarquement à la dernière assiette, chaque détail doit évoquer une hospitalité calme, premium et mémorable.",
+    "cta": "Préparer une réservation",
+    "features": {
+      "cabins": "Espaces sur l'eau",
+      "cabinsDesc": "Cabanes et salons avec vue directe sur la mer.",
+      "water": "Vue & arrivée",
+      "waterDesc": "Le trajet en barque donne immédiatement un caractère exclusif à l'expérience.",
+      "hammocks": "Confort prolongé",
+      "hammocksDesc": "Des zones lounge et ombragées pensées pour rester plus longtemps.",
+      "vibes": "Signature visuelle",
+      "vibesDesc": "Bois, sable, lumière et textures marines dans un langage plus premium."
+    }
+  },
+  "menu": {
+    "eyebrow": "La table",
+    "title": "Les plats les plus demandés à découvrir avant de réserver",
+    "subtitle": "Un aperçu visuel des entrées, fruits de mer, grillades et plats signature servis sur place.",
+    "notes": {
+      "one": "Retrouvez les incontournables que les clients demandent le plus pour le déjeuner, le coucher de soleil et les sorties en groupe.",
+      "two": "Chaque visuel aide à projeter l'assiette, le niveau de gamme et le ticket moyen avant la réservation.",
+      "three": "Besoin de la carte complète ou d'une formule groupe ? L'équipe la partage directement lors de votre prise de contact."
+    },
+    "viewAll": "Voir toute la carte",
+    "showMore": "Voir les {count} autres plats",
+    "prevPage": "Précédent",
+    "nextPage": "Suivant",
+    "reserveCta": "Demander une table",
+    "standard": "Standard",
+    "extra": "Extra",
+    "empty": "Aucun plat disponible pour le moment.",
+    "available": "Disponible",
+    "unavailable": "Indisponible"
+  },
+  "gallery": {
+    "eyebrow": "Galerie",
+    "title": "Un cadre marin pensé pour séduire avant même l'arrivée",
+    "subtitle": "Nous avons retenu les vues qui valorisent le lieu, ses matières et sa qualité d'accueil.",
+    "viewAll": "Voir la galerie",
+    "empty": "Aucune image disponible pour le moment.",
+    "allCategories": "Tout",
+    "backHome": "Retour à l'accueil",
+    "noMore": "Vous avez tout vu.",
+    "labels": {
+      "overwater": "Sur l'eau",
+      "arrival": "Arrivée",
+      "dining": "Table",
+      "lounge": "Lounge privé",
+      "terrace": "Terrasse"
+    }
+  },
+  "video": {
+    "title": "Vivez l'expérience",
+    "play": "Lancer la vidéo",
+    "description": "Une immersion cinématographique au bord de l'eau.",
+    "unavailable": "La vidéo n'a pas pu être chargée"
+  },
+  "experience": {
+    "eyebrow": "Espaces signature",
+    "title": "Choisissez le décor adapté à votre occasion",
+    "subtitle": "Des cabanes sur l'eau aux paillotes sur mer et parasols sur sable, chaque espace a été retenu pour sa lisibilité, sa vue et sa capacité d'accueil.",
+    "viewAll": "Voir tous les espaces",
+    "empty": "Aucun espace disponible pour le moment.",
+    "capacity": "Capacité",
+    "persons": "invités",
+    "perPerson": "par invité",
+    "startingAt": "À partir de",
+    "reserveCta": "Réserver cet espace",
+    "unavailable": "Indisponible",
+    "cards": {
+      "overwater": {
+        "title": "Cabane sur l'eau",
+        "desc": "Table privée au-dessus des eaux turquoise avec hamac"
+      },
+      "swing": {
+        "title": "Balançoire Ilot",
+        "desc": "Notre emblématique balançoire en bois au bord de l'eau"
+      },
+      "hammock": {
+        "title": "Espace détente",
+        "desc": "Hamacs colorés et poufs entre sable et pergolas"
+      },
+      "cabin": {
+        "title": "Cabane privée",
+        "desc": "Pergola couverte avec table, coussins et rideaux"
+      }
+    }
+  },
+  "vouchers": {
+    "title": "Offres & Promotions",
+    "subtitle": "Profitez de nos offres exclusives",
+    "code": "Code",
+    "copy": "Copier le code",
+    "validUntil": "Valable jusqu'au",
+    "off": "de réduction",
+    "useCode": "Utilisez ce code lors de votre réservation",
+    "unavailable": "Indisponible"
+  },
+  "flash": {
+    "title": "Vente Flash",
+    "subtitle": "Découvrez les offres du moment sur les cabanes, menus et réservations de groupe.",
+    "days": "Jours",
+    "hours": "Heures",
+    "minutes": "Min",
+    "seconds": "Sec",
+    "expired": "Cette offre a expiré",
+    "bookNow": "Profiter de l'offre",
+    "seeAll": "Voir toutes les offres",
+    "empty": "Aucune offre disponible pour le moment.",
+    "moreOffers": "offres disponibles",
+    "unavailable": "Indisponible"
+  },
+  "reviews": {
+    "eyebrow": "Preuve sociale",
+    "title": "Des retours qui confirment l'expérience sur place",
+    "subtitle": "Le service, la vue et la qualité de la table reviennent le plus souvent dans les avis clients.",
+    "viewAll": "Voir tous les avis",
+    "writeReview": "Partager votre avis",
+    "loginToReview": "Connectez-vous pour partager votre avis",
+    "empty": "Aucun avis visible pour le moment.",
+    "ratingLabel": "Note moyenne",
+    "reviewsLabel": "avis",
+    "recommendationLabel": "Recommandation",
+    "recommendationText": "des clients recommandent l'expérience"
+  },
+  "reservation": {
+    "eyebrow": "Réservation",
+    "title": "Réserver une table, un espace privé ou un moment de groupe",
+    "subtitle": "Partagez votre date, votre format et vos besoins. L'équipe confirme rapidement via WhatsApp ou téléphone.",
+    "formTitle": "Votre demande",
+    "formHint": "Quelques informations suffisent pour préparer une réponse claire.",
+    "hoursLabel": "Disponibilité",
+    "occasionsLabel": "Idéal pour",
+    "occasionsValue": "Déjeuners privés, groupes, anniversaires, couchers de soleil et journées en famille.",
+    "channelsLabel": "Contact direct",
+    "responseTime": "WhatsApp, Messenger et Instagram permettent un contact rapide, avec un relais par téléphone si besoin.",
+    "submitHint": "Votre message sera prérempli et envoyé directement à l'équipe par WhatsApp.",
+    "name": "Votre nom",
+    "phone": "Numéro de téléphone",
+    "date": "Date souhaitée",
+    "guests": "Nombre de personnes",
+    "message": "Message (optionnel)",
+    "voucherCode": "Code promo (optionnel)",
+    "voucherPlaceholder": "Entrez votre code promo",
+    "whatsapp": "Envoyer via WhatsApp",
+    "call": "Appeler",
+    "namePlaceholder": "Entrez votre nom complet",
+    "phonePlaceholder": "+216 XX XXX XXX",
+    "messagePlaceholder": "Précisez votre demande, l'occasion ou toute information utile...",
+    "guestOptions": {
+      "select": "Choisir...",
+      "1-2": "1-2 personnes",
+      "3-5": "3-5 personnes",
+      "6-10": "6-10 personnes",
+      "10+": "Plus de 10 personnes"
+    }
+  },
+  "location": {
+    "eyebrow": "Accès",
+    "title": "Facile d'accès, marquant dès la traversée",
+    "subtitle": "Le site doit rassurer sur l'arrivée, le temps de trajet et la simplicité de l'accès.",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "hours": "Horaires",
+    "hoursValue": "Tous les jours · 09:00 - 19:00",
+    "directions": "Voir l'itinéraire",
+    "howTo": "Accès à l'îlot",
+    "howToDesc": "Depuis le parking de Coco Beach, une courte traversée en bateau ou en zodiac vous mène directement à l'île.",
+    "steps": {
+      "oneTitle": "Rejoindre le parking",
+      "oneDesc": "Dirigez-vous vers le parking gratuit de Coco Beach et le point d'embarquement.",
+      "twoTitle": "Traverser par bateau",
+      "twoDesc": "La traversée en bateau vers l'île fait partie de l'expérience et structure l'arrivée.",
+      "threeTitle": "S'installer",
+      "threeDesc": "L'équipe vous accueille puis vous oriente vers votre table ou votre espace réservé."
+    }
+  },
+  "footer": {
+    "rights": "Tous droits réservés",
+    "follow": "Suivez-nous",
+    "madeWith": "Pensé et opéré en Tunisie",
+    "description": "Restaurant Coco Beach — cabanes sur l'eau, paillotes, fruits de mer, balades en mer et traversée en bateau à Ghar El Melh, Bizerte.",
+    "explore": "Explorer"
+  },
+  "ui": {
+    "scrollHint": "Faites défiler",
+    "previous": "Précédent",
+    "next": "Suivant"
+  },
+  "errors": {
+    "notFoundTitle": "Page introuvable",
+    "notFoundDesc": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "backHome": "Retour à l'accueil"
+  },
+  "error": {
+    "title": "Impossible de charger les données",
+    "description": "Vérifiez votre connexion internet et réessayez.",
+    "dataValidation": "Données invalides reçues",
+    "configTitle": "Certaines informations du site sont indisponibles.",
+    "configDescription": "Le contenu de configuration n'a pas pu être chargé pour le moment.",
+    "retry": "Réessayer"
+  }
+}

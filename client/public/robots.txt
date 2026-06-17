@@ -1,0 +1,5 @@
+# Ilot Coco Beach — https://ilotcocobeach.tn
+User-agent: *
+Allow: /
+
+Sitemap: https://ilotcocobeach.tn/sitemap.xml

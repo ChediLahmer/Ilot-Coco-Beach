@@ -1,0 +1,231 @@
+{
+  "nav": {
+    "home": "Home",
+    "menu": "Menu",
+    "gallery": "Gallery",
+    "experience": "Spaces",
+    "reservation": "Reserve",
+    "contact": "Access"
+  },
+  "hero": {
+    "welcome": "Signature waterfront address",
+    "tagline": "Private dining, marine setting, boat arrival",
+    "description": "Reserve an overwater cabin, a seafood lunch, a sea trip or a group outing from Ghar El Melh, Bizerte. Restaurant accessible by boat.",
+    "cta": "View menu",
+    "panelTitle": "Plan your visit",
+    "panelText": "Book your table, cabin or group moment quickly and clearly.",
+    "notes": {
+      "locationLabel": "Destination",
+      "locationValue": "Ghar El Melh · Bizerte",
+      "arrivalLabel": "Arrival",
+      "arrivalValue": "Short boat transfer to the islet",
+      "occasionLabel": "Formats",
+      "occasionValue": "Private tables, group bookings and signature moments"
+    }
+  },
+  "about": {
+    "eyebrow": "Positioning",
+    "title": "A destination designed for considered days by the sea",
+    "description": "Coco Beach restaurant brings together sand cabins, thatched sea shelters, parasols and attentive service in a distinctive coastal setting at Ghar El Melh.",
+    "story": "From the first boarding moment to the last plate served, every detail should communicate calm, premium and memorable hospitality.",
+    "cta": "Prepare a reservation",
+    "features": {
+      "cabins": "Overwater spaces",
+      "cabinsDesc": "Cabins and lounges with direct sea views.",
+      "water": "View & arrival",
+      "waterDesc": "The short boat crossing immediately adds exclusivity to the experience.",
+      "hammocks": "Extended comfort",
+      "hammocksDesc": "Shaded lounge zones designed for longer stays.",
+      "vibes": "Visual signature",
+      "vibesDesc": "Wood, sand, light and marine textures translated into a more premium language."
+    }
+  },
+  "gallery": {
+    "eyebrow": "In pictures",
+    "title": "A marine setting designed to impress before guests even arrive",
+    "subtitle": "We kept the views that best highlight the venue, its textures and the quality of the experience.",
+    "viewAll": "View gallery",
+    "empty": "No gallery items are available right now.",
+    "allCategories": "All",
+    "backHome": "Back to home",
+    "noMore": "You've seen it all.",
+    "labels": {
+      "overwater": "Overwater",
+      "arrival": "Arrival",
+      "dining": "Dining",
+      "lounge": "Private lounge",
+      "terrace": "Terrace"
+    }
+  },
+  "video": {
+    "title": "Live the experience",
+    "play": "Play video",
+    "description": "A cinematic glimpse of the waterfront experience.",
+    "unavailable": "Video could not be loaded"
+  },
+  "menu": {
+    "eyebrow": "Dining",
+    "title": "Best-selling dishes to explore before you book",
+    "subtitle": "A visual preview of the starters, seafood, grills and signature plates served on-site.",
+    "notes": {
+      "one": "See the dishes guests ask for most at lunch, sunset service and larger group bookings.",
+      "two": "Every photo helps communicate the plate, the quality level and the expected spend before guests reserve.",
+      "three": "Need the full menu or a group package? The team shares it directly when you get in touch."
+    },
+    "viewAll": "View full menu",
+    "showMore": "Show {count} more dishes",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "reserveCta": "Request a table",
+    "standard": "Standard",
+    "extra": "Extra",
+    "empty": "No dishes are available right now.",
+    "available": "Available",
+    "unavailable": "Unavailable"
+  },
+  "experience": {
+    "eyebrow": "Signature spaces",
+    "title": "Choose the setting that fits your occasion",
+    "subtitle": "From overwater cabins to thatched shelters and parasols on the sand, each setting is featured for its clarity, view and guest capacity.",
+    "viewAll": "View all spaces",
+    "empty": "No spaces are available right now.",
+    "capacity": "Capacity",
+    "persons": "guests",
+    "perPerson": "per guest",
+    "startingAt": "Starting at",
+    "reserveCta": "Reserve this space",
+    "unavailable": "Unavailable",
+    "cards": {
+      "overwater": {
+        "title": "Overwater Cabin",
+        "desc": "Private table above turquoise waters with hammock"
+      },
+      "swing": {
+        "title": "Ilot Swing",
+        "desc": "Our iconic wooden swing by the water's edge"
+      },
+      "hammock": {
+        "title": "Relaxation Area",
+        "desc": "Colorful hammocks and bean bags between sand and pergolas"
+      },
+      "cabin": {
+        "title": "Private Cabin",
+        "desc": "Covered pergola with table, cushions and curtains"
+      }
+    }
+  },
+  "reservation": {
+    "eyebrow": "Reservation",
+    "title": "Reserve a table, a private space or a group moment",
+    "subtitle": "Share your preferred date, format and needs. The team confirms quickly via WhatsApp or phone.",
+    "formTitle": "Your request",
+    "formHint": "A few details are enough to prepare a clear reply.",
+    "hoursLabel": "Availability",
+    "occasionsLabel": "Ideal for",
+    "occasionsValue": "Private lunches, groups, anniversaries, sunset tables and family days.",
+    "channelsLabel": "Direct contact",
+    "responseTime": "WhatsApp, Messenger and Instagram are the fastest ways to reach the team, with phone support when needed.",
+    "submitHint": "Your message will be prefilled and sent directly to the team through WhatsApp.",
+    "name": "Your name",
+    "phone": "Phone number",
+    "date": "Preferred date",
+    "guests": "Number of guests",
+    "message": "Message (optional)",
+    "voucherCode": "Promo code (optional)",
+    "voucherPlaceholder": "Enter your promo code",
+    "whatsapp": "Send via WhatsApp",
+    "call": "Call us",
+    "namePlaceholder": "Enter your full name",
+    "phonePlaceholder": "+216 XX XXX XXX",
+    "messagePlaceholder": "Add any details about your request, the occasion or useful planning notes...",
+    "guestOptions": {
+      "select": "Choose...",
+      "1-2": "1-2 guests",
+      "3-5": "3-5 guests",
+      "6-10": "6-10 guests",
+      "10+": "More than 10 guests"
+    }
+  },
+  "location": {
+    "eyebrow": "Access",
+    "title": "Easy to reach, memorable from the crossing itself",
+    "subtitle": "The access section should reassure guests about arrival, travel time and overall simplicity.",
+    "address": "Address",
+    "phone": "Phone",
+    "hours": "Hours",
+    "hoursValue": "Daily · 09:00 AM - 07:00 PM",
+    "directions": "Get directions",
+    "howTo": "Getting to the islet",
+    "howToDesc": "From the Coco Beach parking area, a short boat or zodiac transfer brings you directly to the island.",
+    "steps": {
+      "oneTitle": "Reach the parking",
+      "oneDesc": "Head to the free Coco Beach parking area and designated boarding point.",
+      "twoTitle": "Cross by boat",
+      "twoDesc": "The short boat crossing to the island is part of the experience and shapes the arrival.",
+      "threeTitle": "Settle in",
+      "threeDesc": "The team welcomes you and guides you to your reserved table or space."
+    }
+  },
+  "vouchers": {
+    "title": "Offers & Promotions",
+    "subtitle": "Take advantage of our exclusive offers",
+    "code": "Code",
+    "copy": "Copy code",
+    "validUntil": "Valid until",
+    "off": "off",
+    "useCode": "Use this code when booking your reservation",
+    "unavailable": "Unavailable"
+  },
+  "flash": {
+    "title": "Flash Sale",
+    "subtitle": "Browse current offers across cabins, menus and group reservations.",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Min",
+    "seconds": "Sec",
+    "expired": "This offer has expired",
+    "bookNow": "Grab the deal",
+    "seeAll": "See all offers",
+    "empty": "No offers are available right now.",
+    "moreOffers": "more offers available",
+    "unavailable": "Unavailable"
+  },
+  "reviews": {
+    "eyebrow": "Social proof",
+    "title": "Guest feedback that confirms the on-site experience",
+    "subtitle": "Service, views and food quality appear most often in guest reviews.",
+    "viewAll": "View all reviews",
+    "writeReview": "Share your review",
+    "loginToReview": "Log in to share your review",
+    "empty": "No reviews are visible right now.",
+    "ratingLabel": "Average rating",
+    "reviewsLabel": "reviews",
+    "recommendationLabel": "Recommendation",
+    "recommendationText": "of guests recommend the experience"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "follow": "Follow us",
+    "madeWith": "Designed and operated in Tunisia",
+    "description": "Coco Beach restaurant — overwater cabins, thatched shelters, seafood, sea trips and boat crossing at Ghar El Melh, Bizerte.",
+    "explore": "Explore"
+  },
+  "ui": {
+    "scrollHint": "Scroll for more",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundDesc": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to home"
+  },
+  "error": {
+    "title": "Unable to load data",
+    "description": "Check your internet connection and try again.",
+    "dataValidation": "Invalid data received",
+    "configTitle": "Some site information is unavailable.",
+    "configDescription": "Configuration content could not be loaded right now.",
+    "retry": "Try again"
+  }
+}

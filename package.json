@@ -1,0 +1,11 @@
+{
+    "name": "ilot-cocobeach-workspace",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+        "validate:backend": "npm --prefix backend run validate",
+        "validate:admin": "npm --prefix admin run validate",
+        "validate:client": "npm --prefix client run validate",
+        "validate:deploy": "npm run validate:backend && npm run validate:admin && npm run validate:client"
+    }
+}

@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  resetTokens PasswordReset[]
+
+  @@map("admins")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  adminId   Int      @map("admin_id")
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@map("password_resets")
+}
+
+model MenuCategory {
+  id    Int    @id @default(autoincrement())
+  name  Json   // { fr, en, ar }
+  order Int    @default(0)
+  items MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id            Int          @id @default(autoincrement())
+  name          Json         // { fr, en, ar }
+  description   Json?        // { fr, en, ar }
+  image         String?
+  priceStandard Decimal      @db.Decimal(8, 2) @map("price_standard")
+  priceExtra    Decimal      @db.Decimal(8, 2) @map("price_extra")
+  available     Boolean      @default(true)
+  visible       Boolean      @default(true)
+  categoryId    Int          @map("category_id")
+  category      MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  order         Int          @default(0)
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  flashSales    FlashSale[]
+
+  @@index([categoryId])
+  @@map("menu_items")
+}
+
+model Space {
+  id          Int     @id @default(autoincrement())
+  name        Json    // { fr, en, ar }
+  description Json?   // { fr, en, ar }
+  image       String?
+  price       Decimal @db.Decimal(8, 2)
+  capacity    Int
+  available   Boolean @default(true)
+  visible     Boolean @default(true)
+  order       Int     @default(0)
+
+  flashSales  FlashSale[]
+
+  @@map("spaces")
+}
+
+model GalleryCategory {
+  id     Int    @id @default(autoincrement())
+  name   Json   // { fr, en, ar }
+  order  Int    @default(0)
+  images GalleryImage[]
+
+  @@map("gallery_categories")
+}
+
+model GalleryImage {
+  id         Int              @id @default(autoincrement())
+  url        String
+  alt        String?
+  category   String?
+  categoryId Int?             @map("category_id")
+  catRef     GalleryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  order      Int              @default(0)
+  visible    Boolean          @default(true)
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  @@index([categoryId])
+  @@map("gallery_images")
+}
+
+model FlashSale {
+  id              Int       @id @default(autoincrement())
+  title           Json      // { fr, en, ar }
+  description     Json      // { fr, en, ar }
+  discountPercent Int       @map("discount_percent")
+  image           String?
+  endsAt          DateTime  @map("ends_at")
+  isActive        Boolean   @default(true) @map("is_active")
+  visible         Boolean   @default(true)
+  menuItemId      Int?      @map("menu_item_id")
+  menuItem        MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  spaceId         Int?      @map("space_id")
+  space           Space?    @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([menuItemId])
+  @@index([spaceId])
+  @@index([isActive, endsAt])
+  @@map("flash_sales")
+}
+
+model Voucher {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
+  discountPercent Int      @map("discount_percent")
+  validUntil      DateTime @map("valid_until")
+  isActive        Boolean  @default(true) @map("is_active")
+  visible         Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([isActive, validUntil])
+  @@map("vouchers")
+}
+
+model SiteConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+
+  @@map("site_config")
+}
+
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  event     String   // "page_view", "click_reserve"
+  path      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([event, createdAt])
+  @@map("analytics_events")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userName  String   @map("user_name")
+  comment   String
+  rating    Int
+  visible   Boolean  @default(false)
+  deviceId  String?  @map("device_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([visible, id])
+  @@map("reviews")
+}
+
+model ReviewStats {
+  id               Int      @id @default(1)
+  visibleCount     Int      @default(0) @map("visible_count")
+  totalRating      Int      @default(0) @map("total_rating")
+  recommendedCount Int      @default(0) @map("recommended_count")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("review_stats")
+}
+
+model JobRun {
+  id           Int       @id @default(autoincrement())
+  jobName      String    @map("job_name")
+  status       String    // "running" | "success" | "error"
+  startedAt    DateTime  @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  durationMs   Int?      @map("duration_ms")
+  itemsCount   Int       @default(0) @map("items_count")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([jobName, startedAt])
+  @@index([jobName, status])
+  @@map("job_runs")
+}
