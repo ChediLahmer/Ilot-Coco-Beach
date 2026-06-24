@@ -2,10 +2,10 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY client/package.json client/package-lock.json* ./
+RUN npm install
 
-COPY . .
+COPY client/ .
 ARG VITE_API_URL=http://localhost:3000/api
 ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
