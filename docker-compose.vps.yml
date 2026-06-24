@@ -1,0 +1,122 @@
+# =====================================================================
+# ILOT COCO BEACH - IP-only deployment (no domain / no SSL yet)
+# Use this to run on a fresh VPS reachable by its public IP.
+# Access after launch:
+#   Public site : http://YOUR_VPS_IP
+#   Admin panel : http://YOUR_VPS_IP:8081
+#   Storage     : http://YOUR_VPS_IP:9100  (images)
+#   MinIO console: http://YOUR_VPS_IP:9101
+#
+# Requires a .env file next to this one (see .env.vps.example).
+# Switch to docker-compose.prod.yml once you have a domain.
+# =====================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cocobeach-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cocobeach
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: cocobeach
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cocobeach"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: cocobeach-storage
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY};
+      mc mb --ignore-existing local/cocobeach;
+      mc anonymous set download local/cocobeach;
+      exit 0;
+      "
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cocobeach-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://cocobeach:${DB_PASSWORD}@db:5432/cocobeach
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: cocobeach
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_PUBLIC_URL: http://${VPS_IP}:9100
+      S3_REGION: us-east-1
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: http://${VPS_IP},http://${VPS_IP}:8081
+      PORT: "3000"
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL}
+      ADMIN_URL: http://${VPS_IP}:8081
+      DEDUP_MEDIA_CRON: "0 3 * * 0"
+      JOB_RUN_RETENTION_DAYS: "30"
+    command: >
+      sh -c "npx prisma migrate deploy && node src/index.js"
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: cocobeach-client
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: cocobeach-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  pgdata:
+  miniodata:
