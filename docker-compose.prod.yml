@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3
     container_name: cocobeach-traefik
     restart: always
     environment:
@@ -10,6 +10,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=600s"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
@@ -63,6 +64,7 @@ services:
       - "traefik.http.routers.storage.entrypoints=websecure"
       - "traefik.http.routers.storage.tls.certresolver=letsencrypt"
       - "traefik.http.services.storage.loadbalancer.server.port=9000"
+      - "traefik.docker.network=ilot-coco-beach_web"
     networks:
       - internal
       - web
@@ -106,7 +108,7 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_PUBLIC_URL: https://storage.${DOMAIN}
       JWT_SECRET: ${JWT_SECRET}
-      CORS_ORIGIN: https://${DOMAIN},https://admin.${DOMAIN}
+      CORS_ORIGIN: https://${DOMAIN},https://www.${DOMAIN},https://admin.${DOMAIN}
       PORT: "3000"
       BREVO_API_KEY: ${BREVO_API_KEY}
       BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL}
@@ -117,6 +119,7 @@ services:
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.services.api.loadbalancer.server.port=3000"
+      - "traefik.docker.network=ilot-coco-beach_web"
     command: >
       sh -c "npx prisma migrate deploy && node src/index.js"
     networks:
