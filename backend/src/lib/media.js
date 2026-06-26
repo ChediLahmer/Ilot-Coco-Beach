@@ -56,7 +56,7 @@ function sanitizeSvg(buffer) {
   return Buffer.from(svg, "utf8");
 }
 
-export async function faststartVideo(buffer, ext = "mp4") {
+export async function optimizeVideo(buffer, ext = "mp4") {
   const dir = await mkdtemp(join(tmpdir(), "cb-vid-"));
   const input = join(dir, `in.${ext}`);
   const output = join(dir, "out.mp4");
@@ -66,10 +66,22 @@ export async function faststartVideo(buffer, ext = "mp4") {
       const ff = spawn("ffmpeg", [
         "-i",
         input,
-        "-map",
-        "0",
-        "-c",
-        "copy",
+        "-vf",
+        "scale=-2:'min(1080,ih)'",
+        "-c:v",
+        "libx264",
+        "-profile:v",
+        "high",
+        "-pix_fmt",
+        "yuv420p",
+        "-preset",
+        "medium",
+        "-crf",
+        "23",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k",
         "-movflags",
         "+faststart",
         "-f",
@@ -110,13 +122,13 @@ export async function processMedia(buffer, detectedMime, filename) {
   }
 
   if (detectedMime === "video/mp4") {
-    const fixed = await faststartVideo(buffer, "mp4").catch(() => buffer);
+    const fixed = await optimizeVideo(buffer, "mp4").catch(() => buffer);
     return { buffer: fixed, mime: "video/mp4", ext: "mp4" };
   }
 
   if (detectedMime === "video/quicktime" || detectedMime === "video/x-m4v") {
     const baseName = filename.replace(/\.[^.]+$/, "");
-    const fixed = await faststartVideo(buffer, "mp4").catch(() => buffer);
+    const fixed = await optimizeVideo(buffer, "mp4").catch(() => buffer);
     return { buffer: fixed, mime: "video/mp4", ext: "mp4", baseName };
   }
 

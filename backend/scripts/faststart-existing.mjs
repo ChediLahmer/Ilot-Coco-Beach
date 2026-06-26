@@ -3,7 +3,7 @@ import {
   getObjectBuffer,
   uploadBufferToKey,
 } from "../src/lib/storage.js";
-import { faststartVideo } from "../src/lib/media.js";
+import { optimizeVideo } from "../src/lib/media.js";
 
 const VIDEO_RE = /\.(mp4|mov|m4v)$/i;
 
@@ -22,7 +22,7 @@ async function run() {
     try {
       const buffer = await getObjectBuffer(key);
       const ext = key.split(".").pop().toLowerCase();
-      const fixed = await faststartVideo(buffer, ext);
+      const fixed = await optimizeVideo(buffer, ext);
       await uploadBufferToKey(key, fixed, "video/mp4");
       ok += 1;
       console.log(`  ✓ ${key} (${buffer.length} -> ${fixed.length} bytes)`);
