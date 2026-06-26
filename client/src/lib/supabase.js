@@ -3,18 +3,15 @@ const REQUEST_TIMEOUT_MS = Number(
   import.meta.env.VITE_REQUEST_TIMEOUT_MS || 180000,
 );
 
-// Proxy images always (CORS, content-type correction)
-// Proxy videos still in incoming/ path (not yet deduplicated — R2 CORS range requests may fail)
-// All other videos load directly from R2 CDN for smooth streaming
-const IMAGE_EXT_RE = /\.(?:png|jpe?g|webp|gif|svg)(?:$|[?#])/i;
+// Serve media directly from object storage (MinIO/CDN) for fast, cached,
+// range-friendly delivery. Only proxy not-yet-deduplicated videos still in the
+// /incoming/ path, where direct range/CORS requests may fail.
 const VIDEO_EXT_RE = /\.(?:mp4|webm|ogg|mov|m4v|avi|mkv)(?:$|[?#])/i;
 
 function toProxyMediaUrl(value) {
   if (typeof value !== "string") return value;
   if (!/^https?:\/\//i.test(value)) return value;
   if (value.includes("/api/media/proxy?url=")) return value;
-  if (IMAGE_EXT_RE.test(value))
-    return `${API}/media/proxy?url=${encodeURIComponent(value)}`;
   if (VIDEO_EXT_RE.test(value) && value.includes("/incoming/"))
     return `${API}/media/proxy?url=${encodeURIComponent(value)}`;
   return value;

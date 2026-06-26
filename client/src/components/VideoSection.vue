@@ -15,7 +15,7 @@
           :poster="sectionPoster"
           class="w-full aspect-video object-cover"
           playsinline
-          preload="auto"
+          preload="metadata"
           @click="togglePlay"
           @ended="isPlaying = false"
           @canplay="videoReady = true"

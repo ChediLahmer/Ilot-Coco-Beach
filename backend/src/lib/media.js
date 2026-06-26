@@ -1,4 +1,8 @@
 import sharp from "sharp";
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const WEB_SAFE_IMAGES = new Set([
   "image/jpeg",
@@ -52,6 +56,44 @@ function sanitizeSvg(buffer) {
   return Buffer.from(svg, "utf8");
 }
 
+export async function faststartVideo(buffer, ext = "mp4") {
+  const dir = await mkdtemp(join(tmpdir(), "cb-vid-"));
+  const input = join(dir, `in.${ext}`);
+  const output = join(dir, "out.mp4");
+  try {
+    await writeFile(input, buffer);
+    await new Promise((resolve, reject) => {
+      const ff = spawn("ffmpeg", [
+        "-i",
+        input,
+        "-map",
+        "0",
+        "-c",
+        "copy",
+        "-movflags",
+        "+faststart",
+        "-f",
+        "mp4",
+        "-y",
+        output,
+      ]);
+      let stderr = "";
+      ff.stderr.on("data", (d) => {
+        stderr += d.toString();
+      });
+      ff.on("error", reject);
+      ff.on("close", (code) =>
+        code === 0
+          ? resolve()
+          : reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-400)}`)),
+      );
+    });
+    return await readFile(output);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
 export async function processMedia(buffer, detectedMime, filename) {
   if (detectedMime === "image/svg+xml") {
     return { buffer: sanitizeSvg(buffer), mime: "image/svg+xml", ext: "svg" };
@@ -67,9 +109,15 @@ export async function processMedia(buffer, detectedMime, filename) {
     return { buffer, mime: detectedMime, ext: null };
   }
 
+  if (detectedMime === "video/mp4") {
+    const fixed = await faststartVideo(buffer, "mp4").catch(() => buffer);
+    return { buffer: fixed, mime: "video/mp4", ext: "mp4" };
+  }
+
   if (detectedMime === "video/quicktime" || detectedMime === "video/x-m4v") {
     const baseName = filename.replace(/\.[^.]+$/, "");
-    return { buffer, mime: "video/mp4", ext: "mp4", baseName };
+    const fixed = await faststartVideo(buffer, "mp4").catch(() => buffer);
+    return { buffer: fixed, mime: "video/mp4", ext: "mp4", baseName };
   }
 
   if (CONVERTIBLE_VIDEOS.has(detectedMime)) {
