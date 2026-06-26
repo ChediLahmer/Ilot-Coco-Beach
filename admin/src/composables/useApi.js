@@ -15,7 +15,6 @@ const IMAGE_MAX_DIMENSION = Number(
 );
 const IMAGE_QUALITY = Number(import.meta.env.VITE_IMAGE_UPLOAD_QUALITY || 0.82);
 // Proxy images always; also proxy incoming/ videos (not yet deduplicated — CORS range may fail)
-const MEDIA_EXT_RE = /\.(?:png|jpe?g|webp|gif|svg)(?:$|[?#])/i;
 const VIDEO_EXT_RE = /\.(?:mp4|webm|ogg|mov|m4v|avi|mkv)(?:$|[?#])/i;
 const VIDEO_EXTENSIONS = {
   mp4: "video/mp4",
@@ -52,8 +51,6 @@ function toProxyMediaUrl(value) {
   if (typeof value !== "string") return value;
   if (!/^https?:\/\//i.test(value)) return value;
   if (value.includes("/api/media/proxy?url=")) return value;
-  if (MEDIA_EXT_RE.test(value))
-    return `${BASE}/media/proxy?url=${encodeURIComponent(value)}`;
   if (VIDEO_EXT_RE.test(value) && value.includes("/incoming/"))
     return `${BASE}/media/proxy?url=${encodeURIComponent(value)}`;
   return value;
