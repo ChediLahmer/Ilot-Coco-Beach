@@ -30,7 +30,7 @@ git push
 Get the IP + root password from the Hostinger panel (VPS → Overview).
 
 ```powershell
-ssh root@YOUR_VPS_IP
+ssh root@72.62.176.202
 ```
 
 Type `yes` to accept the fingerprint, then enter the root password.
@@ -65,8 +65,8 @@ docker compose version
 ## Step 4 — Get your code
 
 ```bash
-mkdir -p /opt/cocobeach
-cd /opt/cocobeach
+mkdir -p /opt/ilotcocobeach
+cd /opt/ilotcocobeach
 git clone https://YOUR_REPO_URL .
 ```
 
@@ -132,7 +132,7 @@ after first login.
 
 ## Step 8 — Verify
 
-- `http://YOUR_VPS_IP` → public site
+- `http://72.62.176.202` → public site
 - `http://YOUR_VPS_IP:8081` → admin panel
 
 ---

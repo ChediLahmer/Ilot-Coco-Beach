@@ -1,6 +1,6 @@
 import { useConfig, configReady } from "@/composables/useConfig";
 
-const ORIGIN = "https://ilotcocobeach.tn";
+const ORIGIN = "https://ilotcocobeach.com";
 const SITE = "Ilot Coco Beach";
 
 const config = useConfig();
