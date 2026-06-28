@@ -43,7 +43,10 @@ async function request(path, options = {}) {
   let res;
   try {
     res = await fetch(`${API}${path}`, {
-      headers: { "Content-Type": "application/json", ...options.headers },
+      headers: {
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...options.headers,
+      },
       ...options,
       signal: options.signal || controller.signal,
     });

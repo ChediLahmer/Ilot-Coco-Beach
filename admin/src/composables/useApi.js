@@ -194,7 +194,7 @@ async function request(path, options = {}) {
   if (token.value) {
     headers.Authorization = `Bearer ${token.value}`;
   }
-  if (!(options.body instanceof FormData)) {
+  if (options.body && !(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
   const base = options._directUpload ? UPLOAD_BASE : BASE;
