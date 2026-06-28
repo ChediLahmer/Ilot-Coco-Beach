@@ -35,7 +35,7 @@ services:
       - key: JOB_RUN_RETENTION_DAYS
         value: "30"
       - key: PRESIGN_MAX_VIDEO_BYTES
-        value: "524288000"
+        value: "104857600"
       - key: S3_REGION
         value: "us-east-1"
       - key: S3_ENDPOINT
