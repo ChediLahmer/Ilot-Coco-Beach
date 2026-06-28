@@ -253,7 +253,10 @@ function isVideo(url) {
 const images = computed(() =>
   galleryImages.value.map((img) => ({
     src: img.url,
-    alt: img.alt || "Ilot Coco Beach",
+    alt:
+      img.alt && !/\.(mov|mp4|webm|ogg|jpe?g|png|webp|gif|avif)$/i.test(img.alt)
+        ? img.alt
+        : "Ilot Coco Beach",
     video: isVideo(img.url),
     labelKey: img.category
       ? `gallery.labels.${img.category}`

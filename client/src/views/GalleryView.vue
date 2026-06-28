@@ -303,7 +303,10 @@ const allMappedImages = computed(() =>
   validatedGalleryImages.value.map((img) => ({
     key: img.id,
     src: img.url,
-    alt: img.alt || "Ilot Coco Beach",
+    alt:
+      img.alt && !/\.(mov|mp4|webm|ogg|jpe?g|png|webp|gif|avif)$/i.test(img.alt)
+        ? img.alt
+        : "Ilot Coco Beach",
     categoryId: img.categoryId || null,
     categoryLabel: img.catRef
       ? img.catRef.name[locale.value] || img.catRef.name.fr

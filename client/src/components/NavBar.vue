@@ -15,7 +15,7 @@
         >
           <a
             v-if="config.whatsapp"
-            :href="'https://wa.me/' + config.whatsapp"
+            :href="whatsappUrl"
             target="_blank"
             rel="noopener"
             class="text-charcoal/40 hover:text-[#25D366] transition-colors"
@@ -239,6 +239,12 @@ const config = useConfig();
 const mobileOpen = ref(false);
 const scrollProgress = ref(0);
 const currentLang = computed(() => locale.value);
+const whatsappUrl = computed(() => {
+  const text = encodeURIComponent(
+    `Bonjour, je souhaite réserver chez ${config.name}.`,
+  );
+  return `https://wa.me/${config.whatsapp}?text=${text}`;
+});
 const langs = ["fr", "ar", "en"];
 
 watch(mobileOpen, (open) => {

@@ -1,7 +1,7 @@
 <template>
   <!-- Mobile: WhatsApp only -->
   <a
-    :href="'https://wa.me/' + config.whatsapp"
+    :href="whatsappUrl"
     target="_blank"
     rel="noopener"
     title="WhatsApp"
@@ -23,7 +23,7 @@
       <div v-if="open" class="flex flex-col gap-3">
         <!-- WhatsApp -->
         <a
-          :href="'https://wa.me/' + config.whatsapp"
+          :href="whatsappUrl"
           target="_blank"
           rel="noopener"
           title="WhatsApp"
@@ -154,6 +154,13 @@ import { useConfig } from "@/composables/useConfig";
 
 const config = useConfig();
 const open = ref(false);
+
+const whatsappUrl = computed(() => {
+  const text = encodeURIComponent(
+    `Bonjour, je souhaite réserver chez ${config.name}.`,
+  );
+  return `https://wa.me/${config.whatsapp}?text=${text}`;
+});
 
 const messengerUrl = computed(() => {
   if (config.messenger) return config.messenger;

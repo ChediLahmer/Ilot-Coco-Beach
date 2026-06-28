@@ -51,12 +51,9 @@
             <a :href="'tel:' + config.phone" class="hover:text-white"
               ><span dir="ltr">{{ config.phone }}</span></a
             >
-            <a
-              v-if="config.email"
-              :href="'mailto:' + config.email"
-              class="hover:text-white"
-              >{{ config.email }}</a
-            >
+            <a v-if="config.email" :href="mailtoUrl" class="hover:text-white">{{
+              config.email
+            }}</a>
           </div>
         </div>
       </div>
@@ -93,6 +90,14 @@ const footerLinks = computed(() => [
   { key: "reservation", id: "reservation", label: t("nav.reservation") },
   { key: "contact", id: "contact", label: t("nav.contact") },
 ]);
+
+const mailtoUrl = computed(() => {
+  const subject = encodeURIComponent(`Réservation - ${config.name}`);
+  const body = encodeURIComponent(
+    `Bonjour, je souhaite réserver chez ${config.name}.`,
+  );
+  return `mailto:${config.email}?subject=${subject}&body=${body}`;
+});
 
 function navigate(link) {
   if (link.path) {
