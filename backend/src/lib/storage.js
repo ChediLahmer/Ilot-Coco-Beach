@@ -23,11 +23,14 @@ const s3 = new S3Client({
   },
 });
 
-// Presigned upload URLs must be signed for the PUBLIC host the browser connects
-// to (SigV4 signs the Host header), so use a client pointed at S3_PUBLIC_URL.
+// Presigned upload URLs must be signed for the exact host the browser PUTs to
+// (SigV4 signs the Host header). Use S3_UPLOAD_URL when set so uploads can go to
+// a NON-Cloudflare-proxied host (no 100s timeout / 100MB cap), while public read
+// URLs still come from S3_PUBLIC_URL (the CDN host). Falls back to S3_PUBLIC_URL.
 const s3Presign = new S3Client({
   region: process.env.S3_REGION || "us-east-1",
   endpoint:
+    process.env.S3_UPLOAD_URL ||
     process.env.S3_PUBLIC_URL ||
     process.env.S3_ENDPOINT ||
     "http://localhost:9100",
