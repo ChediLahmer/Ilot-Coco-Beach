@@ -103,6 +103,7 @@
             class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
             decoding="async"
+            @error="$event.target.style.display='none'"
           />
           <div
             class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
@@ -151,6 +152,7 @@
             class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
             decoding="async"
+            @error="$event.target.style.display='none'"
           />
           <div
             class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"
