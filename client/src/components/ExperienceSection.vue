@@ -109,8 +109,8 @@
                 >
                   <video
                     :src="space.image"
+                    v-play-visible
                     class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    autoplay
                     loop
                     playsinline
                     preload="metadata"

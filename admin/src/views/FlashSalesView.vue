@@ -271,12 +271,14 @@ async function remove(sale) {
 }
 
 async function toggleActive(sale) {
+  const next = !sale.isActive;
+  sale.isActive = next; // optimistic in-place update (no full reload)
   busy.value.add(sale.id);
   try {
-    await api.put(`/flash-sales/${sale.id}`, { isActive: !sale.isActive });
-    await loadData();
-    toast.success(sale.isActive ? "Désactivée" : "Activée");
+    await api.put(`/flash-sales/${sale.id}`, { isActive: next });
+    toast.success(next ? "Activée" : "Désactivée");
   } catch (e) {
+    sale.isActive = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );
@@ -286,12 +288,14 @@ async function toggleActive(sale) {
 }
 
 async function toggleVisible(sale) {
+  const next = !sale.visible;
+  sale.visible = next; // optimistic in-place update (no full reload)
   busy.value.add(sale.id);
   try {
-    await api.put(`/flash-sales/${sale.id}`, { visible: !sale.visible });
-    await loadData();
-    toast.success(sale.visible ? "Masquée" : "Rendue visible");
+    await api.put(`/flash-sales/${sale.id}`, { visible: next });
+    toast.success(next ? "Rendue visible" : "Masquée");
   } catch (e) {
+    sale.visible = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );

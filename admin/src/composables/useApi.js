@@ -281,9 +281,9 @@ function putToStorage(url, file, contentType, onProgress) {
 
 async function uploadVideoPresigned(file, onProgress) {
   const { token } = useAuth();
-  const MAX_SIZE = 100 * 1024 * 1024;
+  const MAX_SIZE = 250 * 1024 * 1024;
   if (file.size > MAX_SIZE) {
-    throw new Error("Fichier trop volumineux (max 100 Mo)");
+    throw new Error("Vidéo trop volumineuse (max 250 Mo)");
   }
   const contentType = file.type || inferVideoContentType(file) || "video/mp4";
   const presign = await presignVideo(file, token);
@@ -373,10 +373,18 @@ export function useApi() {
       request(path, { ...options, method: "DELETE" }),
     upload: async (path, file, extraFields = {}, { onProgress } = {}) => {
       const { token } = useAuth();
-      const MAX_SIZE = 100 * 1024 * 1024;
       const inferredVideoType = inferVideoContentType(file);
+      // Videos upload direct-to-storage (bypassing Cloudflare) so they get a
+      // higher cap; images stay on the synchronous path at 100 MB.
+      const MAX_SIZE = inferredVideoType
+        ? 250 * 1024 * 1024
+        : 100 * 1024 * 1024;
       if (file.size > MAX_SIZE) {
-        throw new Error("Fichier trop volumineux (max 100 Mo)");
+        throw new Error(
+          inferredVideoType
+            ? "Vidéo trop volumineuse (max 250 Mo)"
+            : "Fichier trop volumineux (max 100 Mo)",
+        );
       }
       const validPrefixes = ["image/", "video/"];
       if (

@@ -4,7 +4,6 @@ import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
 import { useConfirm } from "@/composables/useConfirm.js";
-import { useVideoPreload } from "@/composables/useVideoPreload.js";
 import FieldError from "@/components/FieldError.vue";
 import AppToggle from "@/components/AppToggle.vue";
 
@@ -18,7 +17,6 @@ const {
 const api = useApi();
 const toast = useToast();
 const { confirm } = useConfirm();
-const { preloadVideoMetadata } = useVideoPreload();
 const images = ref([]);
 const categories = ref([]);
 const uploading = ref(false);
@@ -67,6 +65,32 @@ async function retryProcessing() {
     toast.success("Traitement relancé. Cela peut prendre un instant.");
   } catch (e) {
     toast.error(e?.message || "Échec du relancement du traitement");
+  }
+}
+
+// Galerie banner: the public hero is whichever item is set here. Stored in
+// siteConfig (gallery_hero_url) so it's an explicit, stable choice rather than
+// the arbitrary first item by per-category order.
+const bannerUrl = ref("");
+
+async function loadBanner() {
+  try {
+    const cfg = await api.get("/config");
+    bannerUrl.value = cfg?.gallery_hero_url || "";
+  } catch {
+    // non-critical
+  }
+}
+
+async function setAsBanner(img) {
+  const prev = bannerUrl.value;
+  bannerUrl.value = img.url; // optimistic
+  try {
+    await api.put("/config/gallery_hero_url", { value: img.url });
+    toast.success("Bannière de la galerie mise à jour");
+  } catch (e) {
+    bannerUrl.value = prev; // rollback
+    toast.error(e?.message || "Échec de la mise à jour de la bannière");
   }
 }
 
@@ -164,13 +188,6 @@ async function loadData() {
     images.value = Array.isArray(res.items) ? res.items : [];
     galNextCursor.value = res.nextCursor;
     galHasMore.value = !!res.nextCursor;
-
-    // Preload all video metadata
-    images.value.forEach((img) => {
-      if (isVideo(img.url)) {
-        preloadVideoMetadata(img.url, "low");
-      }
-    });
   } catch (e) {
     error.value =
       e.response?.data?.message || e.message || "Erreur de chargement";
@@ -195,13 +212,6 @@ async function loadMoreGallery() {
     images.value = [...images.value, ...newItems];
     galNextCursor.value = res.nextCursor;
     galHasMore.value = !!res.nextCursor;
-
-    // Preload new video metadata
-    newItems.forEach((img) => {
-      if (isVideo(img.url)) {
-        preloadVideoMetadata(img.url, "low");
-      }
-    });
   } catch (e) {
     toast.error(
       e.response?.data?.message || e.message || "Erreur de chargement",
@@ -214,6 +224,7 @@ async function loadMoreGallery() {
 onMounted(async () => {
   await loadCategories();
   await loadData();
+  loadBanner();
   galObserver = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting) loadMoreGallery();
@@ -225,13 +236,30 @@ onMounted(async () => {
 
 // While any media is still being processed, poll so the badge clears
 // automatically once the background transcode promotes the final URL.
+// Silent, in-place refresh used while media is processing: patches only the
+// url of items whose value changed (incoming -> final), so the grid never
+// clears, reloads, or resets scroll/pagination during polling.
+async function refreshProcessingSilently() {
+  try {
+    const res = await api.get("/gallery?limit=50");
+    const items = Array.isArray(res.items) ? res.items : [];
+    const byId = new Map(items.map((i) => [i.id, i]));
+    for (const img of images.value) {
+      const fresh = byId.get(img.id);
+      if (fresh && fresh.url !== img.url) img.url = fresh.url;
+    }
+  } catch {
+    // ignore transient polling errors
+  }
+}
+
 let processingTimer = null;
 const hasProcessing = computed(() =>
   images.value.some((img) => isProcessing(img.url)),
 );
 watch(hasProcessing, (active) => {
   if (active && !processingTimer) {
-    processingTimer = setInterval(() => loadData(), 5000);
+    processingTimer = setInterval(refreshProcessingSilently, 5000);
   } else if (!active && processingTimer) {
     clearInterval(processingTimer);
     processingTimer = null;
@@ -291,11 +319,16 @@ async function handleUpload(event) {
 }
 
 async function updateImage(img, data) {
+  // Optimistic in-place update: filteredImages is a computed sorted by order,
+  // so the card re-positions smoothly without a full grid reload.
+  const prev = {};
+  for (const k of Object.keys(data)) prev[k] = img[k];
+  Object.assign(img, data);
   try {
     await api.put(`/gallery/${img.id}`, data);
-    await loadData();
     toast.success("Image mise à jour");
   } catch (e) {
+    Object.assign(img, prev); // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );
@@ -324,12 +357,14 @@ async function remove(img) {
 }
 
 async function toggleVisible(img) {
+  const next = !img.visible;
+  img.visible = next; // optimistic in-place update (no full reload)
   busy.value.add(img.id);
   try {
-    await api.put(`/gallery/${img.id}`, { visible: !img.visible });
-    await loadData();
-    toast.success(img.visible ? "Image masquée" : "Image rendue visible");
+    await api.put(`/gallery/${img.id}`, { visible: next });
+    toast.success(next ? "Image rendue visible" : "Image masquée");
   } catch (e) {
+    img.visible = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );
@@ -628,6 +663,36 @@ async function deleteCat(cat) {
           </button>
         </div>
         <div class="p-3 flex gap-2 items-center">
+          <button
+            type="button"
+            @click.stop="setAsBanner(img)"
+            :disabled="busy.has(img.id) || isProcessing(img.url)"
+            :title="
+              bannerUrl === img.url
+                ? 'Bannière actuelle de la galerie'
+                : 'Définir comme bannière de la galerie'
+            "
+            class="shrink-0 p-1.5 rounded-lg border transition-colors disabled:opacity-40"
+            :class="
+              bannerUrl === img.url
+                ? 'border-amber-400 text-amber-500 bg-amber-50'
+                : 'border-border text-gray-400 hover:text-amber-500 hover:border-amber-300'
+            "
+          >
+            <svg
+              class="w-4 h-4"
+              :fill="bannerUrl === img.url ? 'currentColor' : 'none'"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+              />
+            </svg>
+          </button>
           <AppToggle
             :model-value="img.visible"
             @update:model-value="toggleVisible(img)"

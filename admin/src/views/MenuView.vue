@@ -336,12 +336,14 @@ async function deleteItem(item) {
 }
 
 async function toggleAvailability(item) {
+  const next = !item.available;
+  item.available = next; // optimistic in-place update (no full reload)
   busy.value.add(item.id);
   try {
-    await api.put(`/menu/items/${item.id}`, { available: !item.available });
-    await loadData();
-    toast.success(item.available ? "Marqué indisponible" : "Marqué disponible");
+    await api.put(`/menu/items/${item.id}`, { available: next });
+    toast.success(next ? "Marqué disponible" : "Marqué indisponible");
   } catch (e) {
+    item.available = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );
@@ -351,12 +353,14 @@ async function toggleAvailability(item) {
 }
 
 async function toggleVisible(item) {
+  const next = !item.visible;
+  item.visible = next; // optimistic in-place update (no full reload)
   busy.value.add(item.id);
   try {
-    await api.put(`/menu/items/${item.id}`, { visible: !item.visible });
-    await loadData();
-    toast.success(item.visible ? "Masqué" : "Rendu visible");
+    await api.put(`/menu/items/${item.id}`, { visible: next });
+    toast.success(next ? "Rendu visible" : "Masqué");
   } catch (e) {
+    item.visible = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );

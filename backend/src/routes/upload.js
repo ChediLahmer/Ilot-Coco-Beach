@@ -18,7 +18,7 @@ import {
 } from "../lib/media.js";
 
 const PRESIGN_MAX_VIDEO_BYTES = Number(
-  process.env.PRESIGN_MAX_VIDEO_BYTES || 100 * 1024 * 1024,
+  process.env.PRESIGN_MAX_VIDEO_BYTES || 250 * 1024 * 1024,
 );
 
 export async function uploadRoutes(app) {

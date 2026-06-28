@@ -77,13 +77,13 @@
           <video
             v-if="images[0].video"
             :src="getVideoSrc(images[0].src)"
+            v-play-visible
             class="absolute inset-0 h-full w-full object-cover"
             :class="{
               'opacity-0':
                 !isVideoReady(images[0].src) || hasVideoError(images[0].src),
             }"
             muted
-            autoplay
             loop
             playsinline
             preload="metadata"
@@ -126,12 +126,12 @@
           <video
             v-if="image.video"
             :src="getVideoSrc(image.src)"
+            v-play-visible
             class="absolute inset-0 h-full w-full object-cover"
             :class="{
               'opacity-0': !isVideoReady(image.src) || hasVideoError(image.src),
             }"
             muted
-            autoplay
             loop
             playsinline
             preload="metadata"

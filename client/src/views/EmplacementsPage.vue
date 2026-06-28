@@ -239,12 +239,12 @@ onUnmounted(() => {
             <video
               v-if="emp.image && isVideoMedia(emp.image)"
               :src="emp.image"
+              v-play-visible
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               muted
               loop
               playsinline
               preload="metadata"
-              autoplay
             />
             <img
               v-else-if="emp.image"

@@ -7,8 +7,8 @@
       <video
         v-if="isVideo(heroImage)"
         :src="heroImage"
+        v-play-visible
         class="absolute inset-0 w-full h-full object-cover"
-        autoplay
         loop
         muted
         playsinline
@@ -102,9 +102,9 @@
           <video
             v-if="isVideo(img.src)"
             :src="img.src"
+            v-play-visible
             class="w-full object-cover rounded-xl pointer-events-none"
             muted
-            autoplay
             loop
             playsinline
             preload="metadata"
@@ -227,6 +227,7 @@ import { useI18n } from "vue-i18n";
 import NavBar from "@/components/NavBar.vue";
 import FooterSection from "@/components/FooterSection.vue";
 import { useData } from "@/composables/useData";
+import { useConfig } from "@/composables/useConfig";
 
 function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
@@ -272,6 +273,7 @@ function validateGalleryImage(img) {
 const { t, locale } = useI18n();
 const { galleryImages, galleryHasMore, galleryLoading, loadMoreGallery } =
   useData();
+const config = useConfig();
 
 const validatedGalleryImages = computed(() => {
   try {
@@ -282,7 +284,20 @@ const validatedGalleryImages = computed(() => {
   }
 });
 
-const heroImage = computed(() => validatedGalleryImages.value[0]?.url ?? "");
+const heroImage = computed(() => {
+  // Use the banner explicitly chosen in the admin when it still exists in the
+  // gallery; otherwise fall back to the first item. This keeps the banner
+  // stable and under the user's control (order is per-category, so it can't
+  // reliably pick one global "first" image on its own).
+  const chosen = config.galleryHero;
+  if (
+    chosen &&
+    validatedGalleryImages.value.some((img) => img.url === chosen)
+  ) {
+    return chosen;
+  }
+  return validatedGalleryImages.value[0]?.url ?? "";
+});
 
 const allMappedImages = computed(() =>
   validatedGalleryImages.value.map((img) => ({

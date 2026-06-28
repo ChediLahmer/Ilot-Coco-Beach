@@ -26,6 +26,7 @@ const config = reactive({
   seoTitle: "",
   seoDescription: "",
   ogImage: "",
+  galleryHero: "",
   loaded: false,
 });
 
@@ -73,6 +74,7 @@ const KEY_MAP = {
   seo_title: "seoTitle",
   seo_description: "seoDescription",
   og_image: "ogImage",
+  gallery_hero_url: "galleryHero",
 };
 
 let loaded = false;

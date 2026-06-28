@@ -3,11 +3,13 @@ import App from "./App.vue";
 import router from "./router";
 import i18n from "./i18n";
 import { trackPageView } from "@/composables/useAnalytics";
+import { playVisible } from "./directives/playVisible";
 import "./styles/main.css";
 
 const app = createApp(App);
 app.use(router);
 app.use(i18n);
+app.directive("play-visible", playVisible);
 
 // Track initial page load and route changes
 let isInitialLoad = true;

@@ -114,13 +114,29 @@ async function retryProcessing() {
   }
 }
 
+// Silent, in-place refresh used while media is processing: patches only the
+// image of items whose URL changed (incoming -> final), so the grid never
+// flickers, reloads, or loses scroll/hover state during polling.
+async function refreshProcessingSilently() {
+  try {
+    const res = await api.get(`/spaces?${buildQuery()}`);
+    const byId = new Map((res.items || []).map((s) => [s.id, s]));
+    for (const space of spaces.value) {
+      const fresh = byId.get(space.id);
+      if (fresh && fresh.image !== space.image) space.image = fresh.image;
+    }
+  } catch {
+    // ignore transient polling errors
+  }
+}
+
 let processingTimer = null;
 const hasProcessing = computed(() =>
   spaces.value.some((s) => isProcessing(s.image)),
 );
 watch(hasProcessing, (active) => {
   if (active && !processingTimer) {
-    processingTimer = setInterval(() => loadData(), 5000);
+    processingTimer = setInterval(refreshProcessingSilently, 5000);
   } else if (!active && processingTimer) {
     clearInterval(processingTimer);
     processingTimer = null;
@@ -289,14 +305,14 @@ async function remove(space) {
 }
 
 async function toggleAvailability(space) {
+  const next = !space.available;
+  space.available = next; // optimistic in-place update (no full reload)
   busy.value.add(space.id);
   try {
-    await api.put(`/spaces/${space.id}`, { available: !space.available });
-    await loadData();
-    toast.success(
-      space.available ? "Marqué indisponible" : "Marqué disponible",
-    );
+    await api.put(`/spaces/${space.id}`, { available: next });
+    toast.success(next ? "Marqué disponible" : "Marqué indisponible");
   } catch (e) {
+    space.available = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );
@@ -306,12 +322,14 @@ async function toggleAvailability(space) {
 }
 
 async function toggleVisible(space) {
+  const next = !space.visible;
+  space.visible = next; // optimistic in-place update (no full reload)
   busy.value.add(space.id);
   try {
-    await api.put(`/spaces/${space.id}`, { visible: !space.visible });
-    await loadData();
-    toast.success(space.visible ? "Masqué" : "Rendu visible");
+    await api.put(`/spaces/${space.id}`, { visible: next });
+    toast.success(next ? "Rendu visible" : "Masqué");
   } catch (e) {
+    space.visible = !next; // rollback on failure
     toast.error(
       e.response?.data?.message || e.message || "Erreur de mise à jour",
     );

@@ -262,13 +262,29 @@ async function loadData() {
 onMounted(loadData);
 
 // Poll while any media is still being processed so the badge clears itself.
+// Silent, targeted refresh used while media is processing: patches ONLY the
+// media keys in place (never touches text fields the user may be editing, and
+// no loading flash), so the page doesn't re-render or lose unsaved input.
+async function refreshProcessingSilently() {
+  try {
+    const fresh = await api.get("/config");
+    for (const mf of mediaFields) {
+      if (config.value[mf.key] !== fresh[mf.key]) {
+        config.value[mf.key] = fresh[mf.key];
+      }
+    }
+  } catch {
+    // ignore transient polling errors
+  }
+}
+
 let processingTimer = null;
 const hasProcessing = computed(() =>
   mediaFields.some((mf) => isProcessing(config.value[mf.key])),
 );
 watch(hasProcessing, (active) => {
   if (active && !processingTimer) {
-    processingTimer = setInterval(() => loadData(), 5000);
+    processingTimer = setInterval(refreshProcessingSilently, 5000);
   } else if (!active && processingTimer) {
     clearInterval(processingTimer);
     processingTimer = null;
