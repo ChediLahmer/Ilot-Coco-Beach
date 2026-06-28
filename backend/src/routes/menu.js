@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
-import { deleteFile } from "../lib/storage.js";
+import { deleteFile, isIncomingUrl } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 import {
   ValidationError,
@@ -113,11 +113,23 @@ export async function menuRoutes(app) {
           orderBy: { order: "asc" },
         });
 
-        if (!request.admin && !search && (!sort || sort === "order")) {
-          publicMenuCache = result;
+        if (request.admin) {
+          return result;
         }
 
-        return result;
+        // Don't expose item media still being processed to the public site.
+        const safeResult = result.map((cat) => ({
+          ...cat,
+          items: cat.items.map((item) =>
+            isIncomingUrl(item.image) ? { ...item, image: null } : item,
+          ),
+        }));
+
+        if (!search && (!sort || sort === "order")) {
+          publicMenuCache = safeResult;
+        }
+
+        return safeResult;
       } catch (error) {
         return handleValidationError(error, reply, request.log);
       }

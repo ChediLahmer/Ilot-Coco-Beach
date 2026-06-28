@@ -5,6 +5,7 @@ import {
   uploadFile,
   findExistingByHash,
 } from "../lib/storage.js";
+import { triggerIncomingProcessing } from "../lib/upload-cleanup.js";
 import { fileTypeFromBuffer } from "file-type";
 import { createHash } from "crypto";
 import {
@@ -102,6 +103,28 @@ export async function uploadRoutes(app) {
       }
       const upload = await createPresignedUpload({ filename, contentType });
       return reply.send(upload);
+    },
+  );
+
+  app.post(
+    "/process-incoming",
+    {
+      preHandler: authenticate,
+      schema: {
+        tags: ["Upload"],
+        summary: "Manually (re)trigger processing of pending incoming uploads",
+        security: [{ BearerAuth: [] }],
+        response: {
+          202: {
+            type: "object",
+            properties: { triggered: { type: "boolean" } },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      triggerIncomingProcessing(request.log);
+      return reply.status(202).send({ triggered: true });
     },
   );
 

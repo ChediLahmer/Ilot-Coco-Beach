@@ -98,6 +98,38 @@ function isVideoMedia(url) {
   return typeof url === "string" && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 }
 
+function isProcessing(url) {
+  return (
+    typeof url === "string" &&
+    (url.includes("/incoming/") || url.includes("%2Fincoming%2F"))
+  );
+}
+
+async function retryProcessing() {
+  try {
+    await api.post("/upload/process-incoming");
+    toast.success("Traitement relancé. Cela peut prendre un instant.");
+  } catch (e) {
+    toast.error(e?.message || "Échec du relancement du traitement");
+  }
+}
+
+let processingTimer = null;
+const hasProcessing = computed(() =>
+  spaces.value.some((s) => isProcessing(s.image)),
+);
+watch(hasProcessing, (active) => {
+  if (active && !processingTimer) {
+    processingTimer = setInterval(() => loadData(), 5000);
+  } else if (!active && processingTimer) {
+    clearInterval(processingTimer);
+    processingTimer = null;
+  }
+});
+onUnmounted(() => {
+  if (processingTimer) clearInterval(processingTimer);
+});
+
 const currentIsVideo = computed(() => isVideoMedia(currentImage.value));
 
 function onFileChange(e) {
@@ -391,37 +423,67 @@ onUnmounted(() => {
         class="bg-surface rounded-xl border border-border overflow-hidden transition-shadow hover:shadow-md"
         :class="{ 'opacity-60': !space.available }"
       >
-        <video
-          v-if="space.image && isVideoMedia(space.image)"
-          :src="space.image"
-          class="h-36 w-full object-cover"
-          muted
-          loop
-          playsinline
-          preload="metadata"
-        />
-        <div
-          v-else-if="space.image"
-          class="h-36 bg-cover bg-center"
-          :style="{ backgroundImage: `url(${space.image})` }"
-        ></div>
-        <div
-          v-else
-          class="h-36 bg-surface-alt flex items-center justify-center"
-        >
-          <svg
-            class="w-10 h-10 text-text-muted/40"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div class="relative">
+          <video
+            v-if="space.image && isVideoMedia(space.image)"
+            :src="space.image"
+            class="h-36 w-full object-cover"
+            muted
+            loop
+            playsinline
+            preload="metadata"
+          />
+          <div
+            v-else-if="space.image"
+            class="h-36 bg-cover bg-center"
+            :style="{ backgroundImage: `url(${space.image})` }"
+          ></div>
+          <div
+            v-else
+            class="h-36 bg-surface-alt flex items-center justify-center"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
-            />
-          </svg>
+            <svg
+              class="w-10 h-10 text-text-muted/40"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+              />
+            </svg>
+          </div>
+          <div
+            v-if="isProcessing(space.image)"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 text-white text-xs font-medium"
+          >
+            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <span>En cours de traitement…</span>
+            <button
+              type="button"
+              @click.stop="retryProcessing"
+              class="mt-1 rounded-md border border-white/40 px-2 py-0.5 text-[11px] font-medium hover:bg-white/10"
+            >
+              Relancer
+            </button>
+          </div>
         </div>
         <div class="p-4">
           <div class="flex items-start justify-between gap-2">

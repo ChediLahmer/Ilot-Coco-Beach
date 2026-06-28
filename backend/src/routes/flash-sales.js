@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
-import { deleteFile } from "../lib/storage.js";
+import { deleteFile, isIncomingUrl } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 import { rescheduleExpiryDeactivation } from "../lib/scheduler.js";
 import {
@@ -141,8 +141,13 @@ export async function flashSalesRoutes(app) {
           }),
           prisma.flashSale.count({ where }),
         ]);
+        const safeItems = request.admin
+          ? items
+          : items.map((s) =>
+              isIncomingUrl(s.image) ? { ...s, image: null } : s,
+            );
         return {
-          items,
+          items: safeItems,
           total,
           page: pageNum,
           totalPages: Math.ceil(total / limit),

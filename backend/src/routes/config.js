@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
-import { authenticate } from "../lib/auth.js";
-import { deleteFile } from "../lib/storage.js";
+import { authenticate, optionalAuth } from "../lib/auth.js";
+import { deleteFile, isIncomingUrl } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 import {
   ValidationError,
@@ -9,9 +9,11 @@ import {
 } from "../lib/validation.js";
 
 let configCache = null;
+let publicConfigCache = null;
 
 export function invalidateConfigCache() {
   configCache = null;
+  publicConfigCache = null;
 }
 
 const MEDIA_KEYS = new Set([
@@ -56,6 +58,7 @@ export async function configRoutes(app) {
   app.get(
     "/",
     {
+      preHandler: optionalAuth,
       schema: {
         tags: ["Config"],
         summary: "Get all site configuration",
@@ -67,11 +70,22 @@ export async function configRoutes(app) {
         },
       },
     },
-    async () => {
-      if (configCache) return configCache;
-      const configs = await prisma.siteConfig.findMany();
-      configCache = Object.fromEntries(configs.map((c) => [c.key, c.value]));
-      return configCache;
+    async (request) => {
+      if (!configCache) {
+        const configs = await prisma.siteConfig.findMany();
+        configCache = Object.fromEntries(configs.map((c) => [c.key, c.value]));
+      }
+      // Admins see raw values (incl. media still processing, for the UI badge).
+      if (request.admin) return configCache;
+      if (!publicConfigCache) {
+        publicConfigCache = { ...configCache };
+        for (const key of MEDIA_KEYS) {
+          if (isIncomingUrl(publicConfigCache[key])) {
+            publicConfigCache[key] = "";
+          }
+        }
+      }
+      return publicConfigCache;
     },
   );
 

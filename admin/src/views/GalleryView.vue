@@ -54,6 +54,22 @@ function isVideo(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 }
 
+function isProcessing(url) {
+  return (
+    typeof url === "string" &&
+    (url.includes("/incoming/") || url.includes("%2Fincoming%2F"))
+  );
+}
+
+async function retryProcessing() {
+  try {
+    await api.post("/upload/process-incoming");
+    toast.success("Traitement relancé. Cela peut prendre un instant.");
+  } catch (e) {
+    toast.error(e?.message || "Échec du relancement du traitement");
+  }
+}
+
 function toProxyVideoUrl(url) {
   if (!url || typeof url !== "string") return url;
   if (url.includes("/api/media/proxy?url=")) return url;
@@ -207,8 +223,24 @@ onMounted(async () => {
   if (galSentinel.value) galObserver.observe(galSentinel.value);
 });
 
+// While any media is still being processed, poll so the badge clears
+// automatically once the background transcode promotes the final URL.
+let processingTimer = null;
+const hasProcessing = computed(() =>
+  images.value.some((img) => isProcessing(img.url)),
+);
+watch(hasProcessing, (active) => {
+  if (active && !processingTimer) {
+    processingTimer = setInterval(() => loadData(), 5000);
+  } else if (!active && processingTimer) {
+    clearInterval(processingTimer);
+    processingTimer = null;
+  }
+});
+
 onUnmounted(() => {
   galObserver?.disconnect();
+  if (processingTimer) clearInterval(processingTimer);
 });
 
 async function handleUpload(event) {
@@ -224,16 +256,19 @@ async function handleUpload(event) {
     for (const file of files) {
       try {
         uploadProgress.value = 0;
-        await api.upload(
-          "/gallery",
-          file,
-          {},
-          {
-            onProgress: (pct) => {
-              uploadProgress.value = pct;
-            },
-          },
-        );
+        const onProgress = (pct) => {
+          uploadProgress.value = pct;
+        };
+        const isVideoFile =
+          file.type?.startsWith("video/") ||
+          /\.(mp4|webm|ogg|mov|m4v|mkv|avi)$/i.test(file.name);
+        if (isVideoFile) {
+          // Direct-to-storage upload; record points to the still-processing URL.
+          const { url } = await api.uploadVideo(file, { onProgress });
+          await api.post("/gallery", { url });
+        } else {
+          await api.upload("/gallery", file, {}, { onProgress });
+        }
         succeeded++;
       } catch (e) {
         failed++;
@@ -543,6 +578,34 @@ async function deleteCat(cat) {
             class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
           >
             Vidéo
+          </div>
+          <div
+            v-if="isProcessing(img.url)"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 text-white text-center px-3"
+          >
+            <svg class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <span class="text-xs font-medium">En cours de traitement…</span>
+            <button
+              type="button"
+              @click.stop="retryProcessing"
+              class="rounded-md border border-white/40 px-2 py-1 text-[11px] font-medium hover:bg-white/10"
+            >
+              Relancer
+            </button>
           </div>
           <button
             @click.stop="remove(img)"

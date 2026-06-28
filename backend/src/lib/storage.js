@@ -12,6 +12,32 @@ const s3 = new S3Client({
   region: process.env.S3_REGION || "us-east-1",
   endpoint: process.env.S3_ENDPOINT || "http://localhost:9100",
   forcePathStyle: true,
+  // Keep PutObject free of the SDK's default CRC32 checksum (added in >= 3.729)
+  // for maximum MinIO compatibility — matches the behavior that has worked in
+  // production before the SDK bump.
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY || "minioadmin",
+    secretAccessKey: process.env.S3_SECRET_KEY || "minioadmin",
+  },
+});
+
+// Presigned upload URLs must be signed for the PUBLIC host the browser connects
+// to (SigV4 signs the Host header), so use a client pointed at S3_PUBLIC_URL.
+const s3Presign = new S3Client({
+  region: process.env.S3_REGION || "us-east-1",
+  endpoint:
+    process.env.S3_PUBLIC_URL ||
+    process.env.S3_ENDPOINT ||
+    "http://localhost:9100",
+  forcePathStyle: true,
+  // AWS SDK v3 (>= 3.729) adds a default CRC32 checksum to PutObject. For a
+  // browser-issued presigned PUT that would sign x-amz-sdk-checksum-algorithm /
+  // x-amz-checksum-crc32 headers the browser cannot reproduce, causing
+  // SignatureDoesNotMatch. WHEN_REQUIRED disables it (PutObject doesn't need it).
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY || "minioadmin",
     secretAccessKey: process.env.S3_SECRET_KEY || "minioadmin",
@@ -55,6 +81,14 @@ export function extractStorageKeyFromUrl(url) {
   }
 }
 
+// A media URL still under the "incoming/" prefix has not been processed yet
+// (e.g. a freshly uploaded video awaiting background transcode). Matches both
+// raw storage URLs and proxy-wrapped URLs (where the path is URL-encoded).
+export function isIncomingUrl(url) {
+  if (typeof url !== "string") return false;
+  return url.includes("/incoming/") || url.includes("%2Fincoming%2F");
+}
+
 export function createStorageKey(filename) {
   return createStorageKeyWithPrefix(filename, "");
 }
@@ -64,28 +98,17 @@ export function createStorageKeyWithPrefix(filename, prefix = "") {
 }
 
 export async function createPresignedUpload({ filename, contentType }) {
-  const key = createStorageKeyWithPrefix(filename, "");
+  // Land presigned uploads under incoming/ so the background job can transcode
+  // and promote them; the URL stays "processing" until promotion completes.
+  const key = createStorageKeyWithPrefix(filename, "incoming/");
+  // Only ContentType is signed: the browser PUT sends nothing else, so adding
+  // Cache-Control / x-amz-meta-* here would break the SigV4 signature.
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     ContentType: contentType,
-    ...getS3Metadata(),
   });
-  let url = await getSignedUrl(s3, command, { expiresIn: 900 });
-
-  // Rewrite the internal S3 endpoint to the public URL so browsers can PUT directly,
-  // bypassing the app-server (and its HTTP proxy timeout).
-  const internalBase = (
-    process.env.S3_ENDPOINT || "http://localhost:9100"
-  ).replace(/\/$/, "");
-  const publicBase = (process.env.S3_PUBLIC_URL || internalBase).replace(
-    /\/$/,
-    "",
-  );
-  if (internalBase !== publicBase && url.startsWith(internalBase)) {
-    url = publicBase + url.slice(internalBase.length);
-  }
-
+  const url = await getSignedUrl(s3Presign, command, { expiresIn: 900 });
   return { key, url, publicUrl: buildPublicUrl(key) };
 }
 

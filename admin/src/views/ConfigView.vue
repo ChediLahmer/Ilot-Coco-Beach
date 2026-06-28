@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useApi } from "@/composables/useApi.js";
 import { useFormValidation } from "@/composables/useFormValidation.js";
 import { useToast } from "@/composables/useToast.js";
@@ -68,6 +68,22 @@ const seoFields = [
 
 function isVideoUrl(url) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+function isProcessing(url) {
+  return (
+    typeof url === "string" &&
+    (url.includes("/incoming/") || url.includes("%2Fincoming%2F"))
+  );
+}
+
+async function retryProcessing() {
+  try {
+    await api.post("/upload/process-incoming");
+    toast.success("Traitement relancé. Cela peut prendre un instant.");
+  } catch (e) {
+    toast.error(e?.message || "Échec du relancement du traitement");
+  }
 }
 
 const mediaFields = [
@@ -245,8 +261,23 @@ async function loadData() {
 
 onMounted(loadData);
 
+// Poll while any media is still being processed so the badge clears itself.
+let processingTimer = null;
+const hasProcessing = computed(() =>
+  mediaFields.some((mf) => isProcessing(config.value[mf.key])),
+);
+watch(hasProcessing, (active) => {
+  if (active && !processingTimer) {
+    processingTimer = setInterval(() => loadData(), 5000);
+  } else if (!active && processingTimer) {
+    clearInterval(processingTimer);
+    processingTimer = null;
+  }
+});
+
 onUnmounted(() => {
   clearTimeout(savedTimer);
+  if (processingTimer) clearInterval(processingTimer);
 });
 
 async function save() {
@@ -710,6 +741,37 @@ async function save() {
                 :src="config[mf.key]"
                 class="w-full max-w-md rounded-lg border border-border aspect-video object-cover"
               />
+            </div>
+            <div
+              v-if="isProcessing(config[mf.key])"
+              class="mt-3 flex items-center gap-2 text-sm text-amber-600"
+            >
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+              <span
+                >Vidéo en cours de traitement… elle apparaîtra sur le site une
+                fois prête.</span
+              >
+              <button
+                type="button"
+                @click="retryProcessing"
+                class="rounded-md border border-amber-300 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-50"
+              >
+                Relancer
+              </button>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { authenticate, optionalAuth } from "../lib/auth.js";
-import { deleteFile } from "../lib/storage.js";
+import { deleteFile, isIncomingUrl } from "../lib/storage.js";
 import { scheduleIncomingCleanup } from "../lib/upload-cleanup.js";
 import {
   ValidationError,
@@ -147,8 +147,15 @@ export async function spacesRoutes(app) {
           prisma.space.count({ where }),
         ]);
 
+        // Don't expose media still being processed to the public site.
+        const safeItems = request.admin
+          ? items
+          : items.map((s) =>
+              isIncomingUrl(s.image) ? { ...s, image: null } : s,
+            );
+
         return {
-          items,
+          items: safeItems,
           total,
           page: pageNum,
           totalPages: Math.ceil(total / limit),

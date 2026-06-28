@@ -205,6 +205,24 @@ export function startScheduler(logger) {
     );
   });
 
+  // Self-heal on boot: reconcile any uploads left in incoming/ from before a
+  // restart (e.g. a transcode interrupted by a redeploy). Without this they
+  // would stay "processing" until the next upload or the weekly cron. Deferred
+  // and non-blocking so it never delays startup; the concurrency guard inside
+  // processIncomingUploads prevents overlap with other triggers.
+  setTimeout(() => {
+    processIncomingUploads(logger, { limit: 50 }).then(
+      (processed) => {
+        if (processed > 0) {
+          logger.info(
+            `Scheduler: reconciled ${processed} pending upload(s) on startup`,
+          );
+        }
+      },
+      (err) => logger.error(err, "Scheduler: startup reconciliation failed"),
+    );
+  }, 5000);
+
   // Fallback reconciliation for incoming uploads (primary path is immediate cleanup on upload)
   cron.schedule(DEDUP_MEDIA_CRON, async () => {
     const jobName = "dedup-media";

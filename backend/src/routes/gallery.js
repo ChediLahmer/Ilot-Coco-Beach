@@ -206,7 +206,11 @@ export async function galleryRoutes(app) {
         const where = {};
         if (category) where.category = category;
         if (categoryId) where.categoryId = categoryId;
-        if (!request.admin) where.visible = true;
+        if (!request.admin) {
+          where.visible = true;
+          // Hide media still being processed (awaiting background transcode).
+          where.url = { not: { contains: "/incoming/" } };
+        }
 
         const images = await prisma.galleryImage.findMany({
           where,

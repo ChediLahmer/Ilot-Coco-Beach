@@ -68,6 +68,34 @@ function normalizeMediaUrls(value) {
   return toProxyMediaUrl(value);
 }
 
+// Inverse of toProxyMediaUrl: turn a proxy-wrapped media URL back into the raw
+// storage URL. Applied before writes so the DB never stores a proxy URL (which
+// would break the background promotion's exact-match URL swap).
+function unwrapProxyMediaUrl(value) {
+  if (typeof value !== "string") return value;
+  const marker = "/media/proxy?url=";
+  const index = value.indexOf(marker);
+  if (index === -1) return value;
+  try {
+    return decodeURIComponent(value.slice(index + marker.length));
+  } catch {
+    return value;
+  }
+}
+
+function denormalizeMediaUrls(value) {
+  if (typeof value === "string") return unwrapProxyMediaUrl(value);
+  if (Array.isArray(value)) return value.map(denormalizeMediaUrls);
+  // Only recurse into plain objects; pass Date / File / class instances through
+  // untouched so JSON.stringify keeps serializing them as before (e.g. toJSON).
+  if (value && typeof value === "object" && value.constructor === Object) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, denormalizeMediaUrls(v)]),
+    );
+  }
+  return value;
+}
+
 async function optimizeImageForUpload(file) {
   if (
     !file?.type?.startsWith("image/") ||
@@ -188,6 +216,81 @@ function uploadMultipart(path, body, token, onProgress) {
   });
 }
 
+// Request a presigned direct-to-storage upload URL for a video. Returned raw
+// (NOT normalized) so the signed PUT url is never proxy-wrapped.
+async function presignVideo(file, token) {
+  const res = await fetch(`${UPLOAD_BASE}/upload/presign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getUploadHeaders(token) },
+    body: JSON.stringify({
+      filename: file.name,
+      contentType: file.type || inferVideoContentType(file) || "video/mp4",
+      sizeBytes: file.size,
+    }),
+  });
+  if (res.status === 401) {
+    useAuth().logout();
+    router.push("/login");
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    throw err;
+  }
+  if (!res.ok) {
+    let msg;
+    try {
+      msg = (await res.json())?.message;
+    } catch {
+      msg = null;
+    }
+    throw new Error(msg || "Erreur de préparation de l'envoi");
+  }
+  return res.json();
+}
+
+// PUT the file directly to storage using the presigned URL. The upload bypasses
+// the app server so long transcodes never block the request (done in background).
+function putToStorage(url, file, contentType, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.timeout = UPLOAD_TIMEOUT_MS;
+    xhr.setRequestHeader("Content-Type", contentType);
+    if (onProgress) {
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      });
+    }
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else if (xhr.status === 413) {
+        reject(new Error("Fichier trop volumineux (max 100 Mo)"));
+      } else {
+        reject(new Error(`Échec de l'envoi vers le stockage (${xhr.status})`));
+      }
+    });
+    xhr.addEventListener("error", () => reject(new Error("Erreur réseau")));
+    xhr.addEventListener("timeout", () =>
+      reject(new Error("La requête a expiré. Réessayez.")),
+    );
+    xhr.send(file);
+  });
+}
+
+async function uploadVideoPresigned(file, onProgress) {
+  const { token } = useAuth();
+  const MAX_SIZE = 100 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    throw new Error("Fichier trop volumineux (max 100 Mo)");
+  }
+  const contentType = file.type || inferVideoContentType(file) || "video/mp4";
+  const presign = await presignVideo(file, token);
+  await putToStorage(presign.url, file, contentType, onProgress);
+  return { url: presign.publicUrl };
+}
+
 async function request(path, options = {}) {
   const { token } = useAuth();
   const headers = { ...options.headers };
@@ -252,13 +355,19 @@ export function useApi() {
       request(path, {
         ...options,
         method: "POST",
-        body: body instanceof FormData ? body : JSON.stringify(body),
+        body:
+          body instanceof FormData
+            ? body
+            : JSON.stringify(denormalizeMediaUrls(body)),
       }),
     put: (path, body, options = {}) =>
       request(path, {
         ...options,
         method: "PUT",
-        body: body instanceof FormData ? body : JSON.stringify(body),
+        body:
+          body instanceof FormData
+            ? body
+            : JSON.stringify(denormalizeMediaUrls(body)),
       }),
     del: (path, options = {}) =>
       request(path, { ...options, method: "DELETE" }),
@@ -284,9 +393,12 @@ export function useApi() {
           "Type de fichier non supporte. Formats acceptes : images et videos.",
         );
       }
-      const normalizedFile = inferredVideoType
-        ? file
-        : await optimizeImageForUpload(file);
+      // Videos upload direct-to-storage (presigned) and are transcoded in the
+      // background; only images use the synchronous multipart endpoint.
+      if (inferredVideoType) {
+        return uploadVideoPresigned(file, onProgress);
+      }
+      const normalizedFile = await optimizeImageForUpload(file);
       const form = new FormData();
       form.append("file", normalizedFile);
       for (const [k, v] of Object.entries(extraFields)) {
@@ -294,5 +406,7 @@ export function useApi() {
       }
       return uploadMultipart(path, form, token, onProgress);
     },
+    uploadVideo: (file, { onProgress } = {}) =>
+      uploadVideoPresigned(file, onProgress),
   };
 }
