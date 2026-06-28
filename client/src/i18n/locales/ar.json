@@ -95,6 +95,8 @@
     "startingAt": "ابتداءً من",
     "reserveCta": "احجز هذه المساحة",
     "unavailable": "غير متاح",
+    "unmuteVideo": "تشغيل الصوت",
+    "muteVideo": "كتم الصوت",
     "cards": {
       "overwater": {
         "title": "كوخ على الماء",

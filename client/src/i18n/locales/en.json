@@ -95,6 +95,8 @@
     "startingAt": "Starting at",
     "reserveCta": "Reserve this space",
     "unavailable": "Unavailable",
+    "unmuteVideo": "Turn on sound",
+    "muteVideo": "Mute sound",
     "cards": {
       "overwater": {
         "title": "Overwater Cabin",

@@ -170,7 +170,6 @@
             class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
             controls
             autoplay
-            muted
             playsinline
             preload="metadata"
           />

@@ -133,7 +133,7 @@
         </a>
       </div>
 
-      <div class="mt-8 text-sm text-charcoal/50">
+      <div v-if="hoursText" class="mt-8 text-sm text-charcoal/50">
         {{ t("reservation.hoursLabel") }} · {{ hoursText }}
       </div>
     </div>
@@ -151,7 +151,10 @@ const config = useConfig();
 const hoursText = computed(() => {
   try {
     const parsed = JSON.parse(config.hours || "{}");
-    return parsed[locale.value] || parsed.fr || config.hours || "";
+    if (parsed && typeof parsed === "object") {
+      return parsed[locale.value] || parsed.fr || "";
+    }
+    return config.hours || "";
   } catch {
     return config.hours || "";
   }
@@ -165,7 +168,8 @@ const whatsappUrl = computed(() => {
 });
 
 const messengerUrl = computed(() => {
+  if (config.messenger) return config.messenger;
   const fbId = (config.facebook || "").split("/").filter(Boolean).pop();
-  return `https://m.me/${fbId || ""}`;
+  return fbId ? `https://m.me/${fbId}` : "#";
 });
 </script>

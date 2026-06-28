@@ -27,6 +27,7 @@ const showModal = ref(false);
 const editing = ref(null);
 const form = ref(resetForm());
 const imagePreview = ref(null);
+const previewIsVideo = ref(false);
 const removeImage = ref(false);
 const loading = ref(false);
 const saving = ref(false);
@@ -93,21 +94,30 @@ const currentImage = computed(() => {
   return editing.value?.image || null;
 });
 
+function isVideoMedia(url) {
+  return typeof url === "string" && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+const currentIsVideo = computed(() => isVideoMedia(currentImage.value));
+
 function onFileChange(e) {
   const file = e.target.files[0];
   form.value.imageFile = file;
   if (file) {
     if (imagePreview.value) URL.revokeObjectURL(imagePreview.value);
     imagePreview.value = URL.createObjectURL(file);
+    previewIsVideo.value = file.type.startsWith("video/");
     removeImage.value = false;
   } else {
     imagePreview.value = null;
+    previewIsVideo.value = false;
   }
 }
 
 function clearImage() {
   removeImage.value = true;
   imagePreview.value = null;
+  previewIsVideo.value = false;
   form.value.imageFile = null;
 }
 
@@ -381,8 +391,17 @@ onUnmounted(() => {
         class="bg-surface rounded-xl border border-border overflow-hidden transition-shadow hover:shadow-md"
         :class="{ 'opacity-60': !space.available }"
       >
+        <video
+          v-if="space.image && isVideoMedia(space.image)"
+          :src="space.image"
+          class="h-36 w-full object-cover"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+        />
         <div
-          v-if="space.image"
+          v-else-if="space.image"
           class="h-36 bg-cover bg-center"
           :style="{ backgroundImage: `url(${space.image})` }"
         ></div>
@@ -713,32 +732,42 @@ onUnmounted(() => {
           </div>
           <div>
             <label class="block text-xs font-medium text-text-muted mb-1"
-              >Image</label
+              >Image ou vidéo</label
             >
             <div
               v-if="currentImage || imagePreview"
               class="mb-3 flex items-center gap-3"
             >
+              <video
+                v-if="imagePreview ? previewIsVideo : currentIsVideo"
+                :src="imagePreview || currentImage"
+                class="h-24 w-36 rounded-lg object-cover border border-border"
+                muted
+                autoplay
+                loop
+                playsinline
+              />
               <img
+                v-else
                 :src="imagePreview || currentImage"
                 class="h-24 w-36 rounded-lg object-cover border border-border"
               />
               <div class="flex flex-col gap-1">
                 <span class="text-xs text-text-muted">{{
-                  imagePreview ? "Nouvelle image" : "Image actuelle"
+                  imagePreview ? "Nouveau média" : "Média actuel"
                 }}</span>
                 <button
                   type="button"
                   @click="clearImage"
                   class="text-xs text-danger hover:text-red-700 font-medium transition-colors text-left"
                 >
-                  Supprimer l'image
+                  Supprimer le média
                 </button>
               </div>
             </div>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               @change="onFileChange"
               class="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-medium file:cursor-pointer hover:file:bg-primary/20 transition-colors"
             />

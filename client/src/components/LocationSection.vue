@@ -46,7 +46,7 @@
                   >{{ config.phone }}</a
                 >
               </div>
-              <div>
+              <div v-if="hoursText">
                 <p class="text-xs font-medium text-charcoal/50">
                   {{ t("location.hours") }}
                 </p>
@@ -125,7 +125,10 @@ const config = useConfig();
 const hoursText = computed(() => {
   try {
     const parsed = JSON.parse(config.hours || "{}");
-    return parsed[locale.value] || parsed.fr || config.hours || "";
+    if (parsed && typeof parsed === "object") {
+      return parsed[locale.value] || parsed.fr || "";
+    }
+    return config.hours || "";
   } catch {
     return config.hours || "";
   }

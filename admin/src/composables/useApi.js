@@ -164,7 +164,7 @@ function xhrUpload(
         return;
       }
       if (xhr.status === 413) {
-        msg = "Fichier trop volumineux (max 50 Mo)";
+        msg = "Fichier trop volumineux (max 500 Mo)";
       }
       reject(new Error(msg || "Erreur de téléchargement"));
     });
@@ -236,7 +236,7 @@ async function request(path, options = {}) {
     }
     if (res.status === 404) msg = msg || "Ressource introuvable";
     else if (res.status === 409) msg = msg || "Cette entrée existe déjà";
-    else if (res.status === 413) msg = "Fichier trop volumineux (max 50 Mo)";
+    else if (res.status === 413) msg = "Fichier trop volumineux (max 500 Mo)";
     const err = new Error(msg);
     err.status = res.status;
     throw err;
@@ -264,10 +264,10 @@ export function useApi() {
       request(path, { ...options, method: "DELETE" }),
     upload: async (path, file, extraFields = {}, { onProgress } = {}) => {
       const { token } = useAuth();
-      const MAX_SIZE = 50 * 1024 * 1024;
+      const MAX_SIZE = 500 * 1024 * 1024;
       const inferredVideoType = inferVideoContentType(file);
       if (file.size > MAX_SIZE) {
-        throw new Error("Fichier trop volumineux (max 50 Mo)");
+        throw new Error("Fichier trop volumineux (max 500 Mo)");
       }
       const validPrefixes = ["image/", "video/"];
       if (

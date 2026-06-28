@@ -17,7 +17,7 @@ import {
 } from "../lib/media.js";
 
 const PRESIGN_MAX_VIDEO_BYTES = Number(
-  process.env.PRESIGN_MAX_VIDEO_BYTES || 200 * 1024 * 1024,
+  process.env.PRESIGN_MAX_VIDEO_BYTES || 500 * 1024 * 1024,
 );
 
 export async function uploadRoutes(app) {
@@ -108,7 +108,7 @@ export async function uploadRoutes(app) {
   app.post(
     "/",
     {
-      bodyLimit: 50 * 1024 * 1024,
+      bodyLimit: 525 * 1024 * 1024,
       preHandler: authenticate,
       schema: {
         tags: ["Upload"],

@@ -104,7 +104,52 @@
                 class="group relative min-h-[18rem] h-full overflow-hidden rounded-lg text-white"
               >
                 <div
-                  v-if="space.image"
+                  v-if="space.image && isVideoMedia(space.image)"
+                  class="absolute inset-0 overflow-hidden"
+                >
+                  <video
+                    :src="space.image"
+                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    autoplay
+                    loop
+                    playsinline
+                    preload="metadata"
+                    :muted="!isUnmuted(space.id)"
+                  />
+                  <button
+                    type="button"
+                    class="absolute top-3 end-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70"
+                    :aria-label="
+                      isUnmuted(space.id)
+                        ? t('experience.muteVideo')
+                        : t('experience.unmuteVideo')
+                    "
+                    @click.stop.prevent="toggleSound(space.id)"
+                  >
+                    <svg
+                      v-if="isUnmuted(space.id)"
+                      class="h-4 w-4"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 00-2.5-4.03v8.06A4.5 4.5 0 0016.5 12zM14 3.23v2.06a7 7 0 010 13.42v2.06a9 9 0 000-17.54z"
+                      />
+                    </svg>
+                    <svg
+                      v-else
+                      class="h-4 w-4"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M3 10v4h4l5 5V5L7 10H3zm13.59 2L16 9.41 14.59 8 12 10.59 9.41 8 8 9.41 10.59 12 8 14.59 9.41 16 12 13.41 14.59 16 16 14.59 13.41 12z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  v-else-if="space.image"
                   class="absolute inset-0 overflow-hidden"
                 >
                   <img
@@ -294,6 +339,19 @@ const validatedSpaces = computed(() => {
 
 const spacePrev = ref(null);
 const spaceNext = ref(null);
+const activeSoundId = ref(null);
+
+function isVideoMedia(url) {
+  return typeof url === "string" && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+function isUnmuted(id) {
+  return activeSoundId.value === id;
+}
+
+function toggleSound(id) {
+  activeSoundId.value = activeSoundId.value === id ? null : id;
+}
 
 function onSlideChange(swiper) {
   const perView = Math.ceil(

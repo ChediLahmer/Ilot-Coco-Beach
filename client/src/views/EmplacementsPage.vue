@@ -27,6 +27,10 @@ function normalizeItem(item) {
   return item;
 }
 
+function isVideoMedia(url) {
+  return typeof url === "string" && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
 async function loadMore() {
   if (loading.value || !hasMore.value) return;
   loading.value = true;
@@ -232,8 +236,18 @@ onUnmounted(() => {
         >
           <!-- Image -->
           <div class="relative aspect-[4/3] overflow-hidden">
+            <video
+              v-if="emp.image && isVideoMedia(emp.image)"
+              :src="emp.image"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              autoplay
+            />
             <img
-              v-if="emp.image"
+              v-else-if="emp.image"
               :src="emp.image"
               :alt="emp.name[locale] || emp.name.fr"
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

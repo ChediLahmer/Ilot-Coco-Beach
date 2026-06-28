@@ -92,7 +92,7 @@ await app.register(rateLimit, {
   timeWindow: "1 minute",
 });
 await app.register(compress, { global: true });
-await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } });
+await app.register(multipart, { limits: { fileSize: 500 * 1024 * 1024 } });
 
 app.setErrorHandler((error, request, reply) => {
   if (error.code === "P2025") {
